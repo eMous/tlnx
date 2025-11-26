@@ -2,22 +2,29 @@
 
 # init模块 - 系统初始化配置
 
+# 检查init模块是否已安装
+init_check_installed() {
+    # init模块是系统初始化，每次都需要执行，所以返回1表示未安装
+    log "DEBUG" "init模块是系统初始化，每次都需要执行"
+    return 1
+}
+
 # 更新阿里云镜像源
 init_update_aliyun_mirror() {
     log "INFO" "开始更新阿里云镜像源"
     
     # 检测系统发行版
-    log "INFO" "当前系统：$DISTRO $VERSION"
+    log "INFO" "当前系统：$DISTRO_NAME $DISTRO_VERSION"
     
-    if [ "$DISTRO" = "ubuntu" ]; then
+    if [ "$DISTRO_NAME" = "ubuntu" ]; then
         # Ubuntu系统
         log "INFO" "检测到Ubuntu系统，更新apt源为阿里云镜像"
         
         # 检查Ubuntu版本是否为22.04或24.04
-        if [ "$VERSION" = "22.04" ] || [ "$VERSION" = "24.04" ]; then
-            log "INFO" "当前Ubuntu版本 $VERSION 受支持，继续执行配置"
+        if [ "$DISTRO_VERSION" = "22.04" ] || [ "$DISTRO_VERSION" = "24.04" ]; then
+            log "INFO" "当前Ubuntu版本 $DISTRO_VERSION 受支持，继续执行配置"
         else
-            log "WARN" "当前Ubuntu版本 $VERSION 不在支持范围内，仍将继续执行配置，但可能会遇到问题"
+            log "WARN" "当前Ubuntu版本 $DISTRO_VERSION 不在支持范围内，仍将继续执行配置，但可能会遇到问题"
         fi
         
         # 备份原始源文件
@@ -27,13 +34,10 @@ init_update_aliyun_mirror() {
         sudo cat > /etc/apt/sources.list << EOF
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs) main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs) main restricted universe multiverse
-
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-security main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-security main restricted universe multiverse
-
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-updates main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-updates main restricted universe multiverse
-
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-proposed main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-proposed main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-backports main restricted universe multiverse
@@ -76,7 +80,7 @@ EOF
 }
 
 # 模块入口函数 - init
-init_main() {
+_zsh_install() {
     log "INFO" "=== 开始执行init模块 ==="
     
     init_update_aliyun_mirror

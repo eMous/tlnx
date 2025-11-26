@@ -2,8 +2,17 @@
 
 # ZSH 模块 - 安装和配置 ZSH
 
-# 日志记录
-log "INFO" "=== 开始安装和配置 ZSH ==="
+# 检查ZSH模块是否已安装
+zsh_check_installed() {
+    # 检查zsh命令是否存在
+    if command -v zsh > /dev/null 2>&1; then
+        log "DEBUG" "ZSH 已经安装"
+        return 0
+    else
+        log "DEBUG" "ZSH 未安装"
+        return 1
+    fi
+}
 
 # 安装 ZSH
 zsh_install() {
@@ -76,7 +85,9 @@ ozsh_configure() {
 }
 
 # 主函数
-zsh_main() {
+_zsh_install() {
+    log "INFO" "=== 开始安装和配置 ZSH ==="
+    
     zsh_install
     if [ $? -ne 0 ]; then
         return 1
@@ -89,6 +100,3 @@ zsh_main() {
     log "INFO" "=== ZSH 安装和配置完成 ==="
     return 0
 }
-
-# 执行 ZSH 主函数
-zsh_main

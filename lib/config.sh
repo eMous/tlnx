@@ -8,19 +8,19 @@ detect_distro() {
     
     # 检测是否为macOS
     if [ "$(uname)" = "Darwin" ]; then
-        DISTRO="macos"
-        VERSION=$(sw_vers -productVersion)
-        log "INFO" "检测到发行版: $DISTRO $VERSION"
+        DISTRO_NAME="macos"
+        DISTRO_VERSION=$(sw_vers -productVersion)
+        log "INFO" "检测到发行版: $DISTRO_NAME $DISTRO_VERSION"
     # 检测是否为Linux
     elif [ -f /etc/os-release ]; then
         . /etc/os-release
-        DISTRO=$ID
-        VERSION=$VERSION_ID
-        log "INFO" "检测到发行版: $DISTRO $VERSION"
+        DISTRO_NAME=$ID
+        DISTRO_VERSION=$VERSION_ID
+        log "INFO" "检测到发行版: $DISTRO_NAME $DISTRO_VERSION"
     else
         log "WARNING" "无法检测发行版，使用默认配置"
-        DISTRO="unknown"
-        VERSION="unknown"
+        DISTRO_NAME="unknown"
+        DISTRO_VERSION="unknown"
     fi
 }
 

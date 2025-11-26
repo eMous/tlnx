@@ -2,11 +2,23 @@
 
 # Docker 模块 - 安装和配置 Docker
 
+# 检查Docker模块是否已安装
+docker_check_installed() {
+    # 检查docker命令是否存在
+    if command -v docker > /dev/null 2>&1; then
+        log "DEBUG" "Docker 已经安装"
+        return 0
+    else
+        log "DEBUG" "Docker 未安装"
+        return 1
+    fi
+}
+
 # 日志记录
-log "INFO" "=== 开始安装和配置 Docker ==="
+log "INFO" "=== 开始安装和配置 Docker ===="
 
 # 安装 Docker
-docker_install() {
+_docker_install() {
     log "INFO" "安装 Docker..."
     
     # 更新包列表
@@ -73,24 +85,23 @@ docker_compose_install() {
 
 # 主函数
 docker_main() {
-    docker_install
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-    
+    # 确保Docker服务启动
     docker_start
     if [ $? -ne 0 ]; then
         return 1
     fi
     
-    docker_compose_install
-    if [ $? -ne 0 ]; then
-        return 1
+    # 确保Docker Compose已安装
+    # 检查docker-compose命令是否存在
+    if ! command -v docker-compose > /dev/null 2>&1; then
+        docker_compose_install
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
     fi
     
     log "INFO" "=== Docker 安装和配置完成 ==="
     return 0
 }
 
-# 执行 Docker 主函数
-docker_main
+
