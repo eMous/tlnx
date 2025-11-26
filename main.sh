@@ -145,6 +145,32 @@ main() {
         log "INFO" "没有配置模块列表，使用默认空列表"
     fi
     
+    # 处理必须安装的模块
+    if [ -n "${CONFIG_REQUIRED_MODULES[*]}" ]; then
+        log "INFO" "必须安装的模块列表：${CONFIG_REQUIRED_MODULES[*]}"
+        
+        # 创建一个临时数组，用于存储最终的模块列表
+        local FINAL_MODULES=()
+        
+        # 首先添加所有必须的模块，确保不重复
+        for req_module in "${CONFIG_REQUIRED_MODULES[@]}"; do
+            if [[ ! "${FINAL_MODULES[*]}" =~ "$req_module" ]]; then
+                FINAL_MODULES+=("$req_module")
+            fi
+        done
+        
+        # 然后添加所有非必须的模块，确保不重复且不在必须模块列表中
+        for module in "${MODULES_TO_EXECUTE[@]}"; do
+            if [[ ! "${FINAL_MODULES[*]}" =~ "$module" ]]; then
+                FINAL_MODULES+=("$module")
+            fi
+        done
+        
+        # 更新要执行的模块列表
+        MODULES_TO_EXECUTE=("${FINAL_MODULES[@]}")
+        log "INFO" "最终执行模块列表：${MODULES_TO_EXECUTE[*]}"
+    fi
+    
     # 检查模块序列是否为空
     if [ ${#MODULES_TO_EXECUTE[@]} -eq 0 ]; then
         log "INFO" "没有需要执行的模块"
