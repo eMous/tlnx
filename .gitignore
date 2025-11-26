@@ -1,0 +1,15 @@
+# 忽略日志文件
+logs/
+
+# 忽略解密后的配置文件
+config/enc.conf
+
+# 忽略.vscode配置
+.vscode/
+
+# 忽略临时文件
+*.tmp
+*.swp
+
+# 忽略macOS系统文件
+.DS_Store
