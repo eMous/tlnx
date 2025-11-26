@@ -20,8 +20,8 @@ init_update_aliyun_mirror() {
         # Ubuntu系统
         log "INFO" "检测到Ubuntu系统，更新apt源为阿里云镜像"
         
-        # 检查Ubuntu版本是否为22.04或24.04
-        if [ "$DISTRO_VERSION" = "22.04" ] || [ "$DISTRO_VERSION" = "24.04" ]; then
+        # 检查Ubuntu版本是否以22或24开头
+        if [[ "$DISTRO_VERSION" == 22* ]] || [[ "$DISTRO_VERSION" == 24* ]]; then
             log "INFO" "当前Ubuntu版本 $DISTRO_VERSION 受支持，继续执行配置"
         else
             log "WARN" "当前Ubuntu版本 $DISTRO_VERSION 不在支持范围内，仍将继续执行配置，但可能会遇到问题"
