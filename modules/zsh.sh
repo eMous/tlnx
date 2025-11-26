@@ -3,7 +3,7 @@
 # ZSH 模块 - 安装和配置 ZSH
 
 # 检查ZSH模块是否已安装
-zsh_check_installed() {
+_zsh_check_installed() {
     # 检查zsh命令是否存在
     if command -v zsh > /dev/null 2>&1; then
         log "DEBUG" "ZSH 已经安装"

@@ -3,7 +3,7 @@
 # init模块 - 系统初始化配置
 
 # 检查init模块是否已安装
-init_check_installed() {
+_init_check_installed() {
     # init模块是系统初始化，每次都需要执行，所以返回1表示未安装
     log "DEBUG" "init模块是系统初始化，每次都需要执行"
     return 1
@@ -80,7 +80,7 @@ EOF
 }
 
 # 模块入口函数 - init
-_zsh_install() {
+_init_install() {
     log "INFO" "=== 开始执行init模块 ==="
     
     init_update_aliyun_mirror

@@ -3,7 +3,7 @@
 # Docker 模块 - 安装和配置 Docker
 
 # 检查Docker模块是否已安装
-docker_check_installed() {
+_docker_check_installed() {
     # 检查docker命令是否存在
     if command -v docker > /dev/null 2>&1; then
         log "DEBUG" "Docker 已经安装"
