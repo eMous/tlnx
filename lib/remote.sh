@@ -42,7 +42,7 @@ remote_execution() {
     
     # 2. Compress local folder
     log "INFO" "Archiving project into $local_tar_file"
-    tar -czf "$local_tar_file" --exclude='*.tar.gz' --exclude='.git' --exclude='.log' --exclude='.vscode' "./" >> "$LOG_FILE" 2>&1
+    tar -czf "$local_tar_file" --exclude='*.tar.gz' --exclude='.log' --exclude='.vscode' "./" >> "$LOG_FILE" 2>&1
     
     if [ $? -ne 0 ]; then
         log "ERROR" "Unable to archive local project"

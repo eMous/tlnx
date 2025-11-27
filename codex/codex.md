@@ -275,3 +275,31 @@ Option 2: update the document to describe the single Codex agent and the user re
 
 ## Lessons
 When you adjust how you want the agent framed, `prj.md` should mirror that immediately so the working style remains aligned; future edits should avoid reintroducing outdated agent splits.
+
+---
+id: demand-010
+date: 2025-11-27T14:05:00Z
+type: reflection
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked for a fresh codex log entry after reminding me to search the repo for the active prompt and reread it so the working rhythm stays top of mind.
+
+## Options
+1. Skip adding a history record and simply acknowledge the reminder inline.
+2. Append a formal log entry that documents the prompt review, the renewed commitment to follow the Clarify → Plan → Solve → Verify → Integrate → Reflect cadence, and note the related code cleanup (removing the `--exclude='.git'` flag) so remote syncs stay faithful to the local repo.
+
+## Decision
+Option 2: create a new history entry capturing the prompt review and the rsync behavior change so future demands see that the guidance was reinforced.
+
+## Result
+- Re-scanned the repository for “prompt,” reread `codex/prompt.md`, and reiterated that it governs each interaction alongside `codex.md`.
+- Updated `lib/remote.sh` to drop the `--exclude='.git'` flag so remote transfers retain repository metadata.
+- Added this entry to the codex history so the reminder (and the rsync change) is discoverable when reviewing past demands.
+
+## Lessons
+Regularly rereading the prompt keeps me aligned with your expectations, and noting related code tweaks (like ensuring `.git` syncs remotely) prevents forgetting the operational consequences of those reminders.
