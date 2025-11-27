@@ -1,67 +1,67 @@
-# 服务器自动配置工具 - 配置模板
+# Automated server configuration tool - configuration template
 
-# === 通用环境变量 ===
-# 日志文件路径
+# === General environment variables ===
+# Log file path
 LOG_FILE="logs/server_config.log"
-# 日志级别 (DEBUG, INFO, WARN, ERROR)
+# Default log level (DEBUG, INFO, WARN, ERROR)
 LOG_LEVEL="INFO"
-# 固定的默认模块序列，按顺序执行
+# Default module sequence (executed in order)
 CONFIG_MODULES=()
-# 用于解密配置文件的默认环境变量名
+# Default env var that provides the decryption key
 CONFIG_DEFAULT_KEY_ENV="CONFIG_KEY"
-# 环境检测开关 - 是否为脚本执行环境
+# Execution-environment toggle
 IS_EXECUTION_ENVIRONMENT="false"
-# 加密的目标主机地址
+# Encrypted target host
 TARGET_ENC_HOST=""
-# 加密的目标主机用户名
+# Encrypted target username
 TARGET_ENC_USER=""
-# 加密的目标主机SSH端口
+# Encrypted target SSH port
 TARGET_ENC_PORT=""
-# 加密的目标主机密码
+# Encrypted target password
 TARGET_ENC_PASSWORD=""
 
-# === Clashctl配置 ===
-# Clashctl二进制文件下载地址
+# === Clashctl configuration ===
+# Clashctl binary download URL
 CLASHCTL_URL=""
-# Clash配置文件下载地址
+# Clash configuration download URL
 CLASHCTL_CONFIG_URL=""
-# Clash代理端口
+# Clash proxy port
 CLASHCTL_PROXY_PORT=7890
-# 加密的Clashctl二进制文件下载地址
+# Encrypted Clashctl binary download URL
 CLASHCTL_ENC_URL=""
-# 加密的Clash配置文件下载地址
+# Encrypted Clash configuration download URL
 CLASHCTL_ENC_CONFIG_URL=""
 
-# === Zerotier配置 ===
-# Zerotier网络ID
+# === Zerotier configuration ===
+# Zerotier network ID
 ZEROTIER_NETWORK_ID=""
-# 加密的Zerotier网络ID
+# Encrypted Zerotier network ID
 ZEROTIER_ENC_NETWORK_ID=""
 
-# === FRP配置 ===
-# FRP角色，可选值：client或server
+# === FRP configuration ===
+# FRP role: client or server
 FRP_ROLE="client"
-# FRP服务器地址
+# FRP server address
 FRP_SERVER_ADDR=""
-# FRP服务器端口
+# FRP server port
 FRP_SERVER_PORT=7000
-# FRP认证令牌
+# FRP auth token
 FRP_AUTH_TOKEN=""
-# FRP隧道配置，格式：(("服务名" "本地端口" "远程端口") ("服务名" "本地端口" "远程端口"))
+# FRP tunnel config, format: (("name" "local_port" "remote_port") ...)
 FRP_TUNNELS=()
-# 加密的FRP服务器地址
+# Encrypted FRP server address
 FRP_ENC_SERVER_ADDR=""
-# 加密的FRP认证令牌
+# Encrypted FRP auth token
 FRP_ENC_AUTH_TOKEN=""
 
-# === Docker配置 ===
-# Docker Compose版本
+# === Docker configuration ===
+# Docker Compose version
 DOCKER_COMPOSE_VERSION="v2.20.0"
 
-# === ZSH配置 ===
-# ZSH主题
+# === ZSH configuration ===
+# ZSH theme
 ZSH_THEME="default"
-# 是否启用ZSH VI模式
+# Whether to enable ZSH vi mode
 ZSH_VI_MODE=true
-# ZSH提示符格式
+# ZSH prompt format
 ZSH_PROMPT="%n@%m:%~$ "

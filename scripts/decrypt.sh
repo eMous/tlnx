@@ -1,52 +1,52 @@
 #!/bin/bash
 
-# 解密配置脚本 - 支持输出到文件或标准输出
+# Decrypt configuration script - outputs to file or stdout
 
-# 参数检查
+# Argument validation
 if [ $# -lt 1 ]; then
-    echo "用法: $0 <加密文件路径> [解密输出文件路径] [默认密钥环境变量名]"
-    echo "示例1: $0 config/enc.conf.enc config/enc.conf"  # 输出到文件
-    echo "示例2: $0 config/enc.conf.enc"  # 输出到标准输出
+    echo "Usage: $0 <encrypted file> [output file] [key env var]"
+    echo "Example 1: $0 config/enc.conf.enc config/enc.conf"  # write to file
+    echo "Example 2: $0 config/enc.conf.enc"  # print to stdout
     exit 1
 fi
 
-# 加密文件路径
+# Encrypted file path
 ENCRYPTED_FILE="$1"
 
-# 解密输出文件路径（可选）
+# Optional decrypted output
 OUTPUT_FILE="$2"
 
-# 默认密钥环境变量名，从参数获取或使用默认值
+# Default key env var name
 DEFAULT_KEY_ENV=${3:-"CONFIG_KEY"}
 
-# 从默认环境变量获取密钥或提示用户输入
+# Load key from env var or prompt user
 if [ -n "${!DEFAULT_KEY_ENV}" ]; then
     KEY="${!DEFAULT_KEY_ENV}"
-    echo "使用默认环境变量 $DEFAULT_KEY_ENV 中的密钥进行解密" >&2
+    echo "Using key from environment variable $DEFAULT_KEY_ENV" >&2
 else
-    read -s -p "请输入解密密钥: " KEY
+    read -s -p "Enter decryption key: " KEY
     echo
 fi
 
-# 检查密钥是否为空
+# Ensure key is not empty
 if [ -z "$KEY" ]; then
-    echo "解密密钥不能为空"
+    echo "Decryption key cannot be empty"
     exit 1
 fi
 
-# 使用openssl解密文件
+# Decrypt via openssl
 if [ -n "$OUTPUT_FILE" ]; then
-    # 输出到文件
+    # Write to file
     openssl enc -d -aes-256-cbc -salt -pbkdf2 -in "$ENCRYPTED_FILE" -k "$KEY" > "$OUTPUT_FILE"
     if [ $? -eq 0 ]; then
-        echo "解密成功，输出到文件: $OUTPUT_FILE"
+        echo "Decryption succeeded, written to $OUTPUT_FILE"
         return 0
     else
-        echo "解密失败"
+        echo "Decryption failed"
         exit 1
     fi
 else
-    # 输出到标准输出
+    # Print to stdout
     openssl enc -d -aes-256-cbc -salt -pbkdf2 -in "$ENCRYPTED_FILE" -k "$KEY"
     if [ $? -eq 0 ]; then
         return 0

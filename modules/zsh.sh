@@ -1,92 +1,91 @@
 #!/bin/bash
 
-# ZSH 模块 - 安装和配置 ZSH
+# ZSH module - install and configure ZSH
 
-# 检查ZSH模块是否已安装
+# Check whether ZSH is already installed
 _zsh_check_installed() {
-    # 检查zsh命令是否存在
     if command -v zsh > /dev/null 2>&1; then
-        log "DEBUG" "ZSH 已经安装"
+        log "DEBUG" "ZSH already installed"
         return 0
     else
-        log "DEBUG" "ZSH 未安装"
+        log "DEBUG" "ZSH not installed"
         return 1
     fi
 }
 
-# 安装 ZSH
+# Install ZSH
 zsh_install() {
-    log "INFO" "安装 ZSH..."
+    log "INFO" "Installing ZSH..."
     
-    # 更新包列表
+    # Refresh package list
     sudo apt-get update >> "$LOG_FILE" 2>&1
     
-    # 安装 ZSH
+    # Install ZSH
     sudo apt-get install -y zsh >> "$LOG_FILE" 2>&1
     
     if [ $? -eq 0 ]; then
-        log "INFO" "ZSH 安装成功"
+        log "INFO" "ZSH installation succeeded"
     else
-        log "ERROR" "ZSH 安装失败"
+        log "ERROR" "ZSH installation failed"
         return 1
     fi
 }
 
-# 设置 ZSH 为默认 shell
+# Make ZSH the default shell
 zsh_set_default() {
-    log "INFO" "设置 ZSH 为默认 shell..."
+    log "INFO" "Setting ZSH as the default shell..."
     
-    # 获取当前用户
+    # Determine current user
     local current_user=$(whoami)
     
-    # 设置当前用户的默认 shell 为 zsh
+    # Update default shell for the user
     chsh -s $(which zsh) >> "$LOG_FILE" 2>&1
     
     if [ $? -eq 0 ]; then
-        log "INFO" "ZSH 已设置为默认 shell"
+        log "INFO" "ZSH set as the default shell"
     else
-        log "WARNING" "设置 ZSH 为默认 shell 失败，可能需要手动设置"
+        log "WARNING" "Failed to set ZSH as the default shell; manual intervention may be required"
     fi
 }
 
-# 安装 Oh My Zsh
+# Install Oh My Zsh
 ozsh_install() {
-    log "INFO" "安装 Oh My Zsh..."
+    log "INFO" "Installing Oh My Zsh..."
     
-    # 下载并执行 Oh My Zsh 安装脚本
+    # Download and run the installer
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" >> "$LOG_FILE" 2>&1 || true
     
     if [ -d "$HOME/.oh-my-zsh" ]; then
-        log "INFO" "Oh My Zsh 安装成功"
+        log "INFO" "Oh My Zsh installation succeeded"
     else
-        log "WARNING" "Oh My Zsh 安装失败，跳过"
+        log "WARNING" "Oh My Zsh installation failed; skipping"
     fi
 }
 
-# 配置 ZSH
+# Configure ZSH
 ozsh_configure() {
-    log "INFO" "配置 ZSH..."
+    log "INFO" "Configuring ZSH..."
     
-    # 使用默认主题或配置文件中的主题
+    # Choose theme from config or default
     local theme=${ZSH_THEME:-"robbyrussell"}
     
-    # 检查 ~/.zshrc 文件是否存在
+    # Check the ~/.zshrc file
     if [ -f "$HOME/.zshrc" ]; then
-        # 备份原有配置
+        # Backup the existing config
         cp "$HOME/.zshrc" "$HOME/.zshrc.bak" >> "$LOG_FILE" 2>&1
         
-        # 更新主题
+        # Update the theme
         sed -i "s/ZSH_THEME=.*/ZSH_THEME=\"$theme\"/" "$HOME/.zshrc" >> "$LOG_FILE" 2>&1
         
-        log "INFO" "ZSH 配置更新成功"
+        log "INFO" "ZSH configuration updated"
     else
-        log "WARNING" "~/.zshrc 文件不存在，跳过配置"
+        log "WARNING" "~/.zshrc file not found; skipping configuration"
     fi
 }
 
-# 主函数
+# Module entrypoint for install workflow
 _zsh_install() {
-    log "INFO" "=== 开始安装和配置 ZSH ==="
+    log "INFO" "=== Starting ZSH installation and configuration ==="
     
     zsh_install
     if [ $? -ne 0 ]; then
@@ -97,6 +96,6 @@ _zsh_install() {
     ozsh_install
     ozsh_configure
     
-    log "INFO" "=== ZSH 安装和配置完成 ==="
+    log "INFO" "=== ZSH installation and configuration completed ==="
     return 0
 }

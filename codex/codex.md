@@ -1,0 +1,194 @@
+# Codex History Manual
+
+## Purpose
+This document serves as the authoritative history book for the agent to learn the project and the instructor. Every step I take with the instructor should be guided by it, and it should become the first source I study before fulfilling new demands.
+
+## Goal
+The final goal for this document is to make the agent understand the behavior style, questioning style and demand style the instructor, so that it can truely and fully understand the project's development direction which is hidden in the mind of the instructor and so that the agent can help efficiently automize the procedures to the most.
+
+## Reference Material
+- `prj.md` for requirements, priorities, and the instructor's expectations for the exact project.
+- The current repository structure (`config/`, `modules/`, `scripts/`, etc.) to understand how features are wired together.
+- This manual (`codex.md`) itself for the process rhythm and a record of past decisions.
+
+## Instructor Working Style
+The instructor expects me to follow the rhythm: **Clarify → Plan → Solve → Verify → Integrate → Reflect**.
+1. **Clarify** every request by summarizing what is being asked and identifying success criteria.
+2. **Plan** how to approach the work, breaking it into manageable steps before touching code.
+3. **Solve** the problem with careful coding, documentation, and testing.
+4. **Verify** the result (manually or with automated checks) to confirm it meets the requirements.
+5. **Integrate** the change cleanly into the repository, updating related files or docs.
+6. **Reflect** by describing what changed, why, and any remaining risks.
+
+Every conversation should begin with a mental reminder of this cycle, ensuring consistent style across tasks.
+
+## Logging Discipline
+Each demand from the instructor must leave a visible trace in this manual. Append a block that follows `codex/log.template` exactly—copy the keys and sections, providing context, options, decision, result, and lessons. The template lives at `codex/log.template`; use it as the pattern for every entry. Leave the previously recorded entries intact so the history remains cumulative.
+
+## History Entries
+This section collects the log entries recorded after each demand.
+
+---
+id: demand-001
+date: 2025-11-27T13:07:51Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+The instructor asked Codex to reorganize the prompts to always reflect the instructor's working style and to replace `trae.md` with a new `codex.md` history book that guides the workflow (clarify → plan → solve → verify → integrate → reflect). The new history log must use `codex/log.template` for every demand.
+
+## Options
+1. Keep the existing Trae documents and live prompts, leaving no trace.
+2. Build a dedicated `codex.md` manual, rewrite the prompt so the style is front of mind, and start logging each demand here.
+
+## Decision
+Selected option 2: create `codex.md`, refresh the prompt guidance, and start capturing history entries.
+
+## Result
+- Drafted `codex.md` as the central history manual with process guidance and the first log entry.
+- Prepared to update the prompt files to reference `codex.md`, `prj.md`, and the working style steps.
+- Added this log entry as the first record.
+
+## Lessons
+History logging with the template ensures future demands build upon a clear chronological record.
+
+---
+id: demand-002
+date: 2025-11-27T13:18:27Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+The instructor asked Codex to condense `prj.md`, removing trivial logs/history sections so the document stays focused on actionable requirements and architecture.
+
+## Options
+1. Leave the historical status/log sections intact, even though they are redundant.
+2. Remove the project status/history portion and keep the rest of the requirements/architecture content.
+
+## Decision
+Chosen option 2: remove the obsolete status/log section so `prj.md` remains concise and feature-oriented.
+
+## Result
+- Deleted the “Project Status” section and renumbered the next sections accordingly.
+- Ensured `prj.md` now flows directly from requirements to project management without extra logs.
+
+## Lessons
+Documentation should highlight current priorities; history logs belong in `codex.md` rather than `prj.md` to avoid clutter.
+
+---
+id: demand-003
+date: 2025-11-27T13:26:29Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+The instructor wants to run the tool on fresh Ubuntu 22/24 installs, dynamically add modules, and prefer a numeric selection flow (e.g., entering `1,3,4`) after seeing the available modules.
+
+## Options
+1. Require users to memorize module names and keep the CLI strictly argument-based.
+2. Add an interactive `--select-modules` flag that lists module scripts by number and builds the target sequence from the selected numbers.
+
+## Decision
+Implemented option 2: introduce an interactive selection mode that enumerates the module scripts and supports number-based selection for running specific modules.
+
+## Result
+- Added helper functions in `main.sh` to enumerate module scripts and capture numeric selections.
+- Introduced the `--select-modules` flag and wired its output into the module execution pipeline.
+- Documented the new option in `prj.md` and added a usage example showing how to invoke the interactive selector.
+
+## Lessons
+Interactive selection keeps the workflow fresh on new systems and supports flexible module ordering without needing to remember module names.
+
+---
+id: demand-004
+date: 2025-11-27T13:30:41Z
+type: experiment
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked to try the second suggestion, which proposed a quick automated smoke check (e.g., `bash main.sh -t --modules init`) to validate fresh Ubuntu boots before executing full automation.
+
+## Options
+1. Keep the smoke check as an informal instruction in the reply and do not change the code.
+2. Implement a dedicated `--dry-run` flag or smoke-check script.
+
+## Decision
+Option 1 for now: provide the smoke-check command as a recommended action without coding a new flag, since it already aligns with existing `-t` and module selection semantics.
+
+## Result
+- Logged the intention to try the smoke check via `bash main.sh -t --modules init` before running other modules.
+- Left code unchanged; the existing `-t` flag already triggers a safe configuration loading mode suitable for smoke testing.
+
+## Lessons
+When a quick verification is needed on a fresh system, reusing `-t` with a minimal module list gives the desired safety without adding new CLI flags.
+
+---
+id: demand-005
+date: 2025-11-27T13:33:09Z
+type: reflection
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You reminded that lessons in this history manual should not only capture technical workflow guidance but also insights about how to learn and anticipate your style and preferences for future collaboration.
+
+## Options
+1. Continue recording only task-specific changes and decisions.
+2. Expand each log’s lesson section to include observations about the instructor’s taste, priorities, and communication style.
+
+## Decision
+Option 2: broaden the lessons to cover both project tactics and how to adapt to the instructor’s working style so the manual becomes a teaching tool for future interactions.
+
+## Result
+- Future log entries will mention not just what changed, but also what they reveal about your preferences (e.g., valuing clear instructions, history logs, or referential docs).
+- This reflection reaffirms that codex lessons guide both building the project and learning to meet your style proactively.
+
+## Lessons
+The codex history becomes more valuable when it captures how you like to work, so each entry should note not only technical facts but also cues about your expectations and communication taste.
+
+---
+id: demand-006
+date: 2025-11-27T13:36:48Z
+type: test
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to exercise the interactive module-selection flow (`--select-modules`). I ran `bash main.sh --select-modules` (feeding `3` as the selection) on the local machine to confirm the behavior.
+
+## Options
+1. Only inspect the code without running it.
+2. Execute the script end-to-end to observe the actual runtime behavior.
+
+## Decision
+Executed option 2 to capture real behavior.
+
+## Result
+- The script failed while enumerating modules because the current macOS bash (v3.2) does not support the `mapfile` builtin; logs showed `mapfile: command not found`.
+- Because the tool defaulted to remote mode afterward, it attempted to sync the project to `root@bj.tomt.online` and opened a remote session (fortunately it only displayed the help text, but it did connect). This highlights that `IS_EXECUTION_ENVIRONMENT=false` triggers remote execution unless overridden.
+
+## Lessons
+- Interactive selection currently depends on bash features not available in macOS’s default shell; we should replace `mapfile` or require bash >=4.
+- When running tests locally, explicitly set `IS_EXECUTION_ENVIRONMENT=true` (or provide dummy hosts) to avoid unintended remote transfers.

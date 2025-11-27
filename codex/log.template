@@ -1,0 +1,20 @@
+---
+id: 
+date:
+type: decision  # feature | fix | refactor | decision | experiment
+status: accepted
+idea from:         # agent | instructor
+links:
+  - event_id:
+  - issue
+---
+
+## Context
+
+## Options
+
+## Decision
+
+## Result
+
+## Lessons

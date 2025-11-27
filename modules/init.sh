@@ -1,89 +1,81 @@
 #!/bin/bash
 
-# init模块 - 系统初始化配置
+# init module - system bootstrap configuration
 
-# 检查init模块是否已安装
+# Always run init (return 1 so the installer executes)
 _init_check_installed() {
-    # init模块是系统初始化，每次都需要执行，所以返回1表示未安装
-    log "DEBUG" "init模块是系统初始化，每次都需要执行"
+    log "DEBUG" "init module always runs to prepare the system"
     return 1
 }
 
-# 更新阿里云镜像源
+# Update Alibaba Cloud mirrors
 init_update_aliyun_mirror() {
-    log "INFO" "开始更新阿里云镜像源"
+    log "INFO" "Updating Alibaba Cloud package mirrors"
     
-    # 检测系统发行版
-    log "INFO" "当前系统：$DISTRO_NAME $DISTRO_VERSION"
+    log "INFO" "Detected system: $DISTRO_NAME $DISTRO_VERSION"
     
     if [ "$DISTRO_NAME" = "ubuntu" ]; then
-        # Ubuntu系统
-        log "INFO" "检测到Ubuntu系统，更新apt源为阿里云镜像"
+        log "INFO" "Ubuntu detected, switching apt sources to Alibaba Cloud"
         
-        # 检查Ubuntu版本是否以22或24开头
         if [[ "$DISTRO_VERSION" == 22.* ]] || [[ "$DISTRO_VERSION" == 24.* ]]; then
-            log "INFO" "当前Ubuntu版本 $DISTRO_VERSION 受支持，继续执行配置"
+            log "INFO" "Ubuntu $DISTRO_VERSION is supported"
         else
-            log "WARN" "当前Ubuntu版本 $DISTRO_VERSION 不在支持范围内，仍将继续执行配置，但可能会遇到问题"
+            log "WARN" "Ubuntu $DISTRO_VERSION is outside the tested range; continuing anyway"
         fi
         
-        # 备份原始源文件
         sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-        
-        # 更新为阿里云镜像源
         sudo cat > /etc/apt/sources.list << EOF
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs) main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs) main restricted universe multiverse
+
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-security main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-security main restricted universe multiverse
+
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-updates main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-updates main restricted universe multiverse
+
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-proposed main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-proposed main restricted universe multiverse
+
 deb http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-backports main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ $(lsb_release -cs)-backports main restricted universe multiverse
 EOF
         
-        # 更新apt缓存
         sudo apt-get update -y
         
-    elif [ "$DISTRO_ID" = "centos" ] || [ "$DISTRO_ID" = "rocky" ] || [ "$DISTRO_ID" = "almalinux" ]; then
-        # # CentOS/Rocky/AlmaLinux系统
-        # log "INFO" "检测到CentOS/Rocky/AlmaLinux系统，更新yum源为阿里云镜像"
+    elif [ "$DISTRO_NAME" = "centos" ] || [ "$DISTRO_NAME" = "rocky" ] || [ "$DISTRO_NAME" = "almalinux" ]; then
+        log "INFO" "Detected CentOS/Rocky/AlmaLinux, switching yum repos to Alibaba Cloud"
         
-        # # 备份原始源文件
-        # sudo cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak 2>/dev/null || true
-        # sudo cp /etc/yum.repos.d/Rocky-BaseOS.repo /etc/yum.repos.d/Rocky-BaseOS.repo.bak 2>/dev/null || true
-        # sudo cp /etc/yum.repos.d/AlmaLinux-BaseOS.repo /etc/yum.repos.d/AlmaLinux-BaseOS.repo.bak 2>/dev/null || true
+        sudo cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak 2>/dev/null || true
+        sudo cp /etc/yum.repos.d/Rocky-BaseOS.repo /etc/yum.repos.d/Rocky-BaseOS.repo.bak 2>/dev/null || true
+        sudo cp /etc/yum.repos.d/AlmaLinux-BaseOS.repo /etc/yum.repos.d/AlmaLinux-BaseOS.repo.bak 2>/dev/null || true
         
-        # # 更新为阿里云镜像源
-        # if [ -f "/etc/os-release" ]; then
-        #     . /etc/os-release
+        if [ -f "/etc/os-release" ]; then
+            . /etc/os-release
             
-        #     if [ "$ID" = "centos" ]; then
-        #         sudo curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-$VERSION_ID.repo
-        #     elif [ "$ID" = "rocky" ]; then
-        #         sudo curl -o /etc/yum.repos.d/Rocky-BaseOS.repo http://mirrors.aliyun.com/repo/Rocky-$VERSION_ID.repo
-        #     elif [ "$ID" = "almalinux" ]; then
-        #         sudo curl -o /etc/yum.repos.d/AlmaLinux-BaseOS.repo http://mirrors.aliyun.com/repo/AlmaLinux-$VERSION_ID.repo
-        #     fi
-        # fi
+            if [ "$ID" = "centos" ]; then
+                sudo curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-$VERSION_ID.repo
+            elif [ "$ID" = "rocky" ]; then
+                sudo curl -o /etc/yum.repos.d/Rocky-BaseOS.repo http://mirrors.aliyun.com/repo/Rocky-$VERSION_ID.repo
+            elif [ "$ID" = "almalinux" ]; then
+                sudo curl -o /etc/yum.repos.d/AlmaLinux-BaseOS.repo http://mirrors.aliyun.com/repo/AlmaLinux-$VERSION_ID.repo
+            fi
+        fi
         
-        # # 清理并更新yum缓存
-        # sudo yum clean all
-        # sudo yum makecache
-        log "WARN" "不支持的发行版 $DISTRO_ID，跳过镜像源更新"
+        sudo yum clean all
+        sudo yum makecache
     else
-        log "WARN" "不支持的发行版 $DISTRO_ID，跳过镜像源更新"
+        log "WARN" "Unsupported distribution $DISTRO_NAME, skipping mirror update"
     fi
-    log "INFO" "阿里云镜像源更新完成"
+    
+    log "INFO" "Finished updating Alibaba Cloud mirrors"
 }
 
-# 模块入口函数 - init
+# Module entrypoint - init
 _init_install() {
-    log "INFO" "=== 开始执行init模块 ==="
+    log "INFO" "=== Starting init module ==="
     
     init_update_aliyun_mirror
     
-    log "INFO" "=== init模块执行完成 ==="
+    log "INFO" "=== init module completed ==="
 }
