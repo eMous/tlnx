@@ -303,3 +303,135 @@ Option 2: create a new history entry capturing the prompt review and the rsync b
 
 ## Lessons
 Regularly rereading the prompt keeps me aligned with your expectations, and noting related code tweaks (like ensuring `.git` syncs remotely) prevents forgetting the operational consequences of those reminders.
+---
+id: demand-011
+date: 2025-11-27T14:35:22Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You want `--select-modules` to always display every available module script with a numbered menu so users can point at the modules they want by index.
+
+## Options
+1. Leave the numbering logic inside `prompt_module_selection` and duplicate it wherever we need to show the menu.
+2. Create a small helper that renders the module list with indices and reuse it for the interactive prompt so the numbering is guaranteed to stay in sync.
+
+## Decision
+Option 2: add a helper dedicated to printing the numbered module menu and reuse it from the interactive selection flow.
+
+## Result
+- Added `print_module_menu` to `main.sh` so the numbering logic lives in one place.
+- `prompt_module_selection` now calls the helper before asking the user to pick module indices.
+- Every run of `--select-modules` prints the numbered list dynamically before the prompt.
+
+## Lessons
+Centralizing the menu rendering keeps the numbered list in sync with the available modules and makes future tweaks (e.g., sorting or filtering) easier to implement.
+---
+id: demand-012
+date: 2025-11-27T14:39:45Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+Running `./main.sh --select-modules` didn't show the module list before prompting, so the instructor couldn't see which numbers to enter.
+
+## Options
+1. Keep printing via plain `echo`, which apparently wasn't visible in the current terminal output.
+2. Emit the module menu through the `log` helper so each entry appears with timestamps/levels like the rest of the CLI output.
+
+## Decision
+Option 2: route the menu output through `log` so it always shows up in the console and log file.
+
+## Result
+- `print_module_menu` now logs each numbered entry instead of writing raw `echo` lines.
+- The prompt preamble also uses `log "INFO"` so the “Available modules” heading is visible.
+- `--select-modules` now produces a numbered list before waiting for user input.
+
+## Lessons
+Aligning auxiliary output with the logging style avoids confusion; anything the user must see should go through `log` so it matches the rest of the CLI stream.
+---
+id: demand-013
+date: 2025-11-27T14:46:05Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+After the previous change, the numbered module list still didn’t appear for you because your log level hid INFO messages, so the prompt showed nothing before asking for input.
+
+## Options
+1. Keep relying on `log` output, forcing users to raise their log level whenever they want to see the module menu.
+2. Print the menu directly to stdout (independent of log thresholds) so the list is always visible, while the rest of the flow keeps using the logger.
+
+## Decision
+Option 2: write the module menu with `printf`/`echo` so it always hits the terminal.
+
+## Result
+- Restored `echo`/`printf` output for the “Available modules” heading and each numbered entry.
+- The interactive selector now shows the module list regardless of `LOG_LEVEL` settings.
+
+## Lessons
+Critical interactive prompts shouldn’t depend on log verbosity; printing directly ensures they remain visible even when users prefer quieter logs.
+---
+id: demand-014
+date: 2025-11-27T14:48:13Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+Even after restoring plain `echo` output, the module list still didn’t appear because `prompt_module_selection` runs inside command substitution, which captures stdout and hides the menu from the terminal.
+
+## Options
+1. Keep writing to stdout and accept that the menu disappears whenever the function is invoked via `$()`.
+2. Send the menu output to stderr (or `/dev/tty`) so it still reaches the user while stdout remains reserved for the resulting module list.
+
+## Decision
+Option 2: print the “Available modules” heading and numbered entries to stderr so the prompt is always visible.
+
+## Result
+- `prompt_module_selection` now writes its menu to stderr, which bypasses command substitution capture.
+- Users can see the full menu before entering numbers, while stdout still returns the comma-separated selection.
+
+## Lessons
+Interactive helpers invoked via command substitution must separate user-facing prompts from machine-readable output; emitting prompts on stderr is a reliable way to achieve that.
+---
+id: demand-015
+date: 2025-11-27T14:51:41Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to avoid writing the module menu to stderr and instead change how the selection is captured so stdout remains free for prompts while the selected modules are stored separately.
+
+## Options
+1. Keep emitting the menu on stderr and continue capturing stdout via command substitution.
+2. Store the selected modules in a shared variable and let `prompt_module_selection` print the menu to stdout, eliminating the need to echo the selection itself.
+
+## Decision
+Option 2: introduce a shared buffer (`PROMPT_MODULE_SELECTION_RESULT`) so the function no longer needs to emit the selection on stdout.
+
+## Result
+- `prompt_module_selection` now prints its menu on stdout, collects the chosen modules, and stores the comma-separated list in `PROMPT_MODULE_SELECTION_RESULT`.
+- The caller checks the return code and reads the shared variable instead of using command substitution, so prompts remain visible and stdout stays clean.
+
+## Lessons
+For interactive flows that both display prompts and return structured data, using a shared variable (or explicit output file) is cleaner than relying on command substitution, which forces stdout to double as both UI and data channel.

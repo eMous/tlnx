@@ -58,6 +58,19 @@ get_available_modules() {
     printf '%s\n' "${module_list[@]}"
 }
 
+# Display module names with numeric indices for interactive selection
+print_module_menu() {
+    local modules=("$@")
+    local idx=1
+    for module in "${modules[@]}"; do
+        printf "  %d) %s\n" "$idx" "$module"
+        idx=$((idx+1))
+    done
+}
+
+# Buffer for interactive selection results
+PROMPT_MODULE_SELECTION_RESULT=""
+
 # Prompt the user to select modules by number and return a comma-separated string
 prompt_module_selection() {
     local modules=("$@")
@@ -65,12 +78,10 @@ prompt_module_selection() {
         return 1
     fi
 
+    PROMPT_MODULE_SELECTION_RESULT=""
+    
     echo "Available modules:"
-    local idx=1
-    for module in "${modules[@]}"; do
-        printf "  %d) %s\n" "$idx" "$module"
-        idx=$((idx+1))
-    done
+    print_module_menu "${modules[@]}"
 
     local selection
     read -rp "Select modules by number (comma-separated, e.g., 1,3): " selection
@@ -101,7 +112,8 @@ prompt_module_selection() {
         return 1
     fi
 
-    IFS=','; printf '%s\n' "${selected[*]}"
+    local IFS=','
+    PROMPT_MODULE_SELECTION_RESULT="${selected[*]}"
     return 0
 }
 
@@ -193,10 +205,8 @@ main() {
         if [ ${#AVAILABLE_MODULES[@]} -eq 0 ]; then
             log "WARNING" "No module scripts detected for interactive selection"
         else
-            local selection_result
-            selection_result=$(prompt_module_selection "${AVAILABLE_MODULES[@]}")
-            if [ $? -eq 0 ]; then
-                CUSTOM_MODULES="$selection_result"
+            if prompt_module_selection "${AVAILABLE_MODULES[@]}"; then
+                CUSTOM_MODULES="$PROMPT_MODULE_SELECTION_RESULT"
                 log "INFO" "Interactive module selection: ${CUSTOM_MODULES}"
             else
                 log "WARNING" "No modules were selected interactively; using configured module list"
