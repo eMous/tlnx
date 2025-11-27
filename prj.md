@@ -30,22 +30,22 @@ This is an automated server configuration tool that helps users set up a new clo
 
 ## 2. Project Management
 2.1 **Roles**:
-2.1.1 Trae-meta agent: maintains the `codex.md` rules.
-2.1.2 Trae-prj agent: develops the project following `codex.md`.
-2.1.3 User: provides requirements and coordinates agent work.
+2.1.1 Codex agent: executes the project according to `codex.md` while maintaining its own history and prompts.
+2.1.2 User: provides requirements, feedback, and coordinates decisions.
 2.2 **Communication**:
-2.2.1 Collaborate indirectly through the user as the intermediary.
-2.2.2 Update document status regularly.
-2.2.3 Report project progress in a timely manner.
+2.2.1 Collaborate directly with the user for clarifications and approvals.
+2.2.2 Update `codex.md` and `prj.md` whenever major decisions or requirement changes happen.
+2.2.3 Report progress proactively, especially after significant changes or blockers.
 
-## 4. Technical Solution
-4.1 **Project layout**:
+## 3. Technical Solution
+3.1 **Project layout**:
 ```
 ./
 ├── prj.md               # Project requirements
-├── codex.md              # Task-handling rules
-├── trae_meta_prompt.md  # Trae-meta agent prompt
-├── trae_prj_prompt.md   # Trae-prj agent prompt
+├── codex/               # Codex history and prompts
+│   ├── codex.md         # Task-handling rules and history
+│   ├── prompt.md        # Codex agent prompt
+│   └── log.template     # Log-entry template
 ├── main.sh              # Main configuration script
 ├── lib/                 # Core library scripts
 │   ├── common.sh        # Shared functions
@@ -65,7 +65,7 @@ This is an automated server configuration tool that helps users set up a new clo
 ├── logs/                # Log directory
 └── .gitignore           # Git ignore rules
 ```
-4.2 **Configuration management**:
+3.2 **Configuration management**:
 - **Config file description**:
   - `config/default.conf.template`: Template listing every available variable, including encrypted and environment-detection variables.
   - `config/default.conf`: Default config used in development; contains all environment variables and is the base configuration.
@@ -82,7 +82,7 @@ This is an automated server configuration tool that helps users set up a new clo
 
 - **Environment variable guide**: Refer to `config/default.conf.template` for the full list of variables and explanations.
 
-4.3 **Execution flow**:
+3.3 **Execution flow**:
 1. The user clones the project from GitHub.
 2. Run `main.sh` with optional CLI arguments or environment variables.
 3. The script loads the library files and logging configuration.
@@ -106,7 +106,7 @@ This is an automated server configuration tool that helps users set up a new clo
 9. Generate configuration logs.
 10. Display the result and help information.
 
-4.4 **Remote execution flow**:
+3.4 **Remote execution flow**:
 1. The local script sees `IS_EXECUTION_ENVIRONMENT=false`.
 2. Collect target host information (user, hostname, port).
 3. Archive the project directory into a `.tar.gz` file.
@@ -117,7 +117,7 @@ This is an automated server configuration tool that helps users set up a new clo
 8. Use SSH to connect to the target and run the script.
 9. Leave the project files on the remote machine after completion.
 
-4.5 **Help message flow**:
+3.5 **Help message flow**:
 1. The user runs `./main.sh -h` or `./main.sh --help`.
 2. The script calls `display_usage`.
 3. Show tool name and version.
@@ -126,16 +126,16 @@ This is an automated server configuration tool that helps users set up a new clo
 6. List usage instructions, options, and examples, including the new `-d/-c` flags and `--select-modules`, which lists modules by number and allows numeric selection (e.g., `1,3,4`).
 7. When running remotely, show the client host information.
 
-4.6 **Location of Trae AI artifacts**:
-- All Trae AI-related files live at the project root.
-- They include `codex.md`, `prj.md`, `trae_meta_prompt.md`, and `trae_prj_prompt.md`.
-- These files are not ignored by Git and stay in the repo as historical context.
+3.6 **Location of Codex documentation artifacts**:
+- Codex documentation files live in the `codex/` directory.
+- They include `codex/codex.md`, `codex/prompt.md`, and `codex/log.template`.
+- These files are tracked in Git and serve as the living history of the project.
 - After the project finishes, the files can remain for maintenance purposes.
 
-## 5. Configuration Template Design
-5.1 **Template**: `config/default.conf.template` lists every available configuration item; users can consult it for the supported environment variables.
+## 4. Configuration Template Design
+4.1 **Template**: `config/default.conf.template` lists every available configuration item; users can consult it for the supported environment variables.
 
-5.2 **Encrypted variable naming convention**
+4.2 **Encrypted variable naming convention**
 
 Encrypted variables follow the format `${module}_ENC_${varname}`.
 
@@ -144,7 +144,7 @@ Examples:
 - `ZEROTIER_ENC_NETWORK_ID`: Encrypted Zerotier network ID.
 - `FRP_ENC_AUTH_TOKEN`: Encrypted FRP auth token.
 
-5.3 **Config encryption mechanism**:
+4.3 **Config encryption mechanism**:
 - **Algorithm**: AES-256-CBC with PBKDF2 key derivation.
 - **Security**:
   - PBKDF2 uses 100000 iterations for stronger security.
@@ -173,39 +173,18 @@ Examples:
   - Support manual decryption with the `-d` flag.
   - Support manual encryption with the `-c` flag.
 
-5.4 **Sensitive data handling**
+4.4 **Sensitive data handling**
 - All sensitive entries use the `_ENC_` suffix following the `${module}_ENC_${varname}` pattern.
 - Sensitive placeholders in `default.conf` can be set to `!!!!!!!ENCRYPTED!!!!!!!` or left blank.
 - Encrypted configs are tracked by Git so teams can share them.
 - Decrypted configs are untracked to keep secrets safe.
 
-## 6. README Structure
-**Note**: Do not create a formal `README.md` until the project is marked complete.
+## 5. Codex Asset Handling
+5.1 **File locations**:
+- Store all Codex documentation files under `codex/`.
+- Includes `codex/codex.md`, `codex/prompt.md`, and `codex/log.template`.
 
-The final README will include:
-1. Project introduction.
-2. Feature list.
-3. Supported distributions (initially Ubuntu 22.04 and Ubuntu 24.04).
-4. Quick start:
-   - Clone from GitHub.
-   - Configure.
-   - Run the setup.
-5. Detailed configuration guide:
-   - Module descriptions.
-   - Parameter explanations.
-6. Advanced usage:
-   - Modular execution.
-   - Encrypted configuration management.
-7. Troubleshooting.
-8. Contribution guide.
-9. License.
-
-## 7. Trae AI Asset Handling
-7.1 **File locations**:
-- Store all Trae AI files at the project root.
-- Includes `codex.md`, `prj.md`, `trae_meta_prompt.md`, and `trae_prj_prompt.md`.
-
-7.2 **Git ignore policy**:
+5.2 **Git ignore policy**:
 ```gitignore
 # .gitignore
 
@@ -221,7 +200,7 @@ logs/
 *.swp
 ```
 
-## 8. Usage Examples
+## 6. Usage Examples
 ```bash
 # Clone from GitHub
 git clone https://github.com/user/tlnx.git

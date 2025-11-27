@@ -192,3 +192,86 @@ Executed option 2 to capture real behavior.
 ## Lessons
 - Interactive selection currently depends on bash features not available in macOS’s default shell; we should replace `mapfile` or require bash >=4.
 - When running tests locally, explicitly set `IS_EXECUTION_ENVIRONMENT=true` (or provide dummy hosts) to avoid unintended remote transfers.
+
+---
+id: demand-007
+date: 2025-11-27T13:50:17Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You noted that parts of `prj.md` were no longer necessary or accurate. The document still had legacy numbering gaps and an outdated “README structure” section that no longer reflected how we work.
+
+## Options
+1. Keep the existing sections and just annotate that they are optional.
+2. Remove the obsolete content (e.g., the README outline), tighten the numbering, and keep only the sections that describe current requirements and architecture.
+
+## Decision
+Option 2: trim the document to the relevant sections and fix numbering so the structure is compact and accurate.
+
+## Result
+- Renumbered the “Technical Solution” block to section 3 and adjusted all subheadings.
+- Shifted the configuration template, Trae asset handling, and usage sections so they follow sequentially (4–6).
+- Deleted the stale README-outline section entirely so `prj.md` now focuses on actual requirements and execution flows.
+
+## Lessons
+Keeping `prj.md` short and accurate makes it easier to predict your taste: you prefer documentation that states what’s true today and removes speculative placeholders like future README plans.
+
+---
+id: demand-008
+date: 2025-11-27T13:52:47Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You requested that the literal string “trae” no longer appear anywhere except inside `codex/codex.md`. The project requirements document still referenced legacy Trae agents and file names.
+
+## Options
+1. Leave the old references in `prj.md` but add a note explaining they are legacy terms.
+2. Remove the outdated references, rename sections to “Codex” terminology, and update the file-structure lists accordingly.
+
+## Decision
+Option 2: scrub `trae` from `prj.md` entirely and describe the documentation assets in terms of the Codex directory.
+
+## Result
+- Updated the project layout to reference `codex/` (with `codex.md`, `prompt.md`, and `log.template`) instead of the old Trae prompt files.
+- Renamed the roles and documentation sections to “Codex meta/prj agent” and “Codex asset handling.”
+- Confirmed that no file outside `codex/codex.md` now contains the literal string “trae.”
+
+## Lessons
+Keeping terminology consistent with your current direction avoids confusion and makes it easier to anticipate requests—once you say “no more Trae,” we should update every doc (not just the obvious ones) so future references align with your taste.
+
+---
+id: demand-009
+date: 2025-11-27T13:55:04Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You clarified that there is no longer a split between “meta” and “prj” agents—there is only Codex. `prj.md` still mentioned Codex-meta/Codex-prj roles in the project management section.
+
+## Options
+1. Keep the legacy terminology and add a footnote.
+2. Rewrite the roles/communication section so it references only the single Codex agent plus the user.
+
+## Decision
+Option 2: update the document to describe the single Codex agent and the user relationship directly.
+
+## Result
+- `prj.md` now states that one Codex agent executes the project per `codex.md`, and the user provides requirements/coordination.
+- Communication bullets now emphasize direct collaboration between you and Codex with proactive status updates.
+
+## Lessons
+When you adjust how you want the agent framed, `prj.md` should mirror that immediately so the working style remains aligned; future edits should avoid reintroducing outdated agent splits.
