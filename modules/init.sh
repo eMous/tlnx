@@ -80,6 +80,8 @@ _init_install() {
 
     log "INFO" "=== Starting init module ==="
     init_user_check
+    init_check_internet_access
+    exit 2
     init_enable_bbr
     init_update_aliyun_mirror
     
@@ -98,6 +100,58 @@ init_user_check() {
     else
         log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"
         exit 1
+    fi
+}
+
+# Internet Access Check
+init_check_internet_access() {
+    log "INFO" "Checking internet access"
+    # Checking http(s) proxy, if http proxy is empty
+    if [ -z "$http_proxy" ]; then
+        log "WARN" "No HTTP proxy detected, performing direct internet access check"
+    else
+        log "INFO" "HTTP proxy detected: $http_proxy"
+    fi
+
+    if [ -z "$https_proxy" ]; then
+        log "WARN" "No HTTPS proxy detected, performing direct internet access check"
+    else
+        log "INFO" "HTTPS proxy detected: $https_proxy"
+    fi
+
+    curl --max-time 10 -I https://www.google.com >/dev/null 2> >(tee -a "$LOG_FILE")
+
+    local CURL_STATUS=${PIPESTATUS[0]}
+    if [ $CURL_STATUS -ne 0 ]; then
+        log "WARN" "Google access check failed, please use --set-proxy to set a working HTTP proxy"
+        
+        # Choose force continue or input a proxy
+        log "INFO" "You can choose to continue without internet access (some modules may fail) or set a proxy and retry"
+        while true; do
+            read -rp "Do you want to continue without internet access? (y/n): " yn
+            case $yn in
+                [Yy]* ) log "INFO" "Continuing without internet access"; return 0;;
+                [Nn]* )
+                    read -rp "Please enter your HTTP proxy (e.g., http://proxyserver:port): " user_proxy
+                    export http_proxy="$user_proxy"
+                    export https_proxy="$user_proxy"
+                    log "INFO" "Retrying internet access check with provided proxy"
+                    curl --max-time 10 -I https://www.google.com >/dev/null 2> >(tee -a "$LOG_FILE")
+                    local RETRY_CURL_STATUS=${PIPESTATUS[0]}
+                    if [ $RETRY_CURL_STATUS -ne 0 ]; then
+                        log "ERROR" "Internet access check failed again with provided proxy"
+                        unset http_proxy
+                        unset https_proxy
+                    else
+                        log "INFO" "Internet access check successful with provided proxy"
+                        set_http_proxy "$user_proxy"
+                        return 0
+                    fi
+        
+        return 1
+    else
+        log "INFO" "Internet access check successful"
+        return 0
     fi
 }
 

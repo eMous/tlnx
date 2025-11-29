@@ -435,3 +435,31 @@ Option 2: introduce a shared buffer (`PROMPT_MODULE_SELECTION_RESULT`) so the fu
 
 ## Lessons
 For interactive flows that both display prompts and return structured data, using a shared variable (or explicit output file) is cleaner than relying on command substitution, which forces stdout to double as both UI and data channel.
+
+---
+id: demand-016
+date: 2025-11-27T15:05:00Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked for a `set_http_proxy` helper that writes proxy exports into the user’s shell rc file and hinted it should ultimately be driven by a dedicated `--set-http-proxy` CLI flag rather than being buried in `modules/init.sh`.
+
+## Options
+1. Keep the proxy persistence logic inside `modules/init.sh`, limiting its use to the internet-check retry flow.
+2. Promote the helper into `lib/common.sh`, expose a CLI flag to trigger it directly, and have the init module reuse the shared helper.
+
+## Decision
+Option 2: make proxy persistence a shared utility and wire a `--set-http-proxy` flag so users can configure it explicitly.
+
+## Result
+- Added `set_http_proxy` to `lib/common.sh`, ensuring it updates both the rc file and the current environment variables.
+- Updated `modules/init.sh` to call the shared helper after a successful proxy retry.
+- Extended `main.sh` with `--set-http-proxy` (usage text, parsing, and early exit) so the helper can be invoked without running other modules.
+
+## Lessons
+You prefer features to be reusable and surfaced through explicit CLI options rather than hidden in module internals; when you request a helper, expect it to be available both programmatically and via a dedicated flag.

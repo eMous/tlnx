@@ -31,6 +31,7 @@ display_usage() {
     echo "  -f, --force          Force installation even if a module reports itself as installed"
     echo "  --modules MODULES    Comma-separated module list to run"
     echo "  --select-modules     Show available module scripts and choose by number"
+    echo "  --set-http-proxy URL Persist HTTP/HTTPS proxy settings and exit"
     echo "  -d, --decrypt        Decrypt config/enc.conf.enc into config/enc.conf"
     echo "  -c, --encrypt        Encrypt config/enc.conf into config/enc.conf.enc"
     echo ""
@@ -39,6 +40,7 @@ display_usage() {
     echo "  ./main.sh --modules docker,zsh"
     echo "  ./main.sh -d"
     echo "  ./main.sh -c"
+    echo "  ./main.sh --set-http-proxy http://proxy:port"
 }
 
 # Gather available module scripts from the modules directory
@@ -130,6 +132,7 @@ main() {
     # Parse CLI arguments
     local i=1
     local FORCE_MODE="false"
+    local SET_HTTP_PROXY_VALUE=""
     while [ $i -le $# ]; do
         local arg=${!i}
         if [ "$arg" = "-l" ] || [ "$arg" = "--log-level" ]; then
@@ -155,6 +158,14 @@ main() {
         elif [ "$arg" = "-c" ] || [ "$arg" = "--encrypt" ]; then
             ENCRYPT_MODE="true"
             i=$((i+1))
+        elif [ "$arg" = "--set-http-proxy" ]; then
+            local next_i=$((i+1))
+            if [ $next_i -gt $# ]; then
+                echo "Error: --set-http-proxy requires a proxy URL" >&2
+                exit 1
+            fi
+            SET_HTTP_PROXY_VALUE="${!next_i}"
+            i=$((i+2))
         elif [ "$arg" = "-f" ] || [ "$arg" = "--force" ]; then
             FORCE_MODE="true"
             i=$((i+1))
@@ -165,6 +176,17 @@ main() {
         fi
     done
     
+    if [ -n "$SET_HTTP_PROXY_VALUE" ]; then
+        log "INFO" "Setting HTTP proxy via CLI option"
+        if set_http_proxy "$SET_HTTP_PROXY_VALUE"; then
+            log "INFO" "HTTP proxy set successfully"
+            exit 0
+        else
+            log "ERROR" "Failed to set HTTP proxy"
+            exit 1
+        fi
+    fi
+
     # Handle decrypt/encrypt only modes
     if [ "$DECRYPT_MODE" = "true" ]; then
         echo "Running decrypt option..."
