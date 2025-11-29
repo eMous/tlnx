@@ -200,6 +200,10 @@ logs/
 *.swp
 ```
 
+## 6. Recent Updates
+- Console logging uses color codes (INFO green, DEBUG blue, WARN yellow, ERROR red) while log files remain plain for readability.
+- `apt-get update` output during the init module is streamed both to stdout/stderr and appended to the main log file for better troubleshooting.
+
 ## 6. Usage Examples
 ```bash
 # Clone from GitHub

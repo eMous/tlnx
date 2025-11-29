@@ -30,9 +30,10 @@ log() {
     local level=$1
     local message=$2
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+    local formatted="[$timestamp] [$level] $message"
     
     # Always write to log file
-    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+    echo "$formatted" >> "$LOG_FILE"
     
     # Emit to console when level meets threshold
     local current_priority=$(get_log_priority "$LOG_LEVEL")
@@ -40,6 +41,22 @@ log() {
     
     # Only print when message priority is >= configured level
     if [ $message_priority -ge $current_priority ]; then
-        echo "[$timestamp] [$level] $message"
+        local color_prefix="" color_suffix=""
+        if [ -t 1 ]; then
+            case "$level" in
+                "DEBUG") color_prefix="\033[34m" ;;
+                "INFO") color_prefix="\033[32m" ;;
+                "WARN") color_prefix="\033[33m" ;;
+                "ERROR") color_prefix="\033[31m" ;;
+            esac
+            if [ -n "$color_prefix" ]; then
+                color_suffix="\033[0m"
+            fi
+        fi
+        if [ -n "$color_prefix" ]; then
+            printf "%b%s%b\n" "$color_prefix" "$formatted" "$color_suffix"
+        else
+            echo "$formatted"
+        fi
     fi
 }
