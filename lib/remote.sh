@@ -27,7 +27,7 @@ remote_execution() {
     
     # 1. Remote project directory
     local timestamp=$(date +%Y%m%d%H%M%S)
-    local remote_project_dir="/root/tlnx-${timestamp}"
+    local remote_project_dir="/opt/tlnx/tlnx-${timestamp}"
     local remote_temp_dir="/tmp"
     local local_tar_file="$(pwd)/tlnx-${timestamp}.tar.gz"  # archive within project directory
     log "INFO" "Creating project directory on remote host: $remote_project_dir"

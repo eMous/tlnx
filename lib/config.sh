@@ -74,12 +74,12 @@ decrypt_config() {
 # Load default configuration
 load_config() {
     log "INFO" "Loading default configuration..."
-    
     if [ -f "config/default.conf" ]; then
         . "config/default.conf"
         log "INFO" "Default configuration loaded"
     else
         log "ERROR" "Default configuration missing: config/default.conf"
+        echo "Default configuration missing: config/default.conf"
         exit 1
     fi
     
