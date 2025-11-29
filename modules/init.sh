@@ -147,7 +147,8 @@ init_check_internet_access() {
                         set_http_proxy "$user_proxy"
                         return 0
                     fi
-        
+            esac
+        done 
         return 1
     else
         log "INFO" "Internet access check successful"
