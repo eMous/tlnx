@@ -87,7 +87,7 @@ remote_execution() {
     # 7. Connect and execute remotely while passing origin host info
     local client_hostname=$(hostname)
     log "INFO" "Connecting to remote host and starting shell"
-    "${ssh_cmd[@]}" -t "$target_user@$target_host" "cd $remote_project_dir && SSH_CLIENT_HOST=${client_hostname} ./main.sh -h; bash"
+    "${ssh_cmd[@]}" -t "$target_user@$target_host" "cd $remote_project_dir && SSH_CLIENT_HOST=${client_hostname} ./tlnx -h; bash"
     
     if [ $? -ne 0 ]; then
         log "ERROR" "Remote execution failed"

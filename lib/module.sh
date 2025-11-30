@@ -24,8 +24,8 @@ execute_module() {
     local force=${2:-"false"}
     log "INFO" "Executing module: $module"
     
-    if [ -f "modules/$module.sh" ]; then
-        source "modules/$module.sh"
+    if [ -f "$PROJECT_DIR/modules/$module.sh" ]; then
+        source "$PROJECT_DIR/modules/$module.sh"
         local need_install=true
         
         if [ "$force" != "true" ]; then

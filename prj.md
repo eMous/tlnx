@@ -46,7 +46,7 @@ This is an automated server configuration tool that helps users set up a new clo
 │   ├── codex.md         # Task-handling rules and history
 │   ├── prompt.md        # Codex agent prompt
 │   └── log.template     # Log-entry template
-├── main.sh              # Main configuration script
+├── tlnx                 # Main configuration script
 ├── lib/                 # Core library scripts
 │   ├── common.sh        # Shared functions
 │   ├── config.sh        # Configuration utilities
@@ -84,9 +84,9 @@ This is an automated server configuration tool that helps users set up a new clo
 
 3.3 **Execution flow**:
 1. The user clones the project from GitHub.
-2. Run `main.sh` with optional CLI arguments or environment variables.
+2. Run `./tlnx` (or `bash tlnx`) with optional CLI arguments or environment variables.
 3. The script loads the library files and logging configuration.
-4. Parse CLI options (`-h`, `--help`, `-l`, `--log-level`, `-t`, `--test`, `--modules`, `-d/--decrypt`, `-c/--encrypt`).
+4. Parse CLI options (`-h`, `--help`, `-l`, `--log-level`, `-t`, `--test`, `--modules`, `-d/--decrypt`, `-c/--encrypt`, `--set-http-proxy`).
 5. If `-d/--decrypt` is specified:
    - Decrypt `config/enc.conf.enc` into `config/enc.conf`.
    - Exit after decryption completes.
@@ -118,12 +118,12 @@ This is an automated server configuration tool that helps users set up a new clo
 9. Leave the project files on the remote machine after completion.
 
 3.5 **Help message flow**:
-1. The user runs `./main.sh -h` or `./main.sh --help`.
+1. The user runs `./tlnx -h` or `./tlnx --help`.
 2. The script calls `display_usage`.
 3. Show tool name and version.
 4. Detect remote mode using the `SSH_CLIENT_HOST` environment variable.
 5. Show the current execution mode and hostname.
-6. List usage instructions, options, and examples, including the new `-d/-c` flags and `--select-modules`, which lists modules by number and allows numeric selection (e.g., `1,3,4`).
+6. List usage instructions, options, and examples, including the `-d/-c` flags, `--set-http-proxy`, and `--select-modules`, which lists modules by number and allows numeric selection (e.g., `1,3,4`).
 7. When running remotely, show the client host information.
 
 3.6 **Location of Codex documentation artifacts**:
@@ -207,45 +207,48 @@ git clone https://github.com/user/tlnx.git
 cd tlnx
 
 # Run the default local configuration
-bash main.sh
+./tlnx
 
 # Run locally with encrypted config
-CONFIG_KEY=your-secret-key bash main.sh
+CONFIG_KEY=your-secret-key ./tlnx
 
 # Test mode (no side effects)
-bash main.sh -t
+./tlnx -t
 
 # Run with DEBUG log level
-bash main.sh -l DEBUG
+./tlnx -l DEBUG
 
 # Show help
-bash main.sh -h
+./tlnx -h
 
 # Remote execution (configure the target in config/default.conf first)
 # IS_EXECUTION_ENVIRONMENT=false
 # TARGET_HOST=your-server-ip
 # TARGET_USER=your-username
 # TARGET_PORT=22  # optional
-bash main.sh
+./tlnx
 
 # Remote execution for specific modules
-bash main.sh --modules docker,zsh
+./tlnx --modules docker,zsh
 
 # Use the -d flag to decrypt
-bash main.sh -d
+./tlnx -d
 
 # Use the -c flag to encrypt
-bash main.sh -c
+./tlnx -c
 
 # Decrypt using an env-var key
-CONFIG_KEY=your-secret-key bash main.sh -d
+CONFIG_KEY=your-secret-key ./tlnx -d
 
 # Encrypt using an env-var key
-CONFIG_KEY=your-secret-key bash main.sh -c
+CONFIG_KEY=your-secret-key ./tlnx -c
 
 # Run selected modules only
-bash main.sh --modules docker,zsh
+./tlnx --modules docker,zsh
 
 # Interactively choose modules from the displayed list
-bash main.sh --select-modules
+./tlnx --select-modules
+
+# Persist HTTP proxy settings and exit
+./tlnx --set-http-proxy http://proxy:port
 ```

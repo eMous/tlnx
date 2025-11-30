@@ -463,3 +463,31 @@ Option 2: make proxy persistence a shared utility and wire a `--set-http-proxy` 
 
 ## Lessons
 You prefer features to be reusable and surfaced through explicit CLI options rather than hidden in module internals; when you request a helper, expect it to be available both programmatically and via a dedicated flag.
+
+---
+id: demand-017
+date: 2025-11-30T14:29:05Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to reread this codex, refresh its log, and update `prj.md` so every usage example matches the current entrypoint (`tlnx`) and highlights the new `--set-http-proxy` path that persists proxy settings.
+
+## Options
+1. Leave the documentation stale, continuing to mention the deleted `main.sh` wrapper and omitting the proxy flag.
+2. Update both documents immediately so future runs and contributors see the correct invocation instructions and the new proxy helper.
+
+## Decision
+Option 2: revise the docs to reflect the `tlnx` entrypoint, add the proxy flag to the usage list, and log the demand here.
+
+## Result
+- Added this log entry summarizing the documentation alignment request.
+- Updated `prj.md` usage flows to call `./tlnx`, mention the proxy flag, and keep the help section accurate.
+- Ensured the examples show both direct module selection and the interactive picker with the current command name.
+
+## Lessons
+When scripts are renamed or flags are introduced, you expect the supporting docs and history to be synchronized immediately so future instructions remain trustworthy.

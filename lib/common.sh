@@ -3,10 +3,11 @@
 # Common helper functions
 
 # Ensure log directory exists
-mkdir -p logs
-
+mkdir -p "$PROJECT_DIR/logs"
 # Default log file
-LOG_FILE="logs/server_config.log"
+LOG_FILE="${PROJECT_DIR:+${PROJECT_DIR}/}logs/server_config.log"
+
+
 # Default log level
 LOG_LEVEL=${LOG_LEVEL:-"INFO"}
 
@@ -22,7 +23,6 @@ get_log_priority() {
             return
         fi
     done
-    echo 1  # default to INFO priority
 }
 
 # Log helper
@@ -33,8 +33,7 @@ log() {
     local formatted="[$timestamp] [$level] $message"
     
     # Always write to log file
-    echo "$formatted" >> "$LOG_FILE"
-    
+    echo "$formatted" >> $LOG_FILE
     # Emit to console when level meets threshold
     local current_priority=$(get_log_priority "$LOG_LEVEL")
     local message_priority=$(get_log_priority "$level")
@@ -92,32 +91,16 @@ set_http_proxy() {
         fi
     fi
 
-    local block_start="# >>> TLNX HTTP proxy >>>"
-    local block_end="# <<< TLNX HTTP proxy <<<"
-
-    if grep -Fq "$block_start" "$rc_file" && grep -Fq "$block_end" "$rc_file"; then
-        local tmp_file
-        tmp_file=$(mktemp) || {
-            log "ERROR" "Failed to create temporary file for proxy configuration"
-            return 1
-        }
-        awk -v start="$block_start" -v end="$block_end" '
-            $0 == start {skip=1; next}
-            $0 == end {skip=0; next}
-            skip == 0 {print}
-        ' "$rc_file" > "$tmp_file"
-        cat "$tmp_file" > "$rc_file"
-        rm -f "$tmp_file"
-    fi
-
-    cat <<EOF >> "$rc_file"
-$block_start
+    local proxy_block
+    proxy_block=$(cat <<EOF
 export http_proxy="$proxy_value"
 export https_proxy="$proxy_value"
 export HTTP_PROXY="$proxy_value"
 export HTTPS_PROXY="$proxy_value"
-$block_end
 EOF
+)
+    source "$PROJECT_DIR/lib/shell.sh"
+    append_shell_rc_block "$proxy_block" "$rc_file" || return 1
 
     export http_proxy="$proxy_value"
     export https_proxy="$proxy_value"

@@ -2,11 +2,20 @@
 
 # Automated server configuration tool - main entrypoint
 
-# Load library files
-source "lib/common.sh"
-source "lib/remote.sh"
-source "lib/config.sh"
-source "lib/module.sh"
+# Before log is defined(before log dir is determined), use echo for logging
+is_sourced() {
+  if [ -n "$ZSH_VERSION" ]; then 
+     case $ZSH_EVAL_CONTEXT in *:file:*) return 0;; esac
+  else  # Add additional POSIX-compatible shell names here, if needed.
+    case ${0##*/} in dash|-dash|bash|-bash|ksh|-ksh|sh|-sh) return 0;; esac
+  fi
+  return 1  # NOT sourced.
+}
+# Not allowed use by source
+is_sourced && {
+    echo "[ERROR]" "This script must be executed, not sourced. Exiting."
+    return 1
+}
 
 # Display usage information
 display_usage() {
@@ -22,7 +31,7 @@ display_usage() {
     fi
     echo ""
     echo "Usage:"
-    echo "  ./main.sh [options]"
+    echo "  ./tlnx [options]"
     echo ""
     echo "Options:"
     echo "  -h, --help           Show this help"
@@ -36,11 +45,11 @@ display_usage() {
     echo "  -c, --encrypt        Encrypt config/enc.conf into config/enc.conf.enc"
     echo ""
     echo "Examples:"
-    echo "  ./main.sh -l INFO"
-    echo "  ./main.sh --modules docker,zsh"
-    echo "  ./main.sh -d"
-    echo "  ./main.sh -c"
-    echo "  ./main.sh --set-http-proxy http://proxy:port"
+    echo "  ./tlnx -l INFO"
+    echo "  ./tlnx --modules docker,zsh"
+    echo "  ./tlnx -d"
+    echo "  ./tlnx -c"
+    echo "  ./tlnx --set-http-proxy http://proxy:port"
 }
 
 # Gather available module scripts from the modules directory
@@ -121,6 +130,16 @@ prompt_module_selection() {
 
 # Main function
 main() {
+    PROJECT_DIR=$(cd "$(dirname "$0")" && pwd)
+    echo "[INFO]" "Project directory set to $PROJECT_DIR"
+    source $PROJECT_DIR"/lib/common.sh"
+    source $PROJECT_DIR"/lib/shell.sh"
+    source $PROJECT_DIR"/lib/prerequisite.sh"
+    source $PROJECT_DIR"/lib/remote.sh"
+    source $PROJECT_DIR"/lib/config.sh"
+    source $PROJECT_DIR"/lib/module.sh"
+    source $PROJECT_DIR"/lib/version.sh"
+
     # Initialize defaults
     local LOG_LEVEL="INFO"
     local TEST_MODE="false"
@@ -133,6 +152,15 @@ main() {
     local i=1
     local FORCE_MODE="false"
     local SET_HTTP_PROXY_VALUE=""
+    _load_config || {
+        log "ERROR" "Failed to load configuration"
+        exit 1
+    }
+    _detect_prerequisites || {
+        log "ERROR" "Prerequisite detection failed"
+        return 1
+    }
+
     while [ $i -le $# ]; do
         local arg=${!i}
         if [ "$arg" = "-l" ] || [ "$arg" = "--log-level" ]; then
@@ -212,8 +240,6 @@ main() {
         exit 0
     fi
     
-    # Reload config after decrypt/encrypt
-    load_config
     
     if [ "$INTERACTIVE_SELECT" = "true" ]; then
         local -a AVAILABLE_MODULES
@@ -310,8 +336,6 @@ main() {
         remote_execution "$TARGET_HOST" "$TARGET_USER" "$TARGET_PORT"
         exit $?
     fi
-    
-    detect_distro
     
     # Determine which modules to run
     local MODULES_TO_EXECUTE=()

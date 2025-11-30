@@ -79,34 +79,82 @@ EOF
 _init_install() {
 
     log "INFO" "=== Starting init module ==="
-    init_user_check
+    init_prjdir
+    init_shell_rc_file
+    init_tlnx_in_path
     init_check_internet_access
-    exit 2
     init_enable_bbr
     init_update_aliyun_mirror
     
     log "INFO" "=== init module completed ==="
 }
 
-# Check user settings: aim to run as 'tom' which included in sudoers list in execution environment, move dir to tom's home
-init_user_check() {
-    log "INFO" "Checking user settings for execution environment"
-    log "DEBUG" "Checking who is running the script"
-    local CURRENT_USER
-    CURRENT_USER=$(whoami)
-    # if current user is in sudoers
-    if sudo -l -U "$CURRENT_USER" &>/dev/null; then
-        log "DEBUG" "Current user $CURRENT_USER has sudo privileges, continuing"
-    else
-        log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"
-        exit 1
+
+# Make sure the project directory is or will be in /opt/tlnx
+init_prjdir() {
+    log "INFO" "Checking project directory..."
+    if [ -z "$PROJECT_DIR" ]; then
+        log "ERROR" "PROJECT_DIR is not set. Cannot continue."
+        return 1
     fi
+    if [ "$PROJECT_DIR" = "/opt/tlnx" ]; then
+        log "INFO" "Project directory is correctly set to /opt/tlnx"
+        return 0
+    fi
+    # if /opt/tlnx exist and not empty
+    if [ -d "/opt/tlnx" ] && [ "$(ls -A /opt/tlnx)" ]; then
+        log "WARN" "/opt/tlnx already exists, clean the directory to continue"
+        sudo mkdir -p /opt/tlnx.bak
+        sudo mv /opt/tlnx /opt/tlnx.bak/"tlnx.bak."$(date +"%Y%m%d_%H%M%S")
+        log "INFO" "Backup of /opt/tlnx created at /opt/tlnx.bak/"
+        sudo mkdir -p /opt/tlnx
+    fi
+
+    log "INFO" "Installing project to /opt/tlnx"
+    sudo mkdir -p /opt/tlnx
+
+    # rsync  all stdout and stderr both output to log file and console
+    sudo rsync -r "$PROJECT_DIR"/* /opt/tlnx/ 2>&1 | tee -a "$LOG_FILE"
+    local rsync_status=${PIPESTATUS[0]}
+    if [ $rsync_status -ne 0 ]; then
+        log "ERROR" "Failed to rsync project files to /opt/tlnx"
+        return 1
+    fi
+    PROJECT_DIR="/opt/tlnx"
+    log "INFO" "Project directory set to /opt/tlnx"
+    return 0
+}
+
+# Check tlnx in bin: TODO : ADD /opt/tlnx to PATH in rc file
+init_tlnx_in_path() {
+    return 0
+    # log "INFO" "Checking /usr/local/bin is in PATH"
+    # if ! echo "$PATH" | grep -q "/usr/local/bin"; then
+    #     log "INFO" "/usr/local/bin not in PATH, adding it"
+    #     export PATH="/usr/local/bin:$PATH"
+    #     # add it to rc files 
+    #     for rc_file in "$HOME/.bashrc" "$HOME/.zshrc"; do
+    #         if [ -f "$rc_file" ]; then
+    #             if ! grep -q 'export PATH="/usr/local/bin:$PATH"' "$rc_file"; then
+    #                 echo 'export PATH="/usr/local/bin:$PATH"' >> "$rc_file"
+    #                 log "INFO" "Added /usr/local/bin to PATH in $rc_file"
+    #             fi
+    #         fi
+    #     done
+    # else
+    #     log "INFO" "/usr/local/bin already in PATH"
+    # fi
+    # log "INFO" "Linking tlnx command to /usr/local/binx"
+    # rm -f /usr/local/bin/tlnx
+    # sudo ln -s "$PROJECT_DIR/tlnx" /usr/local/bin/tlnx
 }
 
 # Internet Access Check
 init_check_internet_access() {
     log "INFO" "Checking internet access"
     # Checking http(s) proxy, if http proxy is empty
+    
+    source_rcfile 
     if [ -z "$http_proxy" ]; then
         log "WARN" "No HTTP proxy detected, performing direct internet access check"
     else
