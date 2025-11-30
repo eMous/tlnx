@@ -229,3 +229,11 @@ init_enable_bbr() {
     sudo sysctl -p /etc/sysctl.d/99-bbr.conf
     log "INFO" "BBR congestion control enabled"
 }
+
+# TODO HOSTNAME setup
+# TODO Timezone setup
+# TODO NTP setup
+# TODO ssh keys
+
+
+# TODO BASH BASIC SETUP
