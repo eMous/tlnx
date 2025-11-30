@@ -1,56 +1,53 @@
 _detect_prerequisites() {
-    check_user || {
-        log "ERROR" "User check failed. Exiting."
-        return 1
-    }
-    check_distro || {
-        log "ERROR" "Unsupported operating system distribution. Exiting."
-        return 1
-    }
+	check_user || {
+		log "ERROR" "User check failed. Exiting."
+		return 1
+	}
+	check_distro || {
+		log "ERROR" "Unsupported operating system distribution. Exiting."
+		return 1
+	}
 }
-
 
 # Detect operating system distribution
 check_distro() {
-    log "INFO" "Detecting operating system distribution..."
-    
-    # macOS
-    if [ "$(uname)" = "Darwin" ]; then
-        DISTRO_NAME="macos"
-        DISTRO_VERSION=$(sw_vers -productVersion)
-        log "INFO" "Detected distro: $DISTRO_NAME $DISTRO_VERSION"
-    # Linux
-    elif [ -f /etc/os-release ]; then
-        . /etc/os-release
-        DISTRO_NAME=$ID
-        DISTRO_VERSION=$VERSION_ID
-        log "INFO" "Detected distro: $DISTRO_NAME $DISTRO_VERSION"
-    else
-        log "WARNING" "Unable to detect distro; using defaults"
-        DISTRO_NAME="unknown"
-        DISTRO_VERSION="unknown"
-    fi
+	log "INFO" "Detecting operating system distribution..."
 
-    # if this is not Ubuntu 22 or 24, return 1
-    if [ "$DISTRO_NAME" != "ubuntu" ] || { [[ "$DISTRO_VERSION" != 22.* ]] && [[ "$DISTRO_VERSION" != 24.* ]]; }; then
-        log "WARNING" "Unsupported distro $DISTRO_NAME $DISTRO_VERSION"
-        return 1
-    fi
+	# macOS
+	if [ "$(uname)" = "Darwin" ]; then
+		DISTRO_NAME="macos"
+		DISTRO_VERSION=$(sw_vers -productVersion)
+		log "INFO" "Detected distro: $DISTRO_NAME $DISTRO_VERSION"
+	# Linux
+	elif [ -f /etc/os-release ]; then
+		. /etc/os-release
+		DISTRO_NAME=$ID
+		DISTRO_VERSION=$VERSION_ID
+		log "INFO" "Detected distro: $DISTRO_NAME $DISTRO_VERSION"
+	else
+		log "WARNING" "Unable to detect distro; using defaults"
+		DISTRO_NAME="unknown"
+		DISTRO_VERSION="unknown"
+	fi
+
+	# if this is not Ubuntu 22 or 24, return 1
+	if [ "$DISTRO_NAME" != "ubuntu" ] || { [[ "$DISTRO_VERSION" != 22.* ]] && [[ "$DISTRO_VERSION" != 24.* ]]; }; then
+		log "WARNING" "Unsupported distro $DISTRO_NAME $DISTRO_VERSION"
+		return 1
+	fi
 }
-
-
 
 # Check user has sudo privileges
 check_user() {
-    log "INFO" "Checking user settings for execution environment"
-    log "DEBUG" "Checking who is running the script"
-    local CURRENT_USER
-    CURRENT_USER=$(whoami)
-    # if current user is in sudoers
-    if sudo -l -U "$CURRENT_USER" &>/dev/null; then
-        log "DEBUG" "Current user $CURRENT_USER has sudo privileges, continuing"
-    else
-        log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"
-        return 1
-    fi
+	log "INFO" "Checking user settings for execution environment"
+	log "DEBUG" "Checking who is running the script"
+	local CURRENT_USER
+	CURRENT_USER=$(whoami)
+	# if current user is in sudoers
+	if sudo -l -U "$CURRENT_USER" &>/dev/null; then
+		log "DEBUG" "Current user $CURRENT_USER has sudo privileges, continuing"
+	else
+		log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"
+		return 1
+	fi
 }
