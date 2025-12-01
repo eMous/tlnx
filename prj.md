@@ -93,7 +93,7 @@ This is an automated server configuration tool that helps users set up a new clo
 6. If `-c/--encrypt` is specified:
    - Encrypt `config/enc.conf` into `config/enc.conf.enc`.
    - Exit after encryption completes.
-7. If running in remote mode (`IS_EXECUTION_ENVIRONMENT=false`):
+7. If running in remote mode (`REMOTE_RUN=false`):
    - Compress the project and transfer it to the target host via `rsync`.
    - Extract it on the target and run the script there.
    - Pass `SSH_CLIENT_HOST` to mark the remote session.
@@ -107,12 +107,12 @@ This is an automated server configuration tool that helps users set up a new clo
 10. Display the result and help information.
 
 3.4 **Remote execution flow**:
-1. The local script sees `IS_EXECUTION_ENVIRONMENT=false`.
+1. The local script sees `REMOTE_RUN=false`.
 2. Collect target host information (user, hostname, port).
 3. Archive the project directory into a `.tar.gz` file.
 4. Use `rsync` to copy the archive to the target's temporary directory.
 5. Extract the archive to the final target directory.
-6. Update the remote config to set `IS_EXECUTION_ENVIRONMENT=true`.
+6. Update the remote config to set `REMOTE_RUN=true`.
 7. Read the local hostname and pass it via `SSH_CLIENT_HOST`.
 8. Use SSH to connect to the target and run the script.
 9. Leave the project files on the remote machine after completion.
@@ -222,7 +222,7 @@ CONFIG_KEY=your-secret-key ./tlnx
 ./tlnx -h
 
 # Remote execution (configure the target in config/default.conf first)
-# IS_EXECUTION_ENVIRONMENT=false
+# REMOTE_RUN=false
 # TARGET_HOST=your-server-ip
 # TARGET_USER=your-username
 # TARGET_PORT=22  # optional

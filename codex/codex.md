@@ -187,11 +187,11 @@ Executed option 2 to capture real behavior.
 
 ## Result
 - The script failed while enumerating modules because the current macOS bash (v3.2) does not support the `mapfile` builtin; logs showed `mapfile: command not found`.
-- Because the tool defaulted to remote mode afterward, it attempted to sync the project to `root@bj.tomt.online` and opened a remote session (fortunately it only displayed the help text, but it did connect). This highlights that `IS_EXECUTION_ENVIRONMENT=false` triggers remote execution unless overridden.
+- Because the tool defaulted to remote mode afterward, it attempted to sync the project to `root@bj.tomt.online` and opened a remote session (fortunately it only displayed the help text, but it did connect). This highlights that `REMOTE_RUN=false` triggers remote execution unless overridden.
 
 ## Lessons
 - Interactive selection currently depends on bash features not available in macOS’s default shell; we should replace `mapfile` or require bash >=4.
-- When running tests locally, explicitly set `IS_EXECUTION_ENVIRONMENT=true` (or provide dummy hosts) to avoid unintended remote transfers.
+- When running tests locally, explicitly set `REMOTE_RUN=true` (or provide dummy hosts) to avoid unintended remote transfers.
 
 ---
 id: demand-007
@@ -515,7 +515,7 @@ Option 2: work from a clean clone so the upstream history stays intact and only 
 ## Result
 - Cloned `emous/tlnx` into `/home/tom/tlnx/repo` to regain the `.git` metadata and remote configuration.
 - Copied the modified files (`modules/init.sh`, `config/default.conf`, `config/default.conf.template`, `lib/prerequisite.sh`, `lib/shell.sh`) into the clean clone so their diffs are tracked.
-- Attempted `./tlnx -t` (with `IS_EXECUTION_ENVIRONMENT=true`) to sanity-check the changes; the run halted early because the current user lacks sudo privileges, so no functional regression testing was completed.
+- Attempted `./tlnx -t` (with `REMOTE_RUN=true`) to sanity-check the changes; the run halted early because the current user lacks sudo privileges, so no functional regression testing was completed.
 
 ## Lessons
 When the repository metadata is lost, recloning upstream and transplanting the edited files is safer than trying to rebuild `.git` manually; it preserves history and makes it straightforward to stage, review, and commit the outstanding work.

@@ -156,11 +156,7 @@ main() {
         log "ERROR" "Failed to load configuration"
         exit 1
     }
-    _detect_prerequisites || {
-        log "ERROR" "Prerequisite detection failed"
-        return 1
-    }
-
+    
     while [ $i -le $# ]; do
         local arg=${!i}
         if [ "$arg" = "-l" ] || [ "$arg" = "--log-level" ]; then
@@ -240,6 +236,23 @@ main() {
         exit 0
     fi
     
+	# Environment detection - determine execution context
+	if [ "${REMOTE_RUN:-false}" = "true" ]; then
+		# Not the execution environment; transfer to target host
+		if [ -z "$REMOTE_ENC_HOST" ] || [ -z "$REMOTE_ENC_USER" ]; then
+			log "ERROR" "REMOTE_ENC_HOST and REMOTE_ENC_USER must be set when REMOTE_RUN=true"
+			exit 1
+		fi
+		# Start remote transfer immediately
+		log "INFO" "REMOTE_RUN=true; transferring to remote host"
+		remote_execution "$REMOTE_ENC_HOST" "$REMOTE_ENC_USER" "$REMOTE_ENC_PORT" "$REMOTE_ENC_PASSWORD"
+		exit $?
+	fi
+    
+    _detect_prerequisites || {
+        log "ERROR" "Prerequisite detection failed"
+        return 1
+    }
     
     if [ "$INTERACTIVE_SELECT" = "true" ]; then
         local -a AVAILABLE_MODULES
@@ -324,18 +337,6 @@ main() {
         exit 0
     fi
     
-    # Environment detection - determine execution context
-    if [ "${IS_EXECUTION_ENVIRONMENT:-false}" != "true" ]; then
-        # Not the execution environment; transfer to target host
-        if [ -z "$TARGET_HOST" ] || [ -z "$TARGET_USER" ]; then
-            log "ERROR" "TARGET_HOST and TARGET_USER must be set when not running in the execution environment"
-            exit 1
-        fi
-        # Start remote transfer immediately
-        log "INFO" "Detected non-execution environment; transferring to remote host"
-        remote_execution "$TARGET_HOST" "$TARGET_USER" "$TARGET_PORT"
-        exit $?
-    fi
     
     # Determine which modules to run
     local MODULES_TO_EXECUTE=()

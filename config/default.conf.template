@@ -11,16 +11,16 @@ LOG_LEVEL="INFO"
 CONFIG_MODULES=()
 # Default env var that provides the decryption key
 CONFIG_DEFAULT_KEY_ENV="CONFIG_KEY"
-# Execution-environment toggle
-IS_EXECUTION_ENVIRONMENT="false"
+# Remote execution toggle
+REMOTE_RUN="false"
 # Encrypted target host
-TARGET_ENC_HOST=""
+REMOTE_ENC_HOST=""
 # Encrypted target username
-TARGET_ENC_USER=""
+REMOTE_ENC_USER=""
 # Encrypted target SSH port
-TARGET_ENC_PORT=""
+REMOTE_ENC_PORT=""
 # Encrypted target password
-TARGET_ENC_PASSWORD=""
+REMOTE_ENC_PASSWORD=""
 
 # === Clashctl configuration ===
 # Clashctl binary download URL

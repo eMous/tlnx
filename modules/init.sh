@@ -13,6 +13,7 @@ _init_install() {
 	init_update_aliyun_mirror
 	init_timezone
 	init_timesyncd
+	init_basic_info_grab
 	log "INFO" "=== init module completed ==="
 	exit 
 }
@@ -280,8 +281,14 @@ EOF
 
 # TODO BASH BASIC SETUP
 
-init_hostname() {
-	# If there is a markfile in TODO
-	hostnamectl set-hostname "tlnx-server"
+init_basic_info_grab() {
+	local wanip;
+	# Get WAN IP by Curl
+	wanip=$(curl -s https://api.ip.sb/ip)
+	if [ -z "$wanip" ]; then
+		log "ERROR" "Failed to retrieve WAN IP address"
+		return 1
+	fi
+	log "INFO" "Retrieved WAN IP address: $wanip"
 	return 0
 }

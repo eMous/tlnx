@@ -4,16 +4,20 @@
 
 # Transfer the project to the remote host and execute it
 remote_execution() {
+	check_binaries || {
+		log "ERROR" "Failed to Acquire necessary binaries to execute remote commands."
+		exit 1
+	}
 	local target_host=$1
 	local target_user=$2
-	local target_port=${3:-22}
-	local target_password="${4:-$TARGET_PASSWORD}"
+	local target_port=$3
+	local target_password="$4"
 
 	log "INFO" "Transferring project to remote host: $target_user@$target_host:$target_port"
 
-	# Base SSH/rsync options
-	local ssh_base=(-p $target_port)
-	local rsync_base=(-av --progress -e "ssh -p $target_port")
+	# Base SSH/rsync options (skip host key prompts for automation)
+	local ssh_base=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p "$target_port")
+	local rsync_base=(-av --progress -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $target_port")
 
 	# Full command arrays
 	local ssh_cmd=(ssh "${ssh_base[@]}")
@@ -27,24 +31,39 @@ remote_execution() {
 
 	# 1. Remote project directory
 	local timestamp=$(date +%Y%m%d%H%M%S)
-	local remote_project_dir="/opt/tlnx/tlnx-${timestamp}"
+	local remote_project_dir="/opt/tlnx"
 	local remote_temp_dir="/tmp"
-	local local_tar_file="$(pwd)/tlnx-${timestamp}.tar.gz" # archive within project directory
+	local current_dir=$(pwd)
+	local local_tar_file="/tmp/tlnx-${timestamp}.tar.gz" # archive within project directory
 	log "INFO" "Creating project directory on remote host: $remote_project_dir"
 
 	# Create directory and capture output
-	"${ssh_cmd[@]}" "$target_user@$target_host" "mkdir -p $remote_project_dir" >>"$LOG_FILE" 2>&1
+	# read cmds by heredoc
+	local cmds_to_run=$(
+		cat <<EOF
+mkdir -p $remote_project_dir
+# if there is not empty in remote_project_dir, back it up
+if [ -d "$remote_project_dir" ] && [ "\$(ls -A $remote_project_dir)" ]; then
+	mkdir -p /opt/tlnx.bak	
+	mv $remote_project_dir /opt/tlnx.bak/"tlnx.bak.${timestamp}"
+	mkdir -p $remote_project_dir
+fi
+EOF
+	)
 
-	if [ $? -ne 0 ]; then
+	"${ssh_cmd[@]}" "$target_user@$target_host" "$cmds_to_run"  2>&1 | tee -a "$LOG_FILE"
+
+	if [ ${PIPESTATUS[0]} -ne 0 ]; then
 		log "ERROR" "Unable to create remote project directory"
 		exit 1
 	fi
 
 	# 2. Compress local folder
 	log "INFO" "Archiving project into $local_tar_file"
-	tar -czf "$local_tar_file" --exclude='*.tar.gz' --exclude='.log' --exclude='.vscode' "./" >>"$LOG_FILE" 2>&1
-
-	if [ $? -ne 0 ]; then
+	cd "$PROJECT_DIR" 
+	tar -czf "$local_tar_file" --exclude='*.tar.gz' --exclude='.log' --exclude='.vscode' . 2>&1 | tee -a "$LOG_FILE"
+	cd "$current_dir"
+	if [ ${PIPESTATUS[0]} -ne 0 ]; then
 		log "ERROR" "Unable to archive local project"
 		exit 1
 	fi
@@ -81,8 +100,8 @@ remote_execution() {
 	fi
 
 	# 6. Flip execution flag on remote config
-	log "INFO" "Updating remote config to set IS_EXECUTION_ENVIRONMENT=true"
-	"${ssh_cmd[@]}" "$target_user@$target_host" "sed -i 's/^IS_EXECUTION_ENVIRONMENT=.*/IS_EXECUTION_ENVIRONMENT=\"true\"/' $remote_project_dir/config/default.conf" >>"$LOG_FILE" 2>&1
+	log "INFO" "Updating remote config to set REMOTE_RUN=false"
+	"${ssh_cmd[@]}" "$target_user@$target_host" "sed -i 's/^REMOTE_RUN=.*/REMOTE_RUN=\"false\"/' $remote_project_dir/config/default.conf" >>"$LOG_FILE" 2>&1
 
 	# 7. Connect and execute remotely while passing origin host info
 	local client_hostname=$(hostname)
@@ -96,4 +115,27 @@ remote_execution() {
 
 	log "INFO" "Remote execution finished"
 	exit 0
+}
+
+check_binaries() {
+	# Check for ssh
+	if ! command -v ssh >/dev/null 2>&1; then
+		log "ERROR" "ssh command not found. Please install OpenSSH client."
+		exit 1
+	fi
+
+	# Check for rsync
+	if ! command -v rsync >/dev/null 2>&1; then
+		log "ERROR" "rsync command not found. Please install rsync."
+		exit 1
+	fi
+
+	# Check for sshpass if password is to be used
+	if [ -n "$TARGET_PASSWORD" ] && [ "$TARGET_PASSWORD" != "!!!!!!!ENCRYPTED!!!!!!!" ]; then
+		if ! command -v sshpass >/dev/null 2>&1; then
+			log "ERROR" "sshpass command not found. Please install sshpass to use password authentication."
+			exit 1
+		fi
+	fi
+	return 0
 }
