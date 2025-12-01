@@ -1,13 +1,26 @@
 #!/bin/bash
 
 # init module - system bootstrap configuration
+# Module entrypoint - init
+_init_install() {
 
+	log "INFO" "=== Starting init module ==="
+	init_shell_rc_file
+	init_prjdir
+	init_tlnx_in_path
+	init_check_internet_access
+	init_enable_bbr
+	init_update_aliyun_mirror
+	init_timezone
+	init_timesyncd
+	log "INFO" "=== init module completed ==="
+	exit 
+}
 # Always run init (return 1 so the installer executes)
 _init_check_installed() {
 	log "DEBUG" "init module always runs to prepare the system"
 	return 1
 }
-
 # Update Alibaba Cloud mirrors
 init_update_aliyun_mirror() {
 	log "INFO" "Updating Alibaba Cloud package mirrors"
@@ -75,20 +88,6 @@ EOF
 	log "INFO" "Finished updating Alibaba Cloud mirrors"
 }
 
-# Module entrypoint - init
-_init_install() {
-
-	log "INFO" "=== Starting init module ==="
-	init_prjdir
-	init_shell_rc_file
-	init_tlnx_in_path
-	init_check_internet_access
-	init_enable_bbr
-	init_update_aliyun_mirror
-
-	log "INFO" "=== init module completed ==="
-}
-
 # Make sure the project directory is or will be in /opt/tlnx
 init_prjdir() {
 	log "INFO" "Checking project directory..."
@@ -113,39 +112,36 @@ init_prjdir() {
 	sudo mkdir -p /opt/tlnx
 
 	# rsync  all stdout and stderr both output to log file and console
-	sudo rsync -r "$PROJECT_DIR"/* /opt/tlnx/ 2>&1 | tee -a "$LOG_FILE"
+	sudo rsync -ar "$PROJECT_DIR"/* /opt/tlnx/ 2>&1 | tee -a "$LOG_FILE"
 	local rsync_status=${PIPESTATUS[0]}
 	if [ $rsync_status -ne 0 ]; then
 		log "ERROR" "Failed to rsync project files to /opt/tlnx"
 		return 1
 	fi
+	#rm -rf "$PROJECT_DIR"
+
+	# LOG_FILE update to: in original LOG_FILE, the $PROJECT_DIR substituted to /opt/tlnx
+	LOG_FILE="${LOG_FILE//$PROJECT_DIR/\/opt\/tlnx}"
+	log "INFO" "Log file path updated to $LOG_FILE"
 	PROJECT_DIR="/opt/tlnx"
 	log "INFO" "Project directory set to /opt/tlnx"
 	return 0
 }
 
-# Check tlnx in bin: TODO : ADD /opt/tlnx to PATH in rc file
+# Check tlnx in bin: Add /opt/tlnx to PATH in rc file
 init_tlnx_in_path() {
+	# Check if /opt/tlnx is in PATH
+	if echo "$PATH" | grep -q "$PROJECT_DIR"; then
+		log "INFO" "Project directory $PROJECT_DIR is already in PATH"
+		return 0
+	else
+		log "INFO" "Adding project directory $PROJECT_DIR to PATH"
+		export PATH="$PROJECT_DIR:$PATH"
+		# add it to rc files
+		append_shell_rc_block "export PATH=\"$PROJECT_DIR:\$PATH\"" $RC_FILE
+		log "INFO" "Current PATH: $PATH"
+	fi
 	return 0
-	# log "INFO" "Checking /usr/local/bin is in PATH"
-	# if ! echo "$PATH" | grep -q "/usr/local/bin"; then
-	#     log "INFO" "/usr/local/bin not in PATH, adding it"
-	#     export PATH="/usr/local/bin:$PATH"
-	#     # add it to rc files
-	#     for rc_file in "$HOME/.bashrc" "$HOME/.zshrc"; do
-	#         if [ -f "$rc_file" ]; then
-	#             if ! grep -q 'export PATH="/usr/local/bin:$PATH"' "$rc_file"; then
-	#                 echo 'export PATH="/usr/local/bin:$PATH"' >> "$rc_file"
-	#                 log "INFO" "Added /usr/local/bin to PATH in $rc_file"
-	#             fi
-	#         fi
-	#     done
-	# else
-	#     log "INFO" "/usr/local/bin already in PATH"
-	# fi
-	# log "INFO" "Linking tlnx command to /usr/local/binx"
-	# rm -f /usr/local/bin/tlnx
-	# sudo ln -s "$PROJECT_DIR/tlnx" /usr/local/bin/tlnx
 }
 
 # Internet Access Check
@@ -233,9 +229,53 @@ init_enable_bbr() {
 	log "INFO" "BBR congestion control enabled"
 }
 
+init_timezone() {
+	# if current timezone is not Asia/Shanghai, set it
+	local CURRENT_TZ
+	CURRENT_TZ=$(timedatectl | grep "Time zone" | awk '{print $3}')
+	if [ "$CURRENT_TZ" = "Asia/Shanghai" ]; then
+		log "INFO" "Timezone is already set to Asia/Shanghai"
+		return 0
+	fi
+	log "INFO" "Setting system timezone to Asia/Shanghai"
+	sudo timedatectl set-timezone Asia/Shanghai
+	log "INFO" "System timezone set to $(timedatectl | grep 'Time zone')"
+}
+init_timesyncd() {
+	# Check if systemd-timesyncd is installed
+	if ! command -v  systemd-timesyncd >/dev/null 2>&1; then
+		log "INFO" "timesyncd is not installed, installing..."
+		sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
+		sudo apt-get install -y  systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+		local install_status=${PIPESTATUS[0]}
+		if [ $install_status -ne 0 ]; then
+			log "ERROR" "Failed to install systemd-timesyncd"
+			return 1
+		fi
+		log "INFO" "systemd-timesyncd installed successfully"
+	else
+		log "INFO" "systemd-timesyncd is already installed"
+	fi
+
+	# configure ntp servers: ntp.aliyun.com ntp1.aliyun.com ntp2.aliyun.com
+	sudo tee /etc/systemd/timesyncd.conf >/dev/null <<EOF
+[Time]
+NTP=ntp.aliyun.com ntp.hust.edu.cn
+FallbackNTP=ntp1.aliyun.com ubuntu.pool.ntp.org
+EOF
+	sudo systemctl restart systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+	local restart_status=${PIPESTATUS[0]}
+	if [ $restart_status -ne 0 ]; then
+		log "ERROR" "Failed to restart systemd-timesyncd"
+		return 1
+	fi
+	sudo systemctl enable systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+	log "INFO" "systemd-timesyncd configured with Aliyun NTP servers"
+	log "INFO" "Current system time: $(date)"
+	log "INFO" "Current clock synchronization status: $(timedatectl status | grep 'System clock synchronized' | awk '{print $4}')"
+	return 0
+}
 # TODO HOSTNAME setup
-# TODO Timezone setup
-# TODO NTP setup
 # TODO ssh keys
 
 # TODO BASH BASIC SETUP

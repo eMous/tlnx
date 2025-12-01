@@ -491,3 +491,31 @@ Option 2: revise the docs to reflect the `tlnx` entrypoint, add the proxy flag t
 
 ## Lessons
 When scripts are renamed or flags are introduced, you expect the supporting docs and history to be synchronized immediately so future instructions remain trustworthy.
+
+---
+id: demand-018
+date: 2025-12-01T00:45:00Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You accidentally removed the original `.git` directory, leaving a working tree with untracked changes and no history. You asked me to restore the repository state so those edits can be committed and pushed upstream.
+
+## Options
+1. Reinitialize Git inside the modified working tree and try to reconstruct the remote history by hand, risking mismatches or missing files.
+2. Clone a fresh copy of `emous/tlnx`, copy the modified files from the working tree into the clean repo, and use the restored Git metadata to review and commit the changes.
+
+## Decision
+Option 2: work from a clean clone so the upstream history stays intact and only the intended file changes are staged.
+
+## Result
+- Cloned `emous/tlnx` into `/home/tom/tlnx/repo` to regain the `.git` metadata and remote configuration.
+- Copied the modified files (`modules/init.sh`, `config/default.conf`, `config/default.conf.template`, `lib/prerequisite.sh`, `lib/shell.sh`) into the clean clone so their diffs are tracked.
+- Attempted `./tlnx -t` (with `IS_EXECUTION_ENVIRONMENT=true`) to sanity-check the changes; the run halted early because the current user lacks sudo privileges, so no functional regression testing was completed.
+
+## Lessons
+When the repository metadata is lost, recloning upstream and transplanting the edited files is safer than trying to rebuild `.git` manually; it preserves history and makes it straightforward to stage, review, and commit the outstanding work.

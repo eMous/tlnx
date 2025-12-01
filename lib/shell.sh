@@ -162,6 +162,7 @@ init_shell_rc_file() {
 
 	if grep -Fq "$block_start" "$rc_file"; then
 		log "DEBUG" "TLNX shell block already present in $rc_file"
+		source_rcfile
 		return 0
 	fi
 

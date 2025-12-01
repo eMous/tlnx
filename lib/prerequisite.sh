@@ -51,3 +51,20 @@ check_user() {
 		return 1
 	fi
 }
+
+check_rcfile() {
+	log "INFO" "Checking for existing RC file configurations"
+	# considering zsh and bash only for now
+	local SHELL_NAME
+	SHELL_NAME=$(basename "$SHELL")
+	local RC_FILE=""
+	if [ "$SHELL_NAME" = "zsh" ]; then
+		RC_FILE="$HOME/.zshrc"
+	elif [ "$SHELL_NAME" = "bash" ]; then
+		RC_FILE="$HOME/.bashrc"
+	else
+		log "WARN" "Unsupported shell $SHELL_NAME, skipping RC file check"
+		return 1
+	fi
+	
+}
