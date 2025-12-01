@@ -86,7 +86,7 @@ This is an automated server configuration tool that helps users set up a new clo
 1. The user clones the project from GitHub.
 2. Run `./tlnx` (or `bash tlnx`) with optional CLI arguments or environment variables.
 3. The script loads the library files and logging configuration.
-4. Parse CLI options (`-h`, `--help`, `-l`, `--log-level`, `-t`, `--test`, `--modules`, `-d/--decrypt`, `-c/--encrypt`, `--set-http-proxy`).
+4. Parse CLI options (`-h/--help`, `-l/--log-level`, `-t/--test`, `-f/--force`, `--modules`, `--select-modules`, `-e VAR=value`, `-d/--decrypt`, `-c/--encrypt`, `--set-http-proxy`).
 5. If `-d/--decrypt` is specified:
    - Decrypt `config/enc.conf.enc` into `config/enc.conf`.
    - Exit after decryption completes.
@@ -104,6 +104,7 @@ This is an automated server configuration tool that helps users set up a new clo
    - Load the default configuration.
    - When `CONFIG_KEY` is available, decrypt and load the encrypted config.
    - When the `--select-modules` flag is used, list every available module script with numbers and prompt the user to choose modules by their indices (e.g., `1,3`).
+   - When `-f/--force` is set, skip module "already installed" checks so install hooks rerun even if a module reports success previously.
    - Execute the selected modules in order.
 11. Generate configuration logs.
 12. Display the result and help information.
@@ -125,7 +126,7 @@ This is an automated server configuration tool that helps users set up a new clo
 3. Show tool name and version.
 4. Detect remote mode using the `SSH_CLIENT_HOST` environment variable.
 5. Show the current execution mode and hostname.
-6. List usage instructions, options, and examples, including the `-d/-c` flags, `--set-http-proxy`, and `--select-modules`, which lists modules by number and allows numeric selection (e.g., `1,3,4`).
+6. List usage instructions, options, and examples, including `-f/--force`, `-e VAR=value`, the `-d/-c` flags, `--set-http-proxy`, and `--select-modules`, which lists modules by number and allows numeric selection (e.g., `1,3,4`).
 7. When running remotely, show the client host information.
 
 3.6 **Location of Codex documentation artifacts**:
@@ -257,6 +258,9 @@ CONFIG_KEY=your-secret-key ./tlnx -c
 
 # Interactively choose modules from the displayed list
 ./tlnx --select-modules
+
+# Force re-running the docker module even if it reports as installed
+./tlnx -f --modules docker
 
 # Persist HTTP proxy settings and exit
 ./tlnx --set-http-proxy http://proxy:port

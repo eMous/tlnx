@@ -625,3 +625,31 @@ Option 2: establish `RC_FILE` when the library loads and refactor the helpers to
 
 ## Lessons
 Resolving shared state once reduces duplication and ensures every helper touches the same RC file, which aligns with your preference for deterministic behavior.
+
+---
+id: demand-023
+date: 2025-12-01T14:39:38Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to refresh `prj.md` and `codex.md` so the docs reflect the current CLI surface, especially the force flag that re-runs modules even when their checks say they are already installed.
+
+## Options
+1. Leave the documents untouched, even though the `-f/--force` switch is now live in the entrypoint.
+2. Update `prj.md` with the new option details and record this demand in the codex history.
+
+## Decision
+Option 2: keep the documentation synchronized with the code and note the change here.
+
+## Result
+- Added `-f/--force` (plus the existing `-e VAR=value` overrides) to the CLI option list, help flow description, and usage examples inside `prj.md`.
+- Documented how the force flag skips the "already installed" checks so modules always run when requested.
+- Logged this demand as entry `demand-023` to preserve the rationale.
+
+## Lessons
+Whenever a new CLI switch ships, you expect `prj.md` and the codex log to update immediately so future runs have correct instructions and traceability.
