@@ -48,7 +48,7 @@ check_user() {
 	local CURRENT_USER
 	CURRENT_USER=$(whoami)
 	# if current user is in sudoers
-	if sudo -l -U "$CURRENT_USER" &>/dev/null; then
+	if sudo -l -U "$CURRENT_USER" 2>&1 | tee -a "$LOG_FILE"; then
 		log "DEBUG" "Current user $CURRENT_USER has sudo privileges, continuing"
 	else
 		log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"

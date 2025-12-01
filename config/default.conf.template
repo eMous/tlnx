@@ -21,6 +21,8 @@ REMOTE_ENC_USER=""
 REMOTE_ENC_PORT=""
 # Encrypted target password
 REMOTE_ENC_PASSWORD=""
+# Optional local sudo password used to auto-answer sudo prompts
+LOCAL_USER_PASSWD=""
 
 # === Clashctl configuration ===
 # Clashctl binary download URL

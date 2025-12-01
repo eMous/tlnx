@@ -93,18 +93,20 @@ This is an automated server configuration tool that helps users set up a new clo
 6. If `-c/--encrypt` is specified:
    - Encrypt `config/enc.conf` into `config/enc.conf.enc`.
    - Exit after encryption completes.
-7. If running in remote mode (`REMOTE_RUN=false`):
+7. Apply any CLI overrides passed via `-e VAR=value` after both configs load so the user can force values without editing files.
+8. When a sudo command is required, try `TLNX_PASSWD` first, then `LOCAL_USER_PASSWD`, then `REMOTE_ENC_PASSWORD`; cache whichever password works in `TLNX_PASSWD` before falling back to an interactive prompt.
+9. If running in remote mode (`REMOTE_RUN=false`):
    - Compress the project and transfer it to the target host via `rsync`.
    - Extract it on the target and run the script there.
    - Pass `SSH_CLIENT_HOST` to mark the remote session.
-8. If running locally:
+10. If running locally:
    - Detect the current OS (Linux or macOS).
    - Load the default configuration.
    - When `CONFIG_KEY` is available, decrypt and load the encrypted config.
    - When the `--select-modules` flag is used, list every available module script with numbers and prompt the user to choose modules by their indices (e.g., `1,3`).
    - Execute the selected modules in order.
-9. Generate configuration logs.
-10. Display the result and help information.
+11. Generate configuration logs.
+12. Display the result and help information.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.
@@ -230,6 +232,13 @@ CONFIG_KEY=your-secret-key ./tlnx
 
 # Remote execution for specific modules
 ./tlnx --modules docker,zsh
+
+# Override configuration values at runtime (applied after configs load)
+./tlnx -e REMOTE_RUN=true -e LOG_LEVEL=DEBUG
+# Repeat `-e` flags to override multiple values; overrides are evaluated left-to-right so later flags win when they target the same variable.
+
+# Provide the sudo password via config/`-e` to avoid interactive prompts
+./tlnx -e LOCAL_USER_PASSWD='your-password'
 
 # Use the -d flag to decrypt
 ./tlnx -d

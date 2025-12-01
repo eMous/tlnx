@@ -36,11 +36,12 @@ display_usage() {
     echo "Options:"
     echo "  -h, --help           Show this help"
     echo "  -l, --log-level LEVEL  Set log level (DEBUG, INFO, WARN, ERROR)"
-    echo "  -t, --test           Run in test mode"
-    echo "  -f, --force          Force installation even if a module reports itself as installed"
-    echo "  --modules MODULES    Comma-separated module list to run"
-    echo "  --select-modules     Show available module scripts and choose by number"
-    echo "  --set-http-proxy URL Persist HTTP/HTTPS proxy settings and exit"
+	echo "  -t, --test           Run in test mode"
+	echo "  -f, --force          Force installation even if a module reports itself as installed"
+	echo "  --modules MODULES    Comma-separated module list to run"
+	echo "  --select-modules     Show available module scripts and choose by number"
+	echo "  -e VAR=VALUE         Override configuration variable after configs load (repeatable)"
+	echo "  --set-http-proxy URL Persist HTTP/HTTPS proxy settings and exit"
     echo "  -d, --decrypt        Decrypt config/enc.conf.enc into config/enc.conf"
     echo "  -c, --encrypt        Encrypt config/enc.conf into config/enc.conf.enc"
     echo ""
@@ -141,12 +142,13 @@ main() {
     source $PROJECT_DIR"/lib/version.sh"
 
     # Initialize defaults
-    local LOG_LEVEL="INFO"
-    local TEST_MODE="false"
-    local CUSTOM_MODULES=""
-    local DECRYPT_MODE="false"
-    local ENCRYPT_MODE="false"
-    local INTERACTIVE_SELECT="false"
+	local LOG_LEVEL="INFO"
+	local TEST_MODE="false"
+	local CUSTOM_MODULES=""
+	local DECRYPT_MODE="false"
+	local ENCRYPT_MODE="false"
+	local INTERACTIVE_SELECT="false"
+	local -a CLI_ENV_OVERRIDES=()
     
     # Parse CLI arguments
     local i=1
@@ -190,15 +192,48 @@ main() {
             fi
             SET_HTTP_PROXY_VALUE="${!next_i}"
             i=$((i+2))
-        elif [ "$arg" = "-f" ] || [ "$arg" = "--force" ]; then
-            FORCE_MODE="true"
-            i=$((i+1))
-        else
-            echo "Error: unknown argument $arg" >&2
-            display_usage
-            exit 1
-        fi
-    done
+	elif [ "$arg" = "-f" ] || [ "$arg" = "--force" ]; then
+		FORCE_MODE="true"
+		i=$((i+1))
+	elif [ "$arg" = "-e" ]; then
+		local next_i=$((i+1))
+		if [ $next_i -gt $# ]; then
+			echo "Error: -e requires an assignment like VAR=value" >&2
+			exit 1
+		fi
+		local assignment="${!next_i}"
+		if [[ "$assignment" != *=* ]]; then
+			echo "Error: -e requires an assignment like VAR=value" >&2
+			exit 1
+		fi
+		local override_key="${assignment%%=*}"
+		if [[ ! "$override_key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+			echo "Error: invalid variable name in -e: $override_key" >&2
+			exit 1
+		fi
+		CLI_ENV_OVERRIDES+=("$override_key=${assignment#*=}")
+		i=$((i+2))
+	else
+		echo "Error: unknown argument $arg" >&2
+		display_usage
+		exit 1
+	fi
+done
+
+	if [ ${#CLI_ENV_OVERRIDES[@]} -gt 0 ]; then
+		local assignment override_key override_value
+	for assignment in "${CLI_ENV_OVERRIDES[@]}"; do
+		override_key="${assignment%%=*}"
+		override_value="${assignment#*=}"
+		printf -v "$override_key" '%s' "$override_value"
+		log "INFO" "Applied CLI override: $override_key"
+	done
+	fi
+
+	if [ -n "${TLNX_PASSWD:-}" ]; then
+		log "INFO" "TLNX_PASSWD already provided (env or override); sudo will try it before other sources"
+	fi
+
     
     if [ -n "$SET_HTTP_PROXY_VALUE" ]; then
         log "INFO" "Setting HTTP proxy via CLI option"
