@@ -118,8 +118,9 @@ _tlnx_run_sudo_with_password() {
 	if [ -z "$password" ]; then
 		return 1
 	fi
-
-	if printf '%s\n' "$password" | command sudo -S -p '' "$@"; then
+    
+    log "DEBUG" "Running sudo command with provided password: sudo $*"
+	if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1  >"$LOG_FILE"; then
 		return 0
 	fi
 
@@ -130,9 +131,9 @@ _tlnx_run_sudo_with_password() {
 sudo() {
 	local status
 	if [ -n "${TLNX_PASSWD:-}" ]; then
-		log "INFO" "Attempting sudo with cached TLNX_PASSWD"
+		log "DEBUG" "Attempting sudo with cached TLNX_PASSWD"
 		if _tlnx_run_sudo_with_password "$TLNX_PASSWD" "$@"; then
-			log "INFO" "sudo succeeded using cached TLNX_PASSWD"
+			log "DEBUG" "sudo succeeded using cached TLNX_PASSWD"
 			return 0
 		else
 			status=$?
@@ -140,10 +141,10 @@ sudo() {
 		fi
 	fi
 	if [ -n "${LOCAL_USER_PASSWD:-}" ]; then
-		log "INFO" "Attempting sudo with LOCAL_USER_PASSWD"
+		log "DEBUG" "Attempting sudo with LOCAL_USER_PASSWD"
 		if _tlnx_run_sudo_with_password "$LOCAL_USER_PASSWD" "$@"; then
 			TLNX_PASSWD="$LOCAL_USER_PASSWD"
-			log "INFO" "sudo succeeded using LOCAL_USER_PASSWD; cached in TLNX_PASSWD"
+			log "DEBUG" "sudo succeeded using LOCAL_USER_PASSWD; cached in TLNX_PASSWD"
 			return 0
 		else
 			status=$?
@@ -152,10 +153,10 @@ sudo() {
 	fi
 
 	if [ -n "${REMOTE_ENC_PASSWORD:-}" ]; then
-		log "INFO" "Attempting sudo with REMOTE_ENC_PASSWORD"
+		log "DEBUG" "Attempting sudo with REMOTE_ENC_PASSWORD"
 		if _tlnx_run_sudo_with_password "$REMOTE_ENC_PASSWORD" "$@"; then
 			TLNX_PASSWD="$REMOTE_ENC_PASSWORD"
-			log "INFO" "sudo succeeded using REMOTE_ENC_PASSWORD; cached in TLNX_PASSWD"
+			log "DEBUG" "sudo succeeded using REMOTE_ENC_PASSWORD; cached in TLNX_PASSWD"
 			return 0
 		else
 			status=$?
@@ -167,3 +168,5 @@ sudo() {
 	command sudo "$@"
 	return $?
 }
+
+

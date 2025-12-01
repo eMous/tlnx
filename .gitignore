@@ -1,15 +1,17 @@
 # Ignore logs
 logs/
-
+# Ignore runtime files
+run/
 # Ignore decrypted config
 config/enc.conf
 
 # Ignore local VS Code config
 .vscode/
-
 # Ignore temp files
 *.tmp
 *.swp
 
 # Ignore macOS system files
 .DS_Store
+
+STALE.md

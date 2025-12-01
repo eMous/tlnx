@@ -2,7 +2,6 @@
 
 # Shell-related helpers
 
-# Resolve default RC file once so other helpers can reuse it without re-detecting
 
 
 # Append raw shell configuration lines into the TLNX-managed block of an rc file.
@@ -10,14 +9,13 @@
 # the provided content just before the block end marker on subsequent calls.
 append_shell_rc_block() {
 	local content="$1"
-	local target_shell="${2:-}"
+	local rc_file="${2:-${RC_FILE}}"
 
 	if [ -z "$content" ]; then
 		log "ERROR" "append_shell_rc_block requires content to append"
 		return 1
 	fi
 
-	local rc_file=$RC_FILE
 
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "Unable to resolve target shell configuration file"
@@ -103,8 +101,8 @@ append_shell_rc_sub_block() {
 	fi
 
 	local sub_label="${label:-CUSTOM BLOCK}"
-	local sub_start="# >>> TLNX ${sub_label} >>>"
-	local sub_end="# <<< TLNX ${sub_label} <<<"
+	local sub_start="#     >>> TLNX ${sub_label} >>>"
+	local sub_end="#     <<< TLNX ${sub_label} <<<"
 
 	local rc_file=$RC_FILE
 	if [ -z "$rc_file" ]; then

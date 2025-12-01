@@ -8,12 +8,14 @@ _init_install() {
 	init_shell_rc_file
 	init_prjdir
 	init_tlnx_in_path
+	init_network_info
 	init_check_internet_access
 	init_enable_bbr
 	init_update_aliyun_mirror
 	init_timezone
 	init_timesyncd
-	init_basic_info_grab
+	init_ssh_keys
+	init_bash_setup
 	log "INFO" "=== init module completed ==="
 	exit 
 }
@@ -91,7 +93,10 @@ EOF
 
 # Make sure the project directory is or will be in /opt/tlnx
 init_prjdir() {
+	# It seems there is no need to mv the prjdir to /opt/tlnx explicity
+	return 0
 	log "INFO" "Checking project directory..."
+	local old_project_dir="$PROJECT_DIR"
 	if [ -z "$PROJECT_DIR" ]; then
 		log "ERROR" "PROJECT_DIR is not set. Cannot continue."
 		return 1
@@ -126,12 +131,24 @@ init_prjdir() {
 	log "INFO" "Log file path updated to $LOG_FILE"
 	PROJECT_DIR="/opt/tlnx"
 	log "INFO" "Project directory set to /opt/tlnx"
+
+
+	# if old_project_dir is not PROJECT_DIR, empty file STALE.md in PROJECT_DIR
+	if [ "$old_project_dir" != "$PROJECT_DIR" ]; then
+		log "INFO" "Project directory has changed from $old_project_dir to $PROJECT_DIR"
+		: > $old_project_dir/STALE.md 
+		echo "This project directory has been moved to $PROJECT_DIR on $(date). So the dir: $old_project_dir is STALE to use!" >> $old_project_dir/STALE.md
+		chmod 777 $old_project_dir/STALE.md
+	else
+		log "INFO" "Project directory remains unchanged"
+	fi
+
 	return 0
 }
 
-# Check tlnx in bin: Add /opt/tlnx to PATH in rc file
+# Check tlnx in bin: Add $PROJECT_DIR to PATH in rc file
 init_tlnx_in_path() {
-	# Check if /opt/tlnx is in PATH
+	# Check if $PROJECT_DIR is in PATH
 	if echo "$PATH" | grep -q "$PROJECT_DIR"; then
 		log "INFO" "Project directory $PROJECT_DIR is already in PATH"
 		return 0
@@ -244,7 +261,7 @@ init_timezone() {
 }
 init_timesyncd() {
 	# Check if systemd-timesyncd is installed
-	if ! command -v  systemd-timesyncd >/dev/null 2>&1; then
+	if ! command -v  timedatectl >/dev/null 2>&1; then
 		log "INFO" "timesyncd is not installed, installing..."
 		sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
 		sudo apt-get install -y  systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
@@ -276,19 +293,138 @@ EOF
 	log "INFO" "Current clock synchronization status: $(timedatectl status | grep 'System clock synchronized' | awk '{print $4}')"
 	return 0
 }
-# TODO HOSTNAME setup
-# TODO ssh keys
 
-# TODO BASH BASIC SETUP
+init_network_info() {
+	local wanipv4;
+	# Get WAN IP by Curl unset http_proxy
+	wanipv4=$(http_proxy= curl -s https://api-ipv4.ip.sb/ip | xargs)
+	if [ -z "$wanipv4" ]; then
+		log "ERROR" "Failed to retrieve WAN IPv4 address"
+	else
+		log "INFO" "Retrieved WAN IPv4 address: $wanipv4"
+	fi
 
-init_basic_info_grab() {
-	local wanip;
-	# Get WAN IP by Curl
-	wanip=$(curl -s https://api.ip.sb/ip)
-	if [ -z "$wanip" ]; then
-		log "ERROR" "Failed to retrieve WAN IP address"
+	local wanipv6;
+	# curl without http_proxy
+	wanipv6=$(http_proxy= curl -s https://api-ipv6.ip.sb/ip | xargs)
+	if [ -z "$wanipv6" ]; then
+		log "ERROR" "Failed to retrieve WAN IPv6 address"
+	else
+		log "INFO" "Retrieved WAN IPv6 address: $wanipv6"
+	fi
+
+	# Get lan ip
+	local lanip;
+	# trim lan ip spaces
+	lanip=$(hostname -I | xargs)
+	if [ -z "$lanip" ]; then
+		log "ERROR" "Failed to retrieve LAN IP address"
+	else
+		log "INFO" "Retrieved LAN IP address: $lanip"
+	fi
+
+
+	# If the mark of set-hostname not exist in mark.log, set hostname
+	MARK_FILE="$PROJECT_DIR/run/marks"
+	touch "$MARK_FILE"
+	log "INFO" "Checking hostname setup mark in $MARK_FILE"
+	if ! grep -q "hostname-set" "$MARK_FILE"; then
+		# Ask user to set hostname or keep current
+		local current_hostname
+		current_hostname=$(hostname)
+		log "INFO" "Current hostname is: $current_hostname"
+		read -rp "Do you want to change the hostname? (y/n): " change_hostname
+		if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
+			read -rp "Enter new hostname: " new_hostname
+			if [ -n "$new_hostname" ]; then
+				sudo hostnamectl set-hostname "$new_hostname"
+				log "INFO" "Hostname changed to: $new_hostname"
+				# in /etc/hosts, replace current hostname with new hostname
+				sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
+			else
+				log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
+			fi
+		else
+			log "INFO" "Keeping current hostname: $current_hostname"
+		fi
+		# Add mark
+		echo "hostname-set" >>"$MARK_FILE"
+	else
+		log "INFO" "Hostname has already been set previously, skipping"
+	fi
+
+	# add WAN and LAN IP to run/info
+	local INFO_FILE="$PROJECT_DIR/run/info"
+	mkdir -p "$(dirname "$INFO_FILE")"
+	if [ ! -f "$INFO_FILE" ]; then
+		touch "$INFO_FILE"
+	fi
+	# If there is any existing WAN_IPv4, WAN_IPv6, LAN_IP in INFO_FILE, substitute it
+	if grep -q "^WAN_IPv4=" "$INFO_FILE"; then
+		sed -i "s/^WAN_IPv4=.*/WAN_IPv4=\"$wanipv4\"/" "$INFO_FILE"
+	else
+		echo "WAN_IPv4=\"$wanipv4\"" >>"$INFO_FILE"
+	fi
+
+	if grep -q "^WAN_IPv6=" "$INFO_FILE"; then
+		sed -i "s/^WAN_IPv6=.*/WAN_IPv6=\"$wanipv6\"/" "$INFO_FILE"
+	else
+		echo "WAN_IPv6=\"$wanipv6\"" >>"$INFO_FILE"
+	fi
+
+	if grep -q "^LAN_IP=" "$INFO_FILE"; then
+		sed -i "s/^LAN_IP=.*/LAN_IP=\"$lanip\"/" "$INFO_FILE"
+	else
+		echo "LAN_IP=\"$lanip\"" >>"$INFO_FILE"
+	fi
+	log "INFO" "Network info updated in $INFO_FILE"
+	return 0
+}
+
+# SSH Key setup
+init_ssh_keys() {
+	log "INFO" "Checking SSH key setup"
+	# if mark of key pairs exist in $PROJECT_DIR/run/keys, skip
+	local keydir="$PROJECT_DIR/run/keys"
+	mkdir -p "$keydir"
+	local keyname="id_rsa-$(whoami)@$(hostname)"
+	if [ -f "$keydir/$keyname" ] && [ -f "$keydir/$keyname.pub" ]; then
+		log "INFO" "SSH key pair already exists, skipping generation"
+		return 0
+	fi
+	log "INFO" "Generating new SSH key pair"
+	ssh-keygen -t rsa -b 4096 -f "$keydir/$keyname" -N "" 2>&1 | tee -a "$LOG_FILE"
+	local ssh_status=${PIPESTATUS[0]}
+	if [ $ssh_status -ne 0 ]; then
+		log "ERROR" "Failed to generate SSH key pair"
 		return 1
 	fi
-	log "INFO" "Retrieved WAN IP address: $wanip"
+	log "INFO" "SSH key pair generated successfully"
+	# Register it to authorized_keys
+	mkdir -p "$HOME/.ssh"
+	cat "$keydir/$keyname.pub" >>"$HOME/.ssh/authorized_keys"
+	chmod 600 "$HOME/.ssh/authorized_keys"
+	log "INFO" "SSH public key added to authorized_keys"
+	return 0
+}
+
+init_bash_setup() {
+	log "INFO" "Applying basic bash shell setup"
+	# if there is no etc/.bashrc, return 0
+	if [ ! -f "$PROJECT_DIR/etc/.bashrc" ]; then
+		log "INFO" "No etc/.bashrc found, skipping bash basic setup"
+		return 0
+	fi
+	# if there is a mark of bash-basic-setup in run/marks AND the etc/.bashrc is older than marks, skip
+	local MARK_FILE="$PROJECT_DIR/run/marks"
+	if grep -q "bash-basic-setup" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ]; then
+		log "INFO" "Bash basic setup already applied, skipping"
+		return 0
+	fi
+	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
+	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
+	# add mark
+	echo "bash-basic-setup" >>"$MARK_FILE"
+	log "INFO" "Basic bash shell setup applied"
 	return 0
 }
