@@ -113,60 +113,58 @@ EOF
 
 # Helper to run sudo with a provided password
 _tlnx_run_sudo_with_password() {
-	local password="$1"
-	shift || true
-	if [ -z "$password" ]; then
-		return 1
-	fi
-    
-    log "DEBUG" "Running sudo command with provided password: sudo $*"
-	if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1  >"$LOG_FILE"; then
-		return 0
-	fi
+    local password="$1"
+    shift || true
+    if [ -z "$password" ]; then
+        return 1
+    fi
 
-	return $?
+    log "DEBUG" "Running sudo command with provided password: sudo $*"
+    if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1 >"$LOG_FILE"; then
+        return 0
+    fi
+
+    return $?
 }
 
 # Wrapper to run sudo commands with password fallbacks
 sudo() {
-	local status
-	if [ -n "${TLNX_PASSWD:-}" ]; then
-		log "DEBUG" "Attempting sudo with cached TLNX_PASSWD"
-		if _tlnx_run_sudo_with_password "$TLNX_PASSWD" "$@"; then
-			log "DEBUG" "sudo succeeded using cached TLNX_PASSWD"
-			return 0
-		else
-			status=$?
-			log "WARN" "sudo authentication with TLNX_PASSWD failed (exit $status)"
-		fi
-	fi
-	if [ -n "${LOCAL_USER_PASSWD:-}" ]; then
-		log "DEBUG" "Attempting sudo with LOCAL_USER_PASSWD"
-		if _tlnx_run_sudo_with_password "$LOCAL_USER_PASSWD" "$@"; then
-			TLNX_PASSWD="$LOCAL_USER_PASSWD"
-			log "DEBUG" "sudo succeeded using LOCAL_USER_PASSWD; cached in TLNX_PASSWD"
-			return 0
-		else
-			status=$?
-			log "WARN" "sudo authentication with LOCAL_USER_PASSWD failed (exit $status)"
-		fi
-	fi
+    local status
+    if [ -n "${TLNX_PASSWD:-}" ]; then
+        log "DEBUG" "Attempting sudo with cached TLNX_PASSWD"
+        if _tlnx_run_sudo_with_password "$TLNX_PASSWD" "$@"; then
+            log "DEBUG" "sudo succeeded using cached TLNX_PASSWD"
+            return 0
+        else
+            status=$?
+            log "WARN" "sudo authentication with TLNX_PASSWD failed (exit $status)"
+        fi
+    fi
+    if [ -n "${LOCAL_USER_PASSWD:-}" ]; then
+        log "DEBUG" "Attempting sudo with LOCAL_USER_PASSWD"
+        if _tlnx_run_sudo_with_password "$LOCAL_USER_PASSWD" "$@"; then
+            TLNX_PASSWD="$LOCAL_USER_PASSWD"
+            log "DEBUG" "sudo succeeded using LOCAL_USER_PASSWD; cached in TLNX_PASSWD"
+            return 0
+        else
+            status=$?
+            log "WARN" "sudo authentication with LOCAL_USER_PASSWD failed (exit $status)"
+        fi
+    fi
 
-	if [ -n "${REMOTE_ENC_PASSWORD:-}" ]; then
-		log "DEBUG" "Attempting sudo with REMOTE_ENC_PASSWORD"
-		if _tlnx_run_sudo_with_password "$REMOTE_ENC_PASSWORD" "$@"; then
-			TLNX_PASSWD="$REMOTE_ENC_PASSWORD"
-			log "DEBUG" "sudo succeeded using REMOTE_ENC_PASSWORD; cached in TLNX_PASSWD"
-			return 0
-		else
-			status=$?
-			log "WARN" "sudo authentication with REMOTE_ENC_PASSWORD failed (exit $status)"
-		fi
-	fi
+    if [ -n "${REMOTE_ENC_PASSWORD:-}" ]; then
+        log "DEBUG" "Attempting sudo with REMOTE_ENC_PASSWORD"
+        if _tlnx_run_sudo_with_password "$REMOTE_ENC_PASSWORD" "$@"; then
+            TLNX_PASSWD="$REMOTE_ENC_PASSWORD"
+            log "DEBUG" "sudo succeeded using REMOTE_ENC_PASSWORD; cached in TLNX_PASSWD"
+            return 0
+        else
+            status=$?
+            log "WARN" "sudo authentication with REMOTE_ENC_PASSWORD failed (exit $status)"
+        fi
+    fi
 
-	log "INFO" "All stored sudo passwords failed; prompting for input"
-	command sudo "$@"
-	return $?
+    log "INFO" "All stored sudo passwords failed; prompting for input"
+    command sudo "$@"
+    return $?
 }
-
-
