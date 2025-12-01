@@ -17,7 +17,7 @@ _init_install() {
 	init_ssh_keys
 	init_bash_setup
 	log "INFO" "=== init module completed ==="
-	exit 
+	exit
 }
 # Always run init (return 1 so the installer executes)
 _init_check_installed() {
@@ -54,7 +54,7 @@ init_update_aliyun_mirror() {
 		else
 
 			sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-			sudo tee /etc/apt/sources.list >/dev/null <<EOF
+			command sudo tee /etc/apt/sources.list >/dev/null <<EOF
 # Managed by TLNX
 deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
 #deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
@@ -132,12 +132,11 @@ init_prjdir() {
 	PROJECT_DIR="/opt/tlnx"
 	log "INFO" "Project directory set to /opt/tlnx"
 
-
 	# if old_project_dir is not PROJECT_DIR, empty file STALE.md in PROJECT_DIR
 	if [ "$old_project_dir" != "$PROJECT_DIR" ]; then
 		log "INFO" "Project directory has changed from $old_project_dir to $PROJECT_DIR"
-		: > $old_project_dir/STALE.md 
-		echo "This project directory has been moved to $PROJECT_DIR on $(date). So the dir: $old_project_dir is STALE to use!" >> $old_project_dir/STALE.md
+		: >$old_project_dir/STALE.md
+		echo "This project directory has been moved to $PROJECT_DIR on $(date). So the dir: $old_project_dir is STALE to use!" >>$old_project_dir/STALE.md
 		chmod 777 $old_project_dir/STALE.md
 	else
 		log "INFO" "Project directory remains unchanged"
@@ -261,10 +260,10 @@ init_timezone() {
 }
 init_timesyncd() {
 	# Check if systemd-timesyncd is installed
-	if ! command -v  timedatectl >/dev/null 2>&1; then
+	if ! command -v timedatectl >/dev/null 2>&1; then
 		log "INFO" "timesyncd is not installed, installing..."
 		sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
-		sudo apt-get install -y  systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+		sudo apt-get install -y systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
 		local install_status=${PIPESTATUS[0]}
 		if [ $install_status -ne 0 ]; then
 			log "ERROR" "Failed to install systemd-timesyncd"
@@ -295,7 +294,7 @@ EOF
 }
 
 init_network_info() {
-	local wanipv4;
+	local wanipv4
 	# Get WAN IP by Curl unset http_proxy
 	wanipv4=$(http_proxy= curl -s https://api-ipv4.ip.sb/ip | xargs)
 	if [ -z "$wanipv4" ]; then
@@ -304,7 +303,7 @@ init_network_info() {
 		log "INFO" "Retrieved WAN IPv4 address: $wanipv4"
 	fi
 
-	local wanipv6;
+	local wanipv6
 	# curl without http_proxy
 	wanipv6=$(http_proxy= curl -s https://api-ipv6.ip.sb/ip | xargs)
 	if [ -z "$wanipv6" ]; then
@@ -314,7 +313,7 @@ init_network_info() {
 	fi
 
 	# Get lan ip
-	local lanip;
+	local lanip
 	# trim lan ip spaces
 	lanip=$(hostname -I | xargs)
 	if [ -z "$lanip" ]; then
@@ -323,8 +322,8 @@ init_network_info() {
 		log "INFO" "Retrieved LAN IP address: $lanip"
 	fi
 
-
 	# If the mark of set-hostname not exist in mark.log, set hostname
+	sudo -u $(whoami) mkdir -p "$PROJECT_DIR/run"
 	MARK_FILE="$PROJECT_DIR/run/marks"
 	touch "$MARK_FILE"
 	log "INFO" "Checking hostname setup mark in $MARK_FILE"

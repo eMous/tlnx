@@ -6,7 +6,6 @@
 mkdir -p "$PROJECT_DIR/logs"
 # Default log file
 LOG_FILE="${PROJECT_DIR:+${PROJECT_DIR}/}logs/server_config.log"
-
 # Default log level
 LOG_LEVEL=${LOG_LEVEL:-"INFO"}
 

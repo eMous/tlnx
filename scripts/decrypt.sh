@@ -40,7 +40,7 @@ if [ -n "$OUTPUT_FILE" ]; then
 	openssl enc -d -aes-256-cbc -salt -pbkdf2 -in "$ENCRYPTED_FILE" -k "$KEY" >"$OUTPUT_FILE"
 	if [ $? -eq 0 ]; then
 		echo "Decryption succeeded, written to $OUTPUT_FILE"
-		return 0
+		exit 0
 	else
 		echo "Decryption failed"
 		exit 1
