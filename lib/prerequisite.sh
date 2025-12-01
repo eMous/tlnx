@@ -7,6 +7,10 @@ _detect_prerequisites() {
 		log "ERROR" "Unsupported operating system distribution. Exiting."
 		return 1
 	}
+	check_rcfile || {
+		log "ERROR" "Shell RC file check failed. Exiting."
+		return 1
+	}
 }
 
 # Detect operating system distribution
@@ -50,21 +54,4 @@ check_user() {
 		log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"
 		return 1
 	fi
-}
-
-check_rcfile() {
-	log "INFO" "Checking for existing RC file configurations"
-	# considering zsh and bash only for now
-	local SHELL_NAME
-	SHELL_NAME=$(basename "$SHELL")
-	local RC_FILE=""
-	if [ "$SHELL_NAME" = "zsh" ]; then
-		RC_FILE="$HOME/.zshrc"
-	elif [ "$SHELL_NAME" = "bash" ]; then
-		RC_FILE="$HOME/.bashrc"
-	else
-		log "WARN" "Unsupported shell $SHELL_NAME, skipping RC file check"
-		return 1
-	fi
-	
 }

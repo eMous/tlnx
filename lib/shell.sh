@@ -2,6 +2,9 @@
 
 # Shell-related helpers
 
+# Resolve default RC file once so other helpers can reuse it without re-detecting
+
+
 # Append raw shell configuration lines into the TLNX-managed block of an rc file.
 # The function will manage markers in ~/.zshrc or ~/.bashrc (default) and append
 # the provided content just before the block end marker on subsequent calls.
@@ -14,28 +17,7 @@ append_shell_rc_block() {
 		return 1
 	fi
 
-	local rc_file=""
-	case "$target_shell" in
-	zsh | ZSH)
-		rc_file="$HOME/.zshrc"
-		;;
-	bash | BASH)
-		rc_file="$HOME/.bashrc"
-		;;
-	/*)
-		rc_file="$target_shell"
-		;;
-	"")
-		if [ -f "$HOME/.zshrc" ]; then
-			rc_file="$HOME/.zshrc"
-		else
-			rc_file="$HOME/.bashrc"
-		fi
-		;;
-	*)
-		rc_file="$HOME/.${target_shell}"
-		;;
-	esac
+	local rc_file=$RC_FILE
 
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "Unable to resolve target shell configuration file"
@@ -110,21 +92,62 @@ append_shell_rc_block() {
 	return 0
 }
 
-source_rcfile() {
-	local shell_name rc_file
-	shell_name=$(basename "${SHELL:-/bin/bash}")
+append_shell_rc_sub_block() {
+	local label="$1"
+	local content="$2"
+	local target_shell="${3:-}"
 
-	case "$shell_name" in
-	bash | sh)
-		rc_file="$HOME/.bashrc"
-		;;
-	zsh)
-		rc_file="$HOME/.zshrc"
-		;;
-	*)
-		rc_file="$HOME/.profile"
-		;;
-	esac
+	if [ -z "$content" ]; then
+		log "ERROR" "append_shell_rc_sub_block requires content to append"
+		return 1
+	fi
+
+	local sub_label="${label:-CUSTOM BLOCK}"
+	local sub_start="# >>> TLNX ${sub_label} >>>"
+	local sub_end="# <<< TLNX ${sub_label} <<<"
+
+	local rc_file=$RC_FILE
+	if [ -z "$rc_file" ]; then
+		log "ERROR" "Unable to resolve target shell configuration file for sub block"
+		return 1
+	fi
+	if [ ! -e "$rc_file" ] && ! touch "$rc_file"; then
+		log "ERROR" "Failed to create shell rc file $rc_file for sub block"
+		return 1
+	fi
+
+	if grep -Fq "$sub_start" "$rc_file"; then
+		local tmp_file
+		tmp_file=$(mktemp) || {
+			log "ERROR" "Failed to create temporary file for sub block cleanup"
+			return 1
+		}
+		awk -v start="$sub_start" -v end="$sub_end" '
+            $0 == start {skip=1; next}
+            $0 == end {
+                if (skip) {
+                    skip=0
+                    next
+                }
+            }
+            skip==0 {print}
+        ' "$rc_file" >"$tmp_file" && mv "$tmp_file" "$rc_file"
+		rm -f "$tmp_file"
+	else
+		log "DEBUG" "No existing TLNX sub block ($sub_label) found in $rc_file; nothing to replace"
+	fi
+
+	local block_content
+	block_content=$(printf "%s\n%s\n%s" "$sub_start" "$content" "$sub_end")
+	append_shell_rc_block "$block_content" "$rc_file"
+}
+
+source_rcfile() {
+	local rc_file="${RC_FILE:-}"
+	if [ -z "$rc_file" ]; then
+		log "ERROR" "RC_FILE is not set; cannot source rc file"
+		return 1
+	fi
 
 	if [ -f "$rc_file" ]; then
 		# shellcheck source=/dev/null
@@ -136,20 +159,11 @@ source_rcfile() {
 }
 
 init_shell_rc_file() {
-	local shell_name rc_file block_start backup_file
-	shell_name=$(basename "${SHELL:-/bin/bash}")
-
-	case "$shell_name" in
-	bash | sh)
-		rc_file="$HOME/.bashrc"
-		;;
-	zsh)
-		rc_file="$HOME/.zshrc"
-		;;
-	*)
-		rc_file="$HOME/.profile"
-		;;
-	esac
+	local rc_file="${RC_FILE:-}" block_start backup_file
+	if [ -z "$rc_file" ]; then
+		log "ERROR" "RC_FILE is not set; cannot initialize rc file"
+		return 1
+	fi
 
 	block_start="# >>> TLNX shell block >>>"
 	backup_file="${rc_file}.$(date +%Y%m%d%H%M%S).bak"
@@ -180,4 +194,21 @@ init_shell_rc_file() {
 	: >"$rc_file"
 	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
 	return 0
+}
+
+check_rcfile() {
+	log "INFO" "Checking for existing RC file configurations"
+	# considering zsh and bash only for now
+	local SHELL_NAME
+	SHELL_NAME=$(basename "$SHELL")
+	RC_FILE=""
+	if [ "$SHELL_NAME" = "zsh" ]; then
+		RC_FILE="$HOME/.zshrc"
+	elif [ "$SHELL_NAME" = "bash" ]; then
+		RC_FILE="$HOME/.bashrc"
+	else
+		log "WARN" "Unsupported shell $SHELL_NAME, skipping RC file check"
+		return 1
+	fi
+	log "INFO" "Using RC file: $RC_FILE"
 }

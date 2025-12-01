@@ -519,3 +519,109 @@ Option 2: work from a clean clone so the upstream history stays intact and only 
 
 ## Lessons
 When the repository metadata is lost, recloning upstream and transplanting the edited files is safer than trying to rebuild `.git` manually; it preserves history and makes it straightforward to stage, review, and commit the outstanding work.
+
+---
+id: demand-019
+date: 2025-12-01T01:20:00Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You wanted proxy variables defined in `default.conf` or `enc.conf` to be written into their own TLNX sub block before the init module tests connectivity.
+
+## Options
+1. Keep relying on `set_http_proxy`, forcing users to re-enter proxies interactively.
+2. Teach the init module to persist configured proxy exports automatically using a dedicated shell helper.
+
+## Decision
+Option 2: create `append_shell_rc_sub_block`, expose proxy defaults in the config files, and update the init module to persist them before running network checks.
+
+## Result
+- Added `append_shell_rc_sub_block` to `lib/shell.sh` so labeled TLNX sub blocks can be inserted without clobbering other exports.
+- Declared `http_proxy`, `https_proxy`, `HTTP_PROXY`, and `HTTPS_PROXY` in the config files and updated `init_check_internet_access` to write them into a “PROXY SETTING” sub block before sourcing the RC file.
+
+## Lessons
+Persisting configuration-driven state keeps automation deterministic and avoids redundant prompts for values that are already known.
+
+---
+id: demand-020
+date: 2025-12-01T01:35:00Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You clarified that the init module must read literal proxy values from `enc.conf` first (then `default.conf`), rather than trusting whatever proxy exports happen to exist.
+
+## Options
+1. Keep referencing the current environment and risk mismatches between runtime state and configuration.
+2. Parse the config files directly and only persist those values.
+
+## Decision
+Option 2: add `get_proxy_value_from_configs` so proxy data always comes from the authoritative files.
+
+## Result
+- Introduced `get_proxy_value_from_configs` in `modules/init.sh` and wired it into the proxy persistence block so the init module uses literal config values.
+
+## Lessons
+Reading from the source configuration eliminates ambiguity and ensures the automation reflects the user’s declared intent.
+
+---
+id: demand-021
+date: 2025-12-01T01:45:00Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+After adding the proxy helper, you asked to move it out of `modules/init.sh` so other modules could reuse it.
+
+## Options
+1. Leave `get_proxy_value_from_configs` inside the init module.
+2. Relocate it into `lib/config.sh` alongside the other configuration helpers.
+
+## Decision
+Option 2: centralize the helper in `lib/config.sh`.
+
+## Result
+- Moved `get_proxy_value_from_configs` into `lib/config.sh` and updated the init module to call the shared version.
+
+## Lessons
+Keeping configuration utilities together prevents duplication and makes future reuse simpler.
+
+---
+id: demand-022
+date: 2025-12-01T01:55:00Z
+type: refactor
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to stop re-detecting the current shell inside `lib/shell.sh` and instead use a single `RC_FILE` variable so every helper operates on the same, predetermined file.
+
+## Options
+1. Keep calling `basename "$SHELL"` in each helper, which risks mismatched paths and redundant logic.
+2. Resolve `RC_FILE` once and have every helper rely on it (or explicit overrides) moving forward.
+
+## Decision
+Option 2: establish `RC_FILE` when the library loads and refactor the helpers to rely on it exclusively unless an explicit shell override is provided.
+
+## Result
+- Initialized `RC_FILE` when `lib/shell.sh` loads, falling back to `~/.bashrc` on unsupported shells.
+- Updated `append_shell_rc_block`, `append_shell_rc_sub_block`, `source_rcfile`, `init_shell_rc_file`, and `check_rcfile` to use `RC_FILE` (with strict zsh/bash overrides) so the detection logic lives in one place.
+
+## Lessons
+Resolving shared state once reduces duplication and ensures every helper touches the same RC file, which aligns with your preference for deterministic behavior.

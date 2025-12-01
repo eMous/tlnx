@@ -69,3 +69,29 @@ _load_config() {
 	TARGET_PORT="$TARGET_ENC_PORT"
 	TARGET_PASSWORD="$TARGET_ENC_PASSWORD"
 }
+
+get_proxy_value_from_configs() {
+	local key="$1"
+	local files=("$PROJECT_DIR/config/enc.conf" "$PROJECT_DIR/config/default.conf")
+
+	for file in "${files[@]}"; do
+		if [ ! -f "$file" ]; then
+			continue
+		fi
+
+		local line value
+		line=$(grep -E "^${key}=" "$file" | tail -n 1)
+		if [ -z "$line" ]; then
+			continue
+		fi
+
+		value="${line#*=}"
+		value="${value%\"}"
+		value="${value#\"}"
+		if [ -n "$value" ]; then
+			echo "$value"
+			return 0
+		fi
+	done
+	return 1
+}

@@ -279,3 +279,9 @@ EOF
 # TODO ssh keys
 
 # TODO BASH BASIC SETUP
+
+init_hostname() {
+	# If there is a markfile in TODO
+	hostnamectl set-hostname "tlnx-server"
+	return 0
+}
