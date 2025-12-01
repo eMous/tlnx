@@ -235,13 +235,13 @@ init_enable_bbr() {
 
 	# Enable BBR
 	sudo modprobe tcp_bbr
-	echo "tcp_bbr" | sudo tee -a /etc/modules-load.d/bbr.conf
+	echo "tcp_bbr" | command sudo tee -a /etc/modules-load.d/bbr.conf
 	sudo sysctl -w net.core.default_qdisc=fq
 	sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 
 	# Persist settings
-	echo "net.core.default_qdisc=fq" | sudo tee -a /etc/sysctl.d/99-bbr.conf
-	echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.d/99-bbr.conf
+	echo "net.core.default_qdisc=fq" | command sudo tee -a /etc/sysctl.d/99-bbr.conf
+	echo "net.ipv4.tcp_congestion_control=bbr" | command sudo tee -a /etc/sysctl.d/99-bbr.conf
 	sudo sysctl -p /etc/sysctl.d/99-bbr.conf
 	log "INFO" "BBR congestion control enabled"
 }
