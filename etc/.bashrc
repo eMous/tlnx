@@ -114,3 +114,4 @@ fi
 
 # All below is custom additions
 set -o vi
+bind -x '"\C-l": clear'

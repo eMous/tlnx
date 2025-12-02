@@ -4,13 +4,16 @@
 
 # Check whether ZSH is already installed
 _zsh_check_installed() {
-	if command -v zsh >/dev/null 2>&1; then
-		log "DEBUG" "ZSH already installed"
-		return 0
-	else
+	
+	# if command not exist
+	if ! command -v zsh >/dev/null 2>&1; then
 		log "DEBUG" "ZSH not installed"
 		return 1
 	fi
+
+	# Check mark in marks file is older than etc/.zshrc
+
+
 }
 
 # Install ZSH
