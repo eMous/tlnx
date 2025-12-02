@@ -10,7 +10,7 @@ LOG_FILE="${PROJECT_DIR:+${PROJECT_DIR}/}logs/server_config.log"
 LOG_LEVEL=${LOG_LEVEL:-"INFO"}
 
 # Log level priority map
-LOG_LEVEL_PRIORITY=("DEBUG" "INFO" "WARN" "ERROR")
+LOG_LEVEL_PRIORITY=("VERBOSE" "DEBUG" "INFO" "WARN" "ERROR")
 
 # Resolve the priority index for a given level
 get_log_priority() {
