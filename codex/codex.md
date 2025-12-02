@@ -653,3 +653,31 @@ Option 2: keep the documentation synchronized with the code and note the change 
 
 ## Lessons
 Whenever a new CLI switch ships, you expect `prj.md` and the codex log to update immediately so future runs have correct instructions and traceability.
+
+---
+id: demand-024
+date: 2025-12-02T10:18:34Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked for a dedicated manual test harness for the ZSH module so it can be exercised without touching the real home directory, and you also wanted the documentation refreshed (including this codex) plus a summary of the code changes before committing.
+
+## Options
+1. Keep relying on ad-hoc manual runs of `_zsh_install` and leave the docs/log untouched.
+2. Add a standalone test script that wires up an isolated `HOME`, document the harness in `prj.md`, and log the demand here so future work remembers the intent.
+
+## Decision
+Option 2: provide a reproducible manual harness, update the project requirements doc, and capture the demand in the codex log alongside the commit summary.
+
+## Result
+- Created `tests/manual_zsh_module.sh`, which points `HOME` at `run/tmp/zsh-module-home`, sources the shared libs/modules, runs `_zsh_install`, and prints the resulting `.zshrc` snippet and log location.
+- Updated `prj.md` to explain how module marks gate reruns and to enumerate the suite of manual verification scripts (including the new ZSH harness).
+- Produced a repo-wide change summary before committing so the code delta, docs, and codex entry stay in sync.
+
+## Lessons
+You expect every new capability—even small test helpers—to ship with documentation and codex history so future contributors know how to use it and why it exists; summarizing the change set before committing reinforces that discipline.

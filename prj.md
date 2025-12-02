@@ -87,6 +87,7 @@ This is an automated server configuration tool that helps users set up a new clo
 2. Run `./tlnx` (or `bash tlnx`) with optional CLI arguments or environment variables.
 3. The script loads the library files and logging configuration.
 4. Parse CLI options (`-h/--help`, `-l/--log-level`, `-t/--test`, `-f/--force`, `--modules`, `--select-modules`, `-e VAR=value`, `-d/--decrypt`, `-c/--encrypt`, `--set-http-proxy`).
+5. Before each module runs, check its timestamped mark inside `run/marks`. When the mark exists and the config files (`config/default.conf`, `config/enc.conf`) are newer, the mark is cleared so the module reruns; otherwise the module is skipped unless `-f/--force` is supplied.
 5. If `-d/--decrypt` is specified:
    - Decrypt `config/enc.conf.enc` into `config/enc.conf`.
    - Exit after decryption completes.
@@ -108,6 +109,11 @@ This is an automated server configuration tool that helps users set up a new clo
    - Execute the selected modules in order.
 11. Generate configuration logs.
 12. Display the result and help information.
+
+3.7 **Manual verification scripts**:
+- `tests/manual_git_module.sh` provisions Git inside a disposable `HOME` so global config changes stay inside the repo.
+- `tests/manual_init_bash_setup.sh`, `tests/manual_init_basic_info.sh`, and `tests/manual_init_ssh_keys.sh` exercise specific init subroutines.
+- `tests/manual_zsh_module.sh` spins up a throwaway HOME directory, runs the ZSH module end-to-end, and prints the resulting `.zshrc` plus the log location so shell customization can be validated without touching the real workstation.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.

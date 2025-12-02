@@ -10,38 +10,6 @@ git_module_mark_file() {
 	echo "${PROJECT_DIR}/run/marks"
 }
 
-_git_check_installed() {
-	local mark_file
-	mark_file="$(git_module_mark_file)"
-	local mark
-	mark="$(git_module_mark_name)"
-
-	if ! command -v git >/dev/null 2>&1; then
-		log "DEBUG" "Git binary not found; module needs to run"
-		return 1
-	fi
-
-	# if the default.conf or enc.conf is newer than the mark file, need to remove the mark
-	# log the modification times for default.conf, enc.conf, and mark file
-	local def_mod_time enc_mod_time
-	def_mod_time=$(stat -c %Y "${PROJECT_DIR}/config/default.conf")
-	enc_mod_time=$(stat -c %Y "${PROJECT_DIR}/config/enc.conf")
-	if mark_older_than "$mark" "$def_mod_time" || mark_older_than "$mark" "$enc_mod_time"; then
-		log "INFO" "Git module config files modified since last run; module will run"
-		# remove the mark
-		sed -i "/^${mark}.*$/d" "$mark_file"
-	fi
-
-	# check for the mark
-	if [ -f "$mark_file" ] && grep -Fxq "$mark" "$mark_file"; then
-		log "DEBUG" "Git module already applied (mark found)"
-		return 0
-	fi
-
-	log "DEBUG" "Git module mark missing; module will run"
-	return 1
-}
-
 git_install_packages() {
 	if command -v git >/dev/null 2>&1; then
 		log "INFO" "Git already installed; skipping package installation"
@@ -74,6 +42,9 @@ git_configure_identity() {
 	git_require_command || return 1
 
 	local configured="false"
+
+
+	
 	if [ -n "${GIT_USER_NAME_X:-}" ]; then
 		if git config --global user.name "$GIT_USER_NAME_X" >>"$LOG_FILE" 2>&1; then
 			log "INFO" "Configured git user.name as $GIT_USER_NAME_X"
@@ -182,24 +153,8 @@ _git_install() {
 		return 1
 	fi
 
-	# Mark module as completed
-	git_mark_complete
 	log "INFO" "=== Git installation and configuration completed ==="
 	return 0
-}
-
-git_mark_complete() {
-	local mark_file
-	mark_file="$(git_module_mark_file)"
-	local mark
-	mark="$(git_module_mark_name)"
-	# if there is no mark in mark file, append it
-	if [ ! -f "$mark_file" ] || ! grep -Fxq "$mark" "$mark_file"; then
-		echo "${mark} $(date +%s)" >>"$mark_file"
-		log "DEBUG" "Git module mark $mark added to $mark_file"
-	else
-		log "DEBUG" "Git module mark $mark already present in $mark_file"
-	fi
 }
 
 git_configure_proxy() {

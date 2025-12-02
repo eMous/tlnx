@@ -3,7 +3,6 @@
 # init module - system bootstrap configuration
 # Module entrypoint - init
 _init_install() {
-
 	log "INFO" "=== Starting init module ==="
 	init_shell_rc_file
 	init_prjdir
@@ -17,11 +16,6 @@ _init_install() {
 	init_ssh_keys
 	init_bash_setup
 	log "INFO" "=== init module completed ==="
-}
-# Always run init (return 1 so the installer executes)
-_init_check_installed() {
-	log "DEBUG" "init module always runs to prepare the system"
-	return 1
 }
 # Update Alibaba Cloud mirrors
 init_update_aliyun_mirror() {
@@ -426,8 +420,8 @@ init_bash_setup() {
 		sed -i "/^${mark}.*$/d" "$MARK_FILE"
 	fi
 
-	# if there is a mark of bash-basic-setup in run/marks 
-	# AND the etc/.bashrc is older than marks 
+	# if there is a mark of bash-basic-setup in run/marks
+	# AND the etc/.bashrc is older than marks
 	# AND etc/.bashrc is matched in $HOME/.bashrc, skip
 	local MARK_FILE="$PROJECT_DIR/run/marks"
 	if grep -q "${mark}" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ] && grep -qFf "$PROJECT_DIR/etc/.bashrc" "$HOME/.bashrc"; then
