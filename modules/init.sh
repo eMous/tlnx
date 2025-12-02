@@ -17,7 +17,6 @@ _init_install() {
 	init_ssh_keys
 	init_bash_setup
 	log "INFO" "=== init module completed ==="
-	exit
 }
 # Always run init (return 1 so the installer executes)
 _init_check_installed() {
@@ -326,8 +325,10 @@ init_network_info() {
 	sudo -u $(whoami) mkdir -p "$PROJECT_DIR/run"
 	MARK_FILE="$PROJECT_DIR/run/marks"
 	touch "$MARK_FILE"
+	local mark="hostname-set"
 	log "INFO" "Checking hostname setup mark in $MARK_FILE"
-	if ! grep -q "hostname-set" "$MARK_FILE"; then
+	if ! grep -q "$mark" "$MARK_FILE"; then
+		log "INFO" "Hostname setup mark not found, proceeding to set hostname"
 		# Ask user to set hostname or keep current
 		local current_hostname
 		current_hostname=$(hostname)
@@ -347,7 +348,7 @@ init_network_info() {
 			log "INFO" "Keeping current hostname: $current_hostname"
 		fi
 		# Add mark
-		echo "hostname-set" >>"$MARK_FILE"
+		echo "$mark $(date +%s)" >>"$MARK_FILE"
 	else
 		log "INFO" "Hostname has already been set previously, skipping"
 	fi
@@ -421,7 +422,8 @@ init_bash_setup() {
 		remove_shell_rc_sub_block "bashrc template" "$HOME/.bashrc"
 		# remove mark of bash-basic-setup in run/marks
 		local MARK_FILE="$PROJECT_DIR/run/marks"
-		sed -i "/${mark}/d" "$MARK_FILE"
+		# remove the line of mark
+		sed -i "/^${mark}.*$/d" "$MARK_FILE"
 	fi
 
 	# if there is a mark of bash-basic-setup in run/marks AND the etc/.bashrc is older than marks, skip
@@ -433,7 +435,7 @@ init_bash_setup() {
 	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
 	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
 	# add mark
-	echo "bash-basic-setup" >>"$MARK_FILE"
+	echo "$mark $(date +%s)" >>"$MARK_FILE"
 	log "INFO" "Basic bash shell setup applied"
 	return 0
 }

@@ -64,3 +64,40 @@ execute_module() {
 		return 1
 	fi
 }
+
+mark_older_than(){
+    local mark=$1;
+    local timestamp=$2;
+    local mark_file="$PROJECT_DIR/run/marks"
+
+	# if mark file doesn't exist, consider it older
+	if [ ! -f "$mark_file" ]; then
+		log "WARN" "Mark file $mark_file does not exist; considered older"
+		touch "$mark_file" 
+		return 0
+	fi
+
+	# if mark doesn't exist in mark file, consider it older
+	if grep -Fq "^${mark} " "$mark_file"; then
+		log "DEBUG" "Mark $mark found in $mark_file"
+	else
+		log "WARN" "Mark $mark not found in $mark_file; considered older"
+		return 0
+	fi
+
+    # get the timestamp of the mark in mark_file
+    local mark_timestamp
+    mark_timestamp=$(grep -F "^${mark} " "$mark_file" | awk '{print $2}')
+    if [ -z "$mark_timestamp" ]; then
+        # mark not found
+        log "WARN" "Mark $mark not found; considered older"
+        return 0
+    fi
+    if [ "$mark_timestamp" -lt "$timestamp" ]; then
+        log "DEBUG" "Mark $mark timestamp $mark_timestamp is older than $timestamp"
+        return 0
+    else
+        log "DEBUG" "Mark $mark timestamp $mark_timestamp is not older than $timestamp"
+        return 1
+    fi
+}
