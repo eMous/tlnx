@@ -27,13 +27,26 @@ execute_module() {
 	if [ -f "$PROJECT_DIR/modules/$module.sh" ]; then
 		source "$PROJECT_DIR/modules/$module.sh"
 		local mark="${module}_installed_mark"
-		local mark_file="$PROJECT_DIR/run/marks"
+		local marks_file="$PROJECT_DIR/run/marks"
 		local need_install=true
 
 		if [ "$force" != "true" ]; then
-			if module_check_installed "$module" "$mark" "$mark_file"; then
-				log "INFO" "Module $module already installed; skipping installation"
-				need_install=false
+			if module_check_installed "$module" "$mark" "$marks_file"; then
+				log "INFO" "Module $module already installed by global examining; trying specific check"
+				# if specific module's _check_install exists conduct it
+				local check_func="_${module}_check_installed"
+				if command -v "$check_func" &>/dev/null; then
+					if "$check_func" "${module}" "${mark}" "${marks_file}"; then
+						log "INFO" "Module $module passed specific check; skipping installation"
+						need_install=false
+					else
+						need_install=true	
+						log "INFO" "Module $module failed specific check; starting installation"
+					fi
+				else
+					log "INFO" "No specific check for module $module; skipping installation"
+					need_install=false
+				fi
 			else
 				log "INFO" "Module $module not installed; starting installation"
 			fi
@@ -43,14 +56,13 @@ execute_module() {
 
 		if [ "$need_install" = "true" ]; then
 			local install_func="_${module}_install"
-
 			if command -v "$install_func" &>/dev/null; then
-				"$install_func" "${module}" "${mark}" "${mark_file}"
+				"$install_func" "${module}" "${mark}" "${marks_file}"
 				if [ $? -ne 0 ]; then
 					log "ERROR" "Module $module failed to run $install_func"
 					return 1
 				fi
-				module_install_complete "${module}" "${mark}" "${mark_file}"
+				module_install_complete "${module}" "${mark}" "${marks_file}"
 			else
 				log "WARNING" "Module $module is missing ${install_func}; skipping installation"
 			fi
@@ -66,11 +78,11 @@ execute_module() {
 module_check_installed() {
 	local module=$1
 	local mark=$2
-	local mark_file=$3
-	if grep -Fq "$mark" "$mark_file"; then
-		log "DEBUG" "${module} module mark $mark found in $mark_file"
+	local marks_file=$3
+	if grep -Fq "$mark" "$marks_file"; then
+		log "DEBUG" "${module} module mark $mark found in $marks_file"
 	else
-		log "WARN" "${module} module mark $mark not found in $mark_file; considered older"
+		log "WARN" "${module} module mark $mark not found in $marks_file; considered older"
 		return 1
 	fi
 	if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/default.conf")" &&
@@ -80,7 +92,7 @@ module_check_installed() {
 	else
 		log "INFO" "${module} module config files modified since last run; module will run"
 		# remove the mark
-		sed -i "/^${mark}.*$/d" "$mark_file"
+		sed -i "/^${mark}.*$/d" "$marks_file"
 		return 1
 	fi
 }

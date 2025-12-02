@@ -90,3 +90,19 @@ _zsh_install() {
 	log "INFO" "=== ZSH installation and configuration completed ==="
 	return 0
 }
+
+_zsh_check_installed() {
+	local module=$1
+	local mark=$2
+	local marks_file=$3
+	local zshrc_file="$PROJECT_DIR/etc/.zshrc"
+	if ! mark_older_than "$mark" "$(stat -c %Y "$zshrc_file")"; then
+		log "DEBUG" "${module} module already applied (mark found)"
+		return 0
+	else
+		log "INFO" "${module} module config files modified since last run; module will run"
+		# remove the mark
+		sed -i "/^${mark}.*$/d" "$marks_file"
+		return 1
+	fi
+}
