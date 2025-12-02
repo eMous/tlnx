@@ -131,6 +131,7 @@ prompt_module_selection() {
 
 # Main function
 main() {
+    TLNX_ORIGINAL_ARGS=("$@")
     PROJECT_DIR=$(cd "$(dirname "$0")" && pwd)
     echo "[INFO]" "Project directory set to $PROJECT_DIR"
     source $PROJECT_DIR"/lib/common.sh"

@@ -1,10 +1,6 @@
 #!/bin/bash
 
 # ZSH module - install and configure ZSH
-zsh_installed_mark() {
-	echo "zsh-installed"
-}
-
 # Install ZSH
 zsh_install() {
 	log "INFO" "Installing and configuring ZSH..."
@@ -30,10 +26,11 @@ zsh_set_default() {
 	# Determine current user
 	local current_user=$(whoami)
 	# Update default shell for the user
-	sudo chsh -s $(which zsh) $(whoami) 2>&1 | tee -a "$LOG_FILE" 
+	local user=$(whoami)
+	sudo chsh -s "$(which zsh)" "$user" 2>&1 | tee -a "$LOG_FILE" 
 
 	if [ $? -eq 0 ]; then
-		log "INFO" "ZSH set as the default shell"
+		log "INFO" "ZSH set as the default shell for user $user"
 	else
 		log "WARNING" "Failed to set ZSH as the default shell; manual intervention may be required"
 	fi
@@ -77,20 +74,35 @@ ozsh_configure() {
 # Module entrypoint for install workflow
 _zsh_install() {
 	log "INFO" "=== Starting ZSH installation and configuration ==="
-
+	local current_shell=$(basename $SHELL)	
+	log "INFO" "current shell is $current_shell"
 	zsh_install
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
 
-	zsh_set_default
-	ozsh_install
-	ozsh_configure
+	if ! grep -qF "omzsh-setup" "$PROJECT_DIR/run/marks"; then
+		ozsh_install
+		ozsh_configure
+		echo "omzsh-setup $(date +%s)" >> "$PROJECT_DIR/run/marks"
+	else
+		log "INFO" "Oh My Zsh already installed and configured as there is a mark; skipping"
+	fi
+	# This should behind ozsh_install and ozsh_configure, becasue the old http_proxy in bashrc may be needed during installation
+	# if default log shell of the user is not zsh set it to zsh
+	if [ "$(basename $(get_default_shell))" != "zsh" ]; then
+		log "INFO" "Default shell is not ZSH, changing to ZSH"
+		zsh_set_default
+		if [ $? -ne 0 ]; then
+			return 1
+		fi
+	else
+		log "INFO" "Default shell is already ZSH; skipping default shell change"
+	fi
 	
+	install_rc_file $current_shell
 	log "INFO" "=== ZSH installation and configuration completed ==="
-	return 0
 }
-
 _zsh_check_installed() {
 	local module=$1
 	local mark=$2
@@ -104,5 +116,35 @@ _zsh_check_installed() {
 		# remove the mark
 		sed -i "/^${mark}.*$/d" "$marks_file"
 		return 1
+	fi
+}
+
+install_rc_file() {
+	local original_shell=$1
+
+	case "$original_shell" in
+		zsh)
+			;;
+		bash)
+			;;
+		*)
+			log "WARN" "Unsupported shell $original_shell; skipping rc file installation"
+			exit 1;;
+	esac
+
+	local zshrc_file="$PROJECT_DIR/etc/.zshrc"
+	if [ -f "$zshrc_file" ]; then
+		log "INFO" "Installing ZSH rc file..."
+		sudo mv "$HOME/.zshrc" "$HOME/.zshrc.$(date +%Y%m%d%H%M%S).bak" 2>&1 | tee -a "$LOG_FILE"
+		: > $HOME/.zshrc
+		append_shell_rc_block "$(cat "$zshrc_file")" "$HOME/.zshrc"
+		init_tlnx_in_path
+		# if set http proxy
+		if [ -n "$http_proxy" ]; then
+			set_http_proxy "$http_proxy"
+		fi
+		log "INFO" "ZSH rc file installed"
+	else
+		log "WARNING" "ZSH rc file not found; skipping installation"
 	fi
 }

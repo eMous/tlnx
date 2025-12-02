@@ -78,7 +78,8 @@ set_http_proxy() {
         rc_file="$HOME/.zshrc"
         ;;
     *)
-        rc_file="$HOME/.profile"
+        log "WARN" "Unsupported shell $shell_name; cannot set HTTP proxy"
+        return 1
         ;;
     esac
 

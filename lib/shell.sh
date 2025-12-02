@@ -259,3 +259,9 @@ check_rcfile() {
 	fi
 	log "INFO" "Using RC file: $RC_FILE"
 }
+
+get_default_shell() {
+	local default_shell
+	default_shell=$(getent passwd "$USER" | cut -d: -f7)
+	echo "$default_shell"
+}
