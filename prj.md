@@ -88,27 +88,27 @@ This is an automated server configuration tool that helps users set up a new clo
 3. The script loads the library files and logging configuration.
 4. Parse CLI options (`-h/--help`, `-l/--log-level`, `-t/--test`, `-f/--force`, `--modules`, `--select-modules`, `-e VAR=value`, `-d/--decrypt`, `-c/--encrypt`, `--set-http-proxy`).
 5. Before each module runs, check its timestamped mark inside `run/marks`. When the mark exists and the config files (`config/default.conf`, `config/enc.conf`) are newer, the mark is cleared so the module reruns; otherwise the module is skipped unless `-f/--force` is supplied.
-5. If `-d/--decrypt` is specified:
+6. If `-d/--decrypt` is specified:
    - Decrypt `config/enc.conf.enc` into `config/enc.conf`.
    - Exit after decryption completes.
-6. If `-c/--encrypt` is specified:
+7. If `-c/--encrypt` is specified:
    - Encrypt `config/enc.conf` into `config/enc.conf.enc`.
    - Exit after encryption completes.
-7. Apply any CLI overrides passed via `-e VAR=value` after both configs load so the user can force values without editing files.
-8. When a sudo command is required, try `TLNX_PASSWD` first, then `LOCAL_USER_PASSWD`, then `REMOTE_ENC_PASSWORD`; cache whichever password works in `TLNX_PASSWD` before falling back to an interactive prompt.
-9. If running in remote mode (`REMOTE_RUN=false`):
+8. Apply any CLI overrides passed via `-e VAR=value` after both configs load so the user can force values without editing files.
+9. When a sudo command is required, try `TLNX_PASSWD` first, then `LOCAL_USER_PASSWD`, then `REMOTE_ENC_PASSWORD`; cache whichever password works in `TLNX_PASSWD` before falling back to an interactive prompt.
+10. If running in remote mode (`REMOTE_RUN=false`):
    - Compress the project and transfer it to the target host via `rsync`.
    - Extract it on the target and run the script there.
    - Pass `SSH_CLIENT_HOST` to mark the remote session.
-10. If running locally:
+11. If running locally:
    - Detect the current OS (Linux or macOS).
    - Load the default configuration.
    - When `CONFIG_KEY` is available, decrypt and load the encrypted config.
    - When the `--select-modules` flag is used, list every available module script with numbers and prompt the user to choose modules by their indices (e.g., `1,3`).
    - When `-f/--force` is set, skip module "already installed" checks so install hooks rerun even if a module reports success previously.
    - Execute the selected modules in order.
-11. Generate configuration logs.
-12. Display the result and help information.
+12. Generate configuration logs.
+13. Display the result and help information.
 
 3.7 **Manual verification scripts**:
 - `tests/manual_git_module.sh` provisions Git inside a disposable `HOME` so global config changes stay inside the repo.
