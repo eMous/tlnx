@@ -140,6 +140,55 @@ append_shell_rc_sub_block() {
 	append_shell_rc_block "$block_content" "$rc_file"
 }
 
+remove_shell_rc_sub_block() {
+	local label="$1"
+	local rc_file="${2:-${RC_FILE}}"
+
+	if [ -z "$label" ]; then
+		log "ERROR" "remove_shell_rc_sub_block requires a label"
+		return 1
+	fi
+
+	local sub_start="#     >>> TLNX ${label} >>>"
+	local sub_end="#     <<< TLNX ${label} <<<"
+
+	if [ -z "$rc_file" ]; then
+		log "ERROR" "Unable to resolve target shell configuration file for sub block removal"
+		return 1
+	fi
+
+	if [ ! -e "$rc_file" ]; then
+		log "WARN" "Shell rc file $rc_file does not exist; nothing to remove"
+		return 0
+	fi
+
+	if ! grep -Fq "$sub_start" "$rc_file"; then
+		log "DEBUG" "No TLNX sub block ($label) found in $rc_file; nothing to remove"
+		return 0
+	fi
+
+	local tmp_file
+	tmp_file=$(mktemp) || {
+		log "ERROR" "Failed to create temporary file for sub block removal"
+		return 1
+	}
+
+	awk -v start="$sub_start" -v end="$sub_end" '
+		$0 == start {skip=1; next}
+		$0 == end {
+			if (skip) {
+				skip=0
+				next
+			}
+		}
+		skip==0 {print}
+	' "$rc_file" >"$tmp_file" && mv "$tmp_file" "$rc_file"
+
+	rm -f "$tmp_file"
+	log "INFO" "Removed TLNX sub block ($label) from $rc_file"
+	return 0
+}
+
 source_rcfile() {
 	local rc_file="${RC_FILE:-}"
 	if [ -z "$rc_file" ]; then

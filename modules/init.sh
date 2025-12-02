@@ -414,9 +414,19 @@ init_bash_setup() {
 		log "INFO" "No etc/.bashrc found, skipping bash basic setup"
 		return 0
 	fi
+	local mark="bash-basic-setup"
+	# if etc/.bashrc is newer than user's .bashrc, remove the previous block first
+	if [ "$PROJECT_DIR/etc/.bashrc" -nt "$HOME/.bashrc" ]; then
+		log "INFO" "Updating existing bashrc block in $HOME/.bashrc, as etc/.bashrc is newer"
+		remove_shell_rc_sub_block "bashrc template" "$HOME/.bashrc"
+		# remove mark of bash-basic-setup in run/marks
+		local MARK_FILE="$PROJECT_DIR/run/marks"
+		sed -i "/${mark}/d" "$MARK_FILE"
+	fi
+
 	# if there is a mark of bash-basic-setup in run/marks AND the etc/.bashrc is older than marks, skip
 	local MARK_FILE="$PROJECT_DIR/run/marks"
-	if grep -q "bash-basic-setup" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ]; then
+	if grep -q "${mark}" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ]; then
 		log "INFO" "Bash basic setup already applied, skipping"
 		return 0
 	fi
