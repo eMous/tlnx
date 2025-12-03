@@ -80,8 +80,9 @@ install_zshconf_files() {
 		if [ -f "$target" ] && [ "$target" -nt "$file" ]; then
 			log "INFO" "$filename exists and is newer than the template; skipping installation"
 			continue
-		elif [ "$file" -nt "$target" ] ; then
-			log "INFO" "$filename template is newer than existing file $target; backuping"
+		fi
+		
+		if [  -f "$target" ] ; then
 			mv "$target" "$target.$(date +%Y%m%d%H%M%S).bak" 2>&1 | tee -a "$LOG_FILE"
 			log "INFO" "Existing $filename backed up to $filename.$(date +%Y%m%d%H%M%S).bak"
 		fi

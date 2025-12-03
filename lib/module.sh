@@ -96,6 +96,7 @@ module_check_installed() {
 	local marks_file=$3
 	if [ ! -f "$marks_file" ]; then
 		log "WARN" "Marks file $marks_file does not exist; module $module considered not installed"
+		mkdir -p "$(dirname "$marks_file")"
 		touch "$marks_file"
 		return 1
 	fi
