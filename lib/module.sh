@@ -69,6 +69,21 @@ execute_module() {
 		fi
 
 		log "INFO" "Module $module completed"
+		# if [ "$module" = "zsh" ] && [ -z "${TLNX_RESTARTED:-}" ]; then
+		# 	log "INFO" "Restarting script under ZSH environment..."
+		# 	export TLNX_RESTARTED=true
+			
+		# 	# Reconstruct arguments
+		# 	local args=()
+		# 	if [ -n "${TLNX_ORIGINAL_ARGS+x}" ]; then
+		# 		for arg in "${TLNX_ORIGINAL_ARGS[@]}"; do
+		# 			args+=("$arg")
+		# 		done
+		# 	fi
+			
+		# 	# exec zsh to run bash tlnx
+		# 	exec zsh -l -c "exec bash \"$PROJECT_DIR/tlnx\" \"\$@\"" -- "${args[@]}"
+		# fi
 	else
 		log "WARNING" "Module script missing: modules/$module.sh; skipping"
 		return 1
@@ -138,6 +153,27 @@ mark_older_than() {
 		return 0
 	else
 		log "DEBUG" "Mark $mark timestamp $mark_timestamp is not older than $timestamp"
+		return 1
+	fi
+}
+
+checkout_package_file() {
+	local package_name=$1
+	local package_file="$PROJECT_DIR/packages/${package_name}.tar.gz"
+	# if package file not exists return 1
+	if [ ! -f "$package_file" ]; then
+		log "ERROR" "Package file $package_file does not exist"
+		return 1
+	fi
+
+	local destination="$PROJECT_DIR/run/packages/${package_name}"
+	mkdir -p "$destination"
+	
+	log "INFO" "Extracting package $package_name to $destination"
+	if tar -xzvf "$package_file" -C "$destination" 2>&1  >> "$LOG_FILE"; then
+		return 0
+	else
+		log "ERROR" "Failed to extract package $package_file"
 		return 1
 	fi
 }

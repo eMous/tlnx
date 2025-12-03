@@ -137,11 +137,11 @@ install_rc_file() {
 		log "INFO" "Installing ZSH rc file..."
 		sudo mv "$HOME/.zshrc" "$HOME/.zshrc.$(date +%Y%m%d%H%M%S).bak" 2>&1 | tee -a "$LOG_FILE"
 		: > $HOME/.zshrc
-		append_shell_rc_block "$(cat "$zshrc_file")" "$HOME/.zshrc"
-		init_tlnx_in_path
+		append_shell_rc_sub_block "zshrc template" "$(cat "$zshrc_file")" "$HOME/.zshrc"
+		init_tlnx_in_path $(which zsh)
 		# if set http proxy
 		if [ -n "$http_proxy" ]; then
-			set_http_proxy "$http_proxy"
+			set_http_proxy "$http_proxy" "$HOME/.zshrc"
 		fi
 		log "INFO" "ZSH rc file installed"
 	else

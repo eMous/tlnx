@@ -82,7 +82,7 @@ set_http_proxy() {
         return 1
         ;;
     esac
-
+    rc_file="${2:-${rc_file}}"
     if [ ! -e "$rc_file" ]; then
         if ! touch "$rc_file"; then
             log "ERROR" "Failed to create shell rc file $rc_file"
@@ -120,7 +120,7 @@ _tlnx_run_sudo_with_password() {
     fi
 
     log "DEBUG" "Running sudo command with provided password: sudo $*"
-    if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1 >"$LOG_FILE"; then
+    if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1 | tee -a "$LOG_FILE"; then
         return 0
     fi
 

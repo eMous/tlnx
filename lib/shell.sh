@@ -93,7 +93,7 @@ append_shell_rc_block() {
 append_shell_rc_sub_block() {
 	local label="$1"
 	local content="$2"
-	local target_shell="${3:-}"
+	local rc_file="${3:-}"
 
 	if [ -z "$content" ]; then
 		log "ERROR" "append_shell_rc_sub_block requires content to append"
@@ -104,7 +104,6 @@ append_shell_rc_sub_block() {
 	local sub_start="#     >>> TLNX ${sub_label} >>>"
 	local sub_end="#     <<< TLNX ${sub_label} <<<"
 
-	local rc_file=$RC_FILE
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "Unable to resolve target shell configuration file for sub block"
 		return 1

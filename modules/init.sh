@@ -6,7 +6,7 @@ _init_install() {
 	log "INFO" "=== Starting init module ==="
 	init_shell_rc_file
 	init_prjdir
-	init_tlnx_in_path
+	init_tlnx_in_path $SHELL
 	init_network_info
 	init_check_internet_access
 	init_enable_bbr
@@ -140,17 +140,29 @@ init_prjdir() {
 
 # Check tlnx in bin: Add $PROJECT_DIR to PATH in rc file
 init_tlnx_in_path() {
-	# Check if $PROJECT_DIR is in PATH
-	if echo "$PATH" | grep -q "$PROJECT_DIR"; then
-		log "INFO" "Project directory $PROJECT_DIR is already in PATH"
+	local shell="$(basename $1)"
+	case "$shell" in
+	bash)
+		local rc_file="${HOME}/.bashrc"
+		;;
+	zsh)
+		local rc_file="${HOME}/.zshrc"
+		;;
+	*)
+		log "WARN" "Unsupported shell $shell; cannot add project directory to PATH"
+		return 1
+		;;
+	esac
+	# Check if export PATH="$PROJECT_DIR: $PATH" is in PATH skip otherwise add it
+	local content_to_check="export PATH=\"$PROJECT_DIR:\$PATH\""
+	if grep -Fq "$content_to_check" "$rc_file"; then
+		log "INFO" "Project directory $PROJECT_DIR is already in $shell PATH in $rc_file"
 		return 0
-	else
-		log "INFO" "Adding project directory $PROJECT_DIR to PATH"
-		export PATH="$PROJECT_DIR:$PATH"
-		# add it to rc files
-		append_shell_rc_block "export PATH=\"$PROJECT_DIR:\$PATH\"" $RC_FILE
-		log "INFO" "Current PATH: $PATH"
 	fi
+	log "INFO" "Adding project directory $PROJECT_DIR to $shell PATH"
+	export PATH="$PROJECT_DIR:$PATH"
+	append_shell_rc_block "export PATH=\"$PROJECT_DIR:\$PATH\"" "$rc_file"
+	log "INFO" "Current PATH of shell $1: " $shell -i -c "echo $PATH"
 	return 0
 }
 
