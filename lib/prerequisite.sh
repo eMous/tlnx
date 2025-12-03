@@ -29,14 +29,14 @@ check_distro() {
 		DISTRO_VERSION=$VERSION_ID
 		log "INFO" "Detected distro: $DISTRO_NAME $DISTRO_VERSION"
 	else
-		log "WARNING" "Unable to detect distro; using defaults"
+		log "WARN" "Unable to detect distro; using defaults"
 		DISTRO_NAME="unknown"
 		DISTRO_VERSION="unknown"
 	fi
 
 	# if this is not Ubuntu 22 or 24, return 1
 	if [ "$DISTRO_NAME" != "ubuntu" ] || { [[ "$DISTRO_VERSION" != 22.* ]] && [[ "$DISTRO_VERSION" != 24.* ]]; }; then
-		log "WARNING" "Unsupported distro $DISTRO_NAME $DISTRO_VERSION"
+		log "WARN" "Unsupported distro $DISTRO_NAME $DISTRO_VERSION"
 		return 1
 	fi
 }

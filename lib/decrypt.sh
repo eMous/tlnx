@@ -3,6 +3,7 @@
 # Decrypt configuration script - outputs to file or stdout
 
 decrypt () {
+	log "VERBOSE" "Starting decrypt function"
 	# Argument validation
 	if [ $# -lt 1 ]; then
 		echo "Usage: $0 <encrypted file> [output file] [key env var]"
@@ -26,7 +27,6 @@ decrypt () {
 		echo "Using key from environment variable $DEFAULT_KEY_ENV" >&2
 	else
 		read -s -p "Enter decryption key: " KEY
-		echo
 	fi
 
 	# Ensure key is not empty

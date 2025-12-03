@@ -16,11 +16,10 @@ decrypt_config() {
 			else
 				log "INFO" "Decrypted config older than encrypted file; running decryption"
 			fi
-
-			if [ -f "decrypt" ]; then
+			if command -v "decrypt" &>/dev/null; then
 				DEFAULT_KEY_ENV=${CONFIG_DEFAULT_KEY_ENV:-"CONFIG_KEY"}
 
-				if . "decrypt" "${PROJECT_DIR}/config/enc.conf.enc" "${PROJECT_DIR}/config/enc.conf" "$DEFAULT_KEY_ENV"; then
+				if "decrypt" "${PROJECT_DIR}/config/enc.conf.enc" "${PROJECT_DIR}/config/enc.conf" "$DEFAULT_KEY_ENV"; then
 					log "INFO" "Encrypted config decrypted"
 
 					if [ -f "${PROJECT_DIR}/config/enc.conf" ]; then
@@ -37,7 +36,7 @@ decrypt_config() {
 					return 1
 				fi
 			else
-				log "WARNING" "decrypt not found; skipping decryption"
+				log "WARN" "decrypt not found; skipping decryption"
 				return 1
 			fi
 		fi

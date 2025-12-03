@@ -57,7 +57,7 @@ encrypt() {
 		exit 1
 	fi
 
-	# Encrypt using PBKDF2 for safety and to avoid deprecated warnings
+	# Encrypt using PBKDF2 for safety and to avoid deprecated WARNs
 	if [ -n "$OUTPUT_FILE" ]; then
 		# Write to file
 		openssl enc -e -aes-256-cbc -salt -pbkdf2 -in "$SOURCE_FILE" -k "$KEY" >"$OUTPUT_FILE"

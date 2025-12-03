@@ -7,7 +7,7 @@ display_usage() {
 	echo "Usage: $0 [options]"
 	echo ""
 	echo "Options:"
-	echo "  -l, --log-level <level>   Set log level (DEBUG, INFO, WARNING, ERROR); default INFO"
+	echo "  -l, --log-level <level>   Set log level (DEBUG, INFO, WARN, ERROR); default INFO"
 	echo "  -t, --test               Test mode: load config without running modules"
 	echo "  --modules <list>        Comma-separated modules, e.g., --modules docker,zsh"
 	echo "  -h, --help               Show help"
@@ -64,7 +64,7 @@ execute_module() {
 				fi
 				module_install_complete "${module}" "${mark}" "${marks_file}"
 			else
-				log "WARNING" "Module $module is missing ${install_func}; skipping installation"
+				log "WARN" "Module $module is missing ${install_func}; skipping installation"
 			fi
 		fi
 
@@ -85,7 +85,7 @@ execute_module() {
 		# 	exec zsh -l -c "exec bash \"$PROJECT_DIR/tlnx\" \"\$@\"" -- "${args[@]}"
 		# fi
 	else
-		log "WARNING" "Module script missing: modules/$module.sh; skipping"
+		log "WARN" "Module script missing: modules/$module.sh; skipping"
 		return 1
 	fi
 }

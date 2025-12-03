@@ -111,7 +111,7 @@ prompt_module_selection() {
         fi
         local index=$((token - 1))
         if [ "$index" -lt 0 ] || [ "$index" -ge "${#modules[@]}" ]; then
-            log "WARNING" "Module number out of range: $token"
+            log "WARN" "Module number out of range: $token"
             continue
         fi
         local module="${modules[$index]}"
@@ -264,7 +264,7 @@ done
     
     if [ "$ENCRYPT_MODE" = "true" ]; then
         echo "Running encrypt option..."
-        bash "scripts/encrypt.sh" "config/enc.conf" "config/enc.conf.enc"
+        encrypt "config/enc.conf" "config/enc.conf.enc"
         if [ $? -eq 0 ]; then
             echo "Encryption succeeded: config/enc.conf -> config/enc.conf.enc"
         else
@@ -302,13 +302,13 @@ done
             done < <(get_available_modules)
         fi
         if [ ${#AVAILABLE_MODULES[@]} -eq 0 ]; then
-            log "WARNING" "No module scripts detected for interactive selection"
+            log "WARN" "No module scripts detected for interactive selection"
         else
             if prompt_module_selection "${AVAILABLE_MODULES[@]}"; then
                 CUSTOM_MODULES="$PROMPT_MODULE_SELECTION_RESULT"
                 log "INFO" "Interactive module selection: ${CUSTOM_MODULES}"
             else
-                log "WARNING" "No modules were selected interactively; using configured module list"
+                log "WARN" "No modules were selected interactively; using configured module list"
             fi
         fi
     fi

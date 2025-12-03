@@ -35,12 +35,12 @@ log() {
     # Emit to console when level meets threshold
     local current_priority=$(get_log_priority "$LOG_LEVEL")
     local message_priority=$(get_log_priority "$level")
-
     # Only print when message priority is >= configured level
     if [ $message_priority -ge $current_priority ]; then
         local color_prefix="" color_suffix=""
         if [ -t 1 ] || [ -t 0 ]; then
             case "$level" in
+            "VERBOSE") color_prefix="\033[37m" ;;
             "DEBUG") color_prefix="\033[34m" ;;
             "INFO") color_prefix="\033[32m" ;;
             "WARN") color_prefix="\033[33m" ;;

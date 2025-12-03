@@ -95,7 +95,7 @@ EOF
 	"${ssh_cmd[@]}" "$target_user@$target_host" "rm -f $remote_temp_dir/$(basename $local_tar_file)" >>"$LOG_FILE" 2>&1
 
 	if [ $? -ne 0 ]; then
-		log "WARNING" "Unable to remove remote temporary archive"
+		log "WARN" "Unable to remove remote temporary archive"
 		# Continue regardless
 	fi
 

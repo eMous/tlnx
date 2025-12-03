@@ -32,7 +32,8 @@ zsh_set_default() {
 	if [ $? -eq 0 ]; then
 		log "INFO" "ZSH set as the default shell for user $user"
 	else
-		log "WARNING" "Failed to set ZSH as the default shell; manual intervention may be required"
+
+	log "VERBOSE" "Starting decrypt function"		log "WARN" "Failed to set ZSH as the default shell; manual intervention may be required"
 	fi
 }
 
@@ -64,22 +65,27 @@ _zsh_install() {
 
 	log "INFO" "=== ZSH installation and configuration completed ==="
 }
+
 install_zshconf_files() {
 	local files=("$PROJECT_DIR/etc/.zshenv" "$PROJECT_DIR/etc/.zshrc")
 	for file in "${files[@]}"; do
 		local filename=$(basename "$file")
 		local target="$HOME/$filename"
 		if [ ! -f "$file" ]; then
-			log "WARNING" "ZSH configuration file $file not found; skipping installation"
+			log "WARN" "ZSH configuration file $file not found; skipping installation"
 			continue
 		fi
-		if [ -f "$target" ] && [ "$file" -nt "$target" ]; then
-			sudo mv "$target" "$target.$(date +%Y%m%d%H%M%S).bak" 2>&1 | tee -a "$LOG_FILE"
+		# if target exists and ( file new than target  OR target is not exist ) then backup and install
+		if [ -f "$target" ] && [ "$target" -nt "$file" ]; then
+			log "INFO" "$filename exists and is newer than the template; skipping installation"
+			continue
+		elif [ "$file" -nt "$target" ] ; then
+			log "INFO" "$filename template is newer than existing file $target; backuping"
+			mv "$target" "$target.$(date +%Y%m%d%H%M%S).bak" 2>&1 | tee -a "$LOG_FILE"
 			log "INFO" "Existing $filename backed up to $filename.$(date +%Y%m%d%H%M%S).bak"
-			: > "$target"
-			append_shell_rc_sub_block "$filename template" "$(cat "$file")" "$target"
-			log "INFO" "$filename installed"
 		fi
+		append_shell_rc_sub_block "$filename template" "$(cat "$file")" "$target"
+		log "INFO" "$filename updated"
 	done
 }
 install_rc_patch() {
@@ -91,7 +97,7 @@ install_rc_patch() {
 			set_http_proxy "$http_proxy" "$HOME/.zshrc"
 		fi
 	else 
-		log "WARNING" "ZSH rc file not found; skipping patch"
+		log "WARN" "ZSH rc file not found; skipping patch"
 	fi
 }
 install_zimfw() {
@@ -111,7 +117,6 @@ install_zimfw() {
 	if [ ! -f "${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc}" ] || [ $PROJECT_DIR/etc/.zimrc -nt ${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc} ]; then
 		cp $PROJECT_DIR/etc/.zimrc "${ZIM_CONFIG_FILE:-${ZDOTDIR:-${HOME}}/.zimrc}"
 	fi
-	append_shell_rc_sub_block "zimfw installation" "$content" "$HOME/.zshrc"
 	# Install missing modules and update ${ZIM_HOME}/init.zsh if missing or outdated.
 	add_mark "$mark"
 	return 0
@@ -166,6 +171,6 @@ _zsh_check_installed() {
 # 		fi
 # 		log "INFO" "ZSH rc file installed"
 # 	else
-# 		log "WARNING" "ZSH rc file not found; skipping installation"
+# 		log "WARN" "ZSH rc file not found; skipping installation"
 # 	fi
 # }
