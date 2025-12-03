@@ -36,41 +36,6 @@ zsh_set_default() {
 	fi
 }
 
-# Install Oh My Zsh
-ozsh_install() {
-	log "INFO" "Installing Oh My Zsh..."
-
-	# Download and run the installer
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>&1 | tee -a "$LOG_FILE"
-
-	if [ -d "$HOME/.oh-my-zsh" ]; then
-		log "INFO" "Oh My Zsh installation succeeded"
-	else
-		log "WARNING" "Oh My Zsh installation failed; skipping"
-	fi
-}
-
-# Configure ZSH
-ozsh_configure() {
-	log "INFO" "Configuring ZSH..."
-
-	# Choose theme from config or default
-	local theme=${ZSH_THEME:-"robbyrussell"}
-
-	# Check the ~/.zshrc file
-	if [ -f "$HOME/.zshrc" ]; then
-		# Backup the existing config
-		cp "$HOME/.zshrc" "$HOME/.zshrc.bak" 2>&1 | tee -a "$LOG_FILE"
-
-		# Update the theme
-		sed -i "s/ZSH_THEME=.*/ZSH_THEME=\"$theme\"/" "$HOME/.zshrc" 2>&1 | tee -a "$LOG_FILE"
-
-		log "INFO" "ZSH configuration updated"
-	else
-		log "WARNING" "~/.zshrc file not found; skipping configuration"
-	fi
-}
-
 # Module entrypoint for install workflow
 _zsh_install() {
 	log "INFO" "=== Starting ZSH installation and configuration ==="
@@ -79,14 +44,6 @@ _zsh_install() {
 	zsh_install
 	if [ $? -ne 0 ]; then
 		return 1
-	fi
-
-	if ! grep -qF "omzsh-setup" "$PROJECT_DIR/run/marks"; then
-		ozsh_install
-		ozsh_configure
-		echo "omzsh-setup $(date +%s)" >> "$PROJECT_DIR/run/marks"
-	else
-		log "INFO" "Oh My Zsh already installed and configured as there is a mark; skipping"
 	fi
 	# This should behind ozsh_install and ozsh_configure, becasue the old http_proxy in bashrc may be needed during installation
 	# if default log shell of the user is not zsh set it to zsh
