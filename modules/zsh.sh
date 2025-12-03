@@ -43,7 +43,8 @@ _zsh_install() {
 	local current_shell=$(basename $SHELL)	
 	log "INFO" "current shell is $current_shell"
 	zsh_install
-	if [ $? -ne 0 ]; then
+	if ! command -v zsh >/dev/null 2>&1; then
+		log "ERROR" "ZSH installation failed; aborting ZSH module"
 		return 1
 	fi
 

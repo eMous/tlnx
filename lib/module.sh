@@ -94,6 +94,11 @@ module_check_installed() {
 	local module=$1
 	local mark=$2
 	local marks_file=$3
+	if [ ! -f "$marks_file" ]; then
+		log "WARN" "Marks file $marks_file does not exist; module $module considered not installed"
+		touch "$marks_file"
+		return 1
+	fi
 	if grep -Fq "$mark" "$marks_file"; then
 		log "DEBUG" "${module} module mark $mark found in $marks_file"
 	else
