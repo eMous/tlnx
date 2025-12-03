@@ -54,11 +54,13 @@ This is an automated server configuration tool that helps users set up a new clo
 │   └── remote.sh        # Remote execution helper
 ├── modules/             # Individual module scripts
 │   ├── docker.sh        # Docker module
-│   └── zsh.sh           # ZSH module
+│   ├── zsh.sh           # ZSH module
+│   └── clashctl.sh      # Clashctl proxy module
 ├── config/              # Configuration files
 │   ├── default.conf     # Default config example
 │   ├── default.conf.template  # Config template
 │   └── enc.conf.enc     # Encrypted config
+├── packages/            # Offline bundles (e.g., clash-for-linux-install.tar.gz)
 ├── scripts/             # Helper scripts
 │   ├── decrypt.sh       # Decryption helper
 │   └── encrypt.sh       # Encryption helper
@@ -81,6 +83,13 @@ This is an automated server configuration tool that helps users set up a new clo
 - **Git ignore policy**: Add the encrypted config (`config/enc.conf.enc`), decrypted config (`config/enc.conf`), and log files (`logs/`) to `.gitignore` to keep secrets and logs out of GitHub.
 
 - **Environment variable guide**: Refer to `config/default.conf.template` for the full list of variables and explanations.
+- **Module orchestration**:
+  - `config/default.conf` seeds `CONFIG_MODULES=("init" "git" "zsh" "clashctl")` so proxy tooling installs automatically on new hosts.
+  - Override the default list via `--modules`, `--select-modules`, or by editing the config when bespoke orderings are needed.
+- **Offline package staging**:
+  - Prebuilt archives (for example `clash-for-linux-install.tar.gz`) live under `packages/` so air-gapped installs stay reproducible.
+  - `checkout_package_file` extracts each archive into `run/packages/<name>` before the owning module runs.
+  - Modules consume the extracted content directly, minimizing external downloads except for explicit inputs such as subscription URLs.
 
 3.3 **Execution flow**:
 1. The user clones the project from GitHub.
@@ -114,6 +123,15 @@ This is an automated server configuration tool that helps users set up a new clo
 - `tests/manual_git_module.sh` provisions Git inside a disposable `HOME` so global config changes stay inside the repo.
 - `tests/manual_init_bash_setup.sh`, `tests/manual_init_basic_info.sh`, and `tests/manual_init_ssh_keys.sh` exercise specific init subroutines.
 - `tests/manual_zsh_module.sh` spins up a throwaway HOME directory, runs the ZSH module end-to-end, and prints the resulting `.zshrc` plus the log location so shell customization can be validated without touching the real workstation.
+
+3.8 **Clashctl module**:
+- Purpose: install the Clash/Clashctl proxy stack so outbound traffic respects the configured subscription as soon as the base environment is ready.
+- Packaging flow:
+  1. `_clashctl_install` calls `checkout_package_file clash-for-linux-install`, which extracts `packages/clash-for-linux-install.tar.gz` into `run/packages/clash-for-linux-install`.
+  2. When `CLASHCTL_SUB_X` is set in the config, the module fetches the subscription YAML into `resources/config.yaml` inside the extracted directory.
+  3. The module runs the bundled `uninstall.sh` and `install.sh` via `sudo $SHELL` to ensure a clean re-install each time.
+  4. All stdout/stderr streams are tee'd into `logs/server_config-*.log` so proxy provisioning diagnostics stay captured.
+- Because the tarball lives inside the repo, Clashctl installs succeed even on air-gapped machines; only the optional subscription download hits the network.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.
@@ -239,6 +257,8 @@ CONFIG_KEY=your-secret-key ./tlnx
 
 # Remote execution for specific modules
 ./tlnx --modules docker,zsh
+# Refresh the Clashctl proxy tooling alone
+./tlnx --modules clashctl
 
 # Override configuration values at runtime (applied after configs load)
 ./tlnx -e REMOTE_RUN=true -e LOG_LEVEL=DEBUG

@@ -681,3 +681,31 @@ Option 2: provide a reproducible manual harness, update the project requirements
 
 ## Lessons
 You expect every new capability—even small test helpers—to ship with documentation and codex history so future contributors know how to use it and why it exists; summarizing the change set before committing reinforces that discipline.
+
+---
+id: demand-025
+date: 2025-12-02T15:45:00Z
+type: docs
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked me to read through the latest repository changes, document the newly added Clashctl module plus the offline package flow, and then prepare the Markdown files for a commit so the docs reflect reality.
+
+## Options
+1. Leave `prj.md` and `codex.md` untouched even though the code now includes `modules/clashctl.sh`, new package archives, and helper functions such as `checkout_package_file`.
+2. Update the documentation immediately so the module list, package handling, and history log describe the new behavior and default module ordering.
+
+## Decision
+Option 2: refresh the docs to include the Clashctl module, package staging details, and this codex entry before committing.
+
+## Result
+- Expanded the project layout and configuration management sections to mention `modules/clashctl.sh`, `packages/`, and the default `CONFIG_MODULES=("init" "git" "zsh" "clashctl")`.
+- Added a dedicated Clashctl module subsection outlining how the packaged installer is extracted, how `CLASHCTL_SUB_X` seeds `resources/config.yaml`, and how the scripts run under sudo with logs captured.
+- Logged this demand here so future contributors know why the Markdown files were updated alongside the new module work.
+
+## Lessons
+Whenever you introduce a new module or helper, you expect the documentation and history to capture the full workflow (including offline assets and env vars) right away so the repo stays self-explanatory.
