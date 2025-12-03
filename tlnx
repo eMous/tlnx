@@ -134,13 +134,15 @@ main() {
     TLNX_ORIGINAL_ARGS=("$@")
     PROJECT_DIR=$(cd "$(dirname "$0")" && pwd)
     echo "[INFO]" "Project directory set to $PROJECT_DIR"
-    source $PROJECT_DIR"/lib/common.sh"
-    source $PROJECT_DIR"/lib/shell.sh"
-    source $PROJECT_DIR"/lib/prerequisite.sh"
-    source $PROJECT_DIR"/lib/remote.sh"
-    source $PROJECT_DIR"/lib/config.sh"
-    source $PROJECT_DIR"/lib/module.sh"
-    source $PROJECT_DIR"/lib/version.sh"
+
+    # source every file in lib
+    for lib_file in "$PROJECT_DIR"/lib/*.sh; do
+        source "$lib_file"
+    done
+    # source every file in modules
+    for module_file in "$PROJECT_DIR"/modules/*.sh; do
+        source "$module_file"
+    done
 
     # Initialize defaults
 	local LOG_LEVEL="INFO"
@@ -250,7 +252,7 @@ done
     # Handle decrypt/encrypt only modes
     if [ "$DECRYPT_MODE" = "true" ]; then
         echo "Running decrypt option..."
-        bash "scripts/decrypt.sh" "config/enc.conf.enc" "config/enc.conf"
+        bash "decrypt" "config/enc.conf.enc" "config/enc.conf"
         if [ $? -eq 0 ]; then
             echo "Decryption succeeded: config/enc.conf.enc -> config/enc.conf"
         else

@@ -16,7 +16,7 @@ display_usage() {
 	exit 1
 }
 
-main() {
+encrypt() {
 	# Validate arguments
 	if [ $# -lt 1 ]; then
 		display_usage
@@ -80,4 +80,3 @@ main() {
 	fi
 }
 
-main "$@"

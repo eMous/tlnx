@@ -40,11 +40,11 @@ execute_module() {
 						log "INFO" "Module $module passed specific check; skipping installation"
 						need_install=false
 					else
-						need_install=true	
+						need_install=true
 						log "INFO" "Module $module failed specific check; starting installation"
 					fi
 				else
-					log "INFO" "No specific check for module $module; skipping installation"
+					log "INFO" "No specific check for module $module, no _${module}_check_installed; skipping installation"
 					need_install=false
 				fi
 			else
@@ -72,7 +72,7 @@ execute_module() {
 		# if [ "$module" = "zsh" ] && [ -z "${TLNX_RESTARTED:-}" ]; then
 		# 	log "INFO" "Restarting script under ZSH environment..."
 		# 	export TLNX_RESTARTED=true
-			
+
 		# 	# Reconstruct arguments
 		# 	local args=()
 		# 	if [ -n "${TLNX_ORIGINAL_ARGS+x}" ]; then
@@ -80,7 +80,7 @@ execute_module() {
 		# 			args+=("$arg")
 		# 		done
 		# 	fi
-			
+
 		# 	# exec zsh to run bash tlnx
 		# 	exec zsh -l -c "exec bash \"$PROJECT_DIR/tlnx\" \"\$@\"" -- "${args[@]}"
 		# fi
@@ -119,7 +119,12 @@ module_install_complete() {
 	echo "$mark $(date +%s)" >>"$mark_file"
 	log "INFO" "${module} module mark $mark added to $mark_file"
 }
-
+add_mark() {
+	local mark=$1
+	local mark_file=${2:-"$PROJECT_DIR/run/marks"}
+	echo "$mark $(date +%s)" >>"$mark_file"
+	log "INFO" "Mark $mark added to $mark_file"
+}
 mark_older_than() {
 	local mark=$1
 	local timestamp=$2
@@ -157,6 +162,27 @@ mark_older_than() {
 	fi
 }
 
+mark_exists() {
+	local mark=$1
+	local mark_file=${2:-"$PROJECT_DIR/run/marks"}
+
+	# if mark file doesn't exist, consider mark not exists
+	if [ ! -f "$mark_file" ]; then
+		log "WARN" "Mark file $mark_file does not exist; mark $mark considered not exists"
+		touch "$mark_file"
+		return 1
+	fi
+
+	# check if mark exists in mark file
+	if grep -Fq "${mark} " "$mark_file"; then
+		log "DEBUG" "Mark $mark exists in $mark_file"
+		return 0
+	else
+		log "DEBUG" "Mark $mark does not exist in $mark_file"
+		return 1
+	fi
+}
+
 checkout_package_file() {
 	local package_name=$1
 	local package_file="$PROJECT_DIR/packages/${package_name}.tar.gz"
@@ -168,9 +194,9 @@ checkout_package_file() {
 
 	local destination="$PROJECT_DIR/run/packages/${package_name}"
 	mkdir -p "$destination"
-	
+
 	log "INFO" "Extracting package $package_name to $destination"
-	if tar -xzvf "$package_file" -C "$destination" 2>&1  >> "$LOG_FILE"; then
+	if tar -xzvf "$package_file" -C "$destination" 2>&1 >>"$LOG_FILE"; then
 		return 0
 	else
 		log "ERROR" "Failed to extract package $package_file"

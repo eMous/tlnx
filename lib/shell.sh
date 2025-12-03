@@ -264,3 +264,15 @@ get_default_shell() {
 	default_shell=$(getent passwd "$USER" | cut -d: -f7)
 	echo "$default_shell"
 }
+
+mark_exists() {
+	local mark=$1
+	local marks_file=${2:-"$PROJECT_DIR/run/marks"}
+	if grep -Fq "$mark" "$marks_file"; then
+		log "DEBUG" "mark $mark found in $marks_file"
+		return 0
+	else
+		log "WARN" "mark $mark not found in $marks_file"
+		return 1
+	fi
+}

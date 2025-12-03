@@ -2,7 +2,7 @@
 
 # Decrypt configuration script - outputs to file or stdout
 
-main() {
+decrypt () {
 	# Argument validation
 	if [ $# -lt 1 ]; then
 		echo "Usage: $0 <encrypted file> [output file] [key env var]"
@@ -56,6 +56,5 @@ main() {
 	fi
 }
 
-main "$@"
 
 
