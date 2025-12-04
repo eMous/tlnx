@@ -4,9 +4,6 @@
 # Purpose: encrypt configuration content
 # Version: 1.0
 
-# Enable strict mode
-set -e
-
 # Usage helper
 display_usage() {
 	echo "Usage: $0 <source file> [encrypted output file] [key env var]"

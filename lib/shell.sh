@@ -196,6 +196,7 @@ source_rcfile() {
 	fi
 
 	if [ -f "$rc_file" ]; then
+		log "VERBOSE" "Sourcing shell rc file: $rc_file"
 		# shellcheck source=/dev/null
 		source "$rc_file"
 		log "INFO" "Sourced shell rc file: $rc_file"
@@ -206,6 +207,7 @@ source_rcfile() {
 
 init_shell_rc_file() {
 	local rc_file="${RC_FILE:-}" block_start backup_file
+	log "VERBOSE" "Initializing shell rc file: $rc_file"
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "RC_FILE is not set; cannot initialize rc file"
 		return 1
