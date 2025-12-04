@@ -4,65 +4,19 @@
 
 FRP_VERSION="0.58.1"
 
-frp_check_arch() {
-	local arch=$(uname -m)
-	case $arch in
-		x86_64)
-			echo "amd64"
-			;;
-		aarch64)
-			echo "arm64"
-			;;
-		*)
-			log "ERROR" "Unsupported architecture: $arch"
-			return 1
-			;;
-	esac
+_frp_installed_check() {
+    if mark_older_than "frp_installed_mark" "$(stat -c %Y "$PROJECT_DIR/etc/HOME/.conf/frp/frpc.toml")" || mark_older_than "frp_installed_mark" "$(stat -c %Y "$PROJECT_DIR/etc/HOME/.conf/frp/frps.toml")"; then
+        log "INFO" "FRP module config files modified since last run; module will run"
+        # remove the mark
+        sed -i "/^frp_installed_mark.*$/d" "$PROJECT_DIR/run/marks"
+        return 1
+    else
+        log "DEBUG" "FRP module already applied (mark found)"
+        return 0
+    fi
 }
 
-frp_install() {
-	if command -v frpc >/dev/null 2>&1; then
-		log "INFO" "frpc is already installed"
-		return 0
-	fi
 
-	local arch
-	arch=$(frp_check_arch) || return 1
-	
-	local filename="frp_${FRP_VERSION}_linux_${arch}"
-	local url="https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/${filename}.tar.gz"
-	local tmp_dir="/tmp/frp_install"
-	
-	log "INFO" "Downloading FRP from $url"
-	mkdir -p "$tmp_dir"
-	
-	if curl -L "$url" -o "$tmp_dir/frp.tar.gz" 2>&1 | tee -a "$LOG_FILE"; then
-		log "INFO" "Download successful"
-	else
-		log "ERROR" "Download failed"
-		rm -rf "$tmp_dir"
-		return 1
-	fi
-	
-	log "INFO" "Extracting FRP..."
-	tar -xzf "$tmp_dir/frp.tar.gz" -C "$tmp_dir"
-	
-	log "INFO" "Installing frpc binary..."
-	sudo cp "$tmp_dir/$filename/frpc" /usr/local/bin/
-	sudo chmod +x /usr/local/bin/frpc
-	
-	sudo mkdir -p /etc/frp
-	
-	# Clean up
-	rm -rf "$tmp_dir"
-	
-	if command -v frpc >/dev/null; then
-		log "INFO" "frpc installed successfully"
-	else
-		log "ERROR" "frpc installation failed"
-		return 1
-	fi
-}
 
 frp_configure() {
 	local config_file="/etc/frp/frpc.toml"
@@ -120,7 +74,52 @@ EOF
 
 _frp_install() {
 	log "INFO" "=== Starting FRP module ==="
-	frp_install
+    local package_name="frp"
+    if ! checkout_package_file "$package_name"; then
+        log "ERROR" "Failed to checkout package file for $package_name"
+        return 1
+    fi
+ 
+    local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
+    cd $extracted_dir
+    local frpc_binary="frpc"
+    local frps_binary="frps"
+
+
 	frp_configure
+    
 	log "INFO" "=== FRP module completed ==="
+}
+
+_frp_uninstall() {
+    log "INFO" "=== Starting FRP module uninstallation ==="
+    # check if frpc service exists
+    if ! systemctl list-units --full -all | grep -Fq "frps.service"; then
+        log "INFO" "frps service not found; skipping uninstall frps service"
+        return 0
+    else 
+        log "INFO" "frps service found; try to uninstall frps service"
+        sudo systemctl stop frps
+        sudo systemctl disable frps
+        sudo rm -f /etc/systemd/system/frps.service
+    fi
+
+    if ! systemctl list-units --full -all | grep -Fq "frpc.service"; then
+        log "INFO" "frpc service not found; skipping uninstall frpc service"
+        return 0
+    else
+        log "INFO" "frpc service found; try to uninstall frpc service"
+        sudo systemctl stop frpc
+        sudo systemctl disable frpc
+        sudo rm -f /etc/systemd/system/frpc.service
+    fi
+
+    # TODO HERE
+    sudo rm -f /usr/local/bin/frpc
+    sudo rm -f /usr/local/bin/frps
+
+    sudo rm -f /etc/frp/frpc.toml
+    sudo systemctl daemon-reload
+    log "INFO" "FRP module uninstalled"
+    log "INFO" "=== FRP module uninstallation completed ==="
 }
