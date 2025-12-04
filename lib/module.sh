@@ -62,6 +62,7 @@ execute_module() {
 					log "ERROR" "Module $module failed to run $install_func"
 					return 1
 				fi
+				module_install_callback "${module}"
 				module_install_complete "${module}" "${mark}" "${marks_file}"
 			else
 				log "WARN" "Module $module is missing ${install_func}; skipping installation"
@@ -69,21 +70,6 @@ execute_module() {
 		fi
 
 		log "INFO" "Module $module completed"
-		# if [ "$module" = "zsh" ] && [ -z "${TLNX_RESTARTED:-}" ]; then
-		# 	log "INFO" "Restarting script under ZSH environment..."
-		# 	export TLNX_RESTARTED=true
-
-		# 	# Reconstruct arguments
-		# 	local args=()
-		# 	if [ -n "${TLNX_ORIGINAL_ARGS+x}" ]; then
-		# 		for arg in "${TLNX_ORIGINAL_ARGS[@]}"; do
-		# 			args+=("$arg")
-		# 		done
-		# 	fi
-
-		# 	# exec zsh to run bash tlnx
-		# 	exec zsh -l -c "exec bash \"$PROJECT_DIR/tlnx\" \"\$@\"" -- "${args[@]}"
-		# fi
 	else
 		log "WARN" "Module script missing: modules/$module.sh; skipping"
 		return 1
@@ -125,6 +111,58 @@ module_install_complete() {
 	echo "$mark $(date +%s)" >>"$mark_file"
 	log "INFO" "${module} module mark $mark added to $mark_file"
 }
+
+
+
+module_install_callback() {
+	log "VERBOSE" "Running post-install callbacks for module $module"
+	local all_modules=()
+	for mod_file in "$PROJECT_DIR/modules/"*.sh; do
+		mod_name=$(basename "$mod_file" .sh)
+		all_modules+=("$mod_name")
+	done
+	log "DEBUG" "All modules: ${all_modules[*]}"
+	
+	local module=$1
+	local module_post_reg_func="_${module}_post_install_register"
+	if command -v "$module_post_reg_func" &>/dev/null; then
+		log "INFO" "Module $module has a func to register relevant modules post installation."
+		"$module_post_reg_func"
+		if [ $? -ne 0 ]; then
+			log "ERROR" "Module $module failed to run $module_post_reg_func"
+			return 1
+		fi
+	else
+		log "DEBUG" "Module $module has no post installation registration function."
+	fi
+	local all_callback_funcs=()
+	for mod in "${all_modules[@]}"; do
+		if [ "$mod" = "$module" ]; then
+			continue
+		fi
+		local callback_func1="_${mod}_${module}_post_install_callback"
+		local callback_func2="_${module}_${mod}_post_install_callback"
+		if command -v "$callback_func1" &>/dev/null && ! mark_exists "$callback_func1" && ! mark_exists "$callback_func2"; then
+			log "INFO" "Module $mod has a post installation callback for $module."
+			"$callback_func1"
+			if [ $? -ne 0 ]; then
+				log "ERROR" "Module $mod failed to run $callback_func1"
+				return 1
+			fi
+			add_mark "$callback_func1"
+		fi
+		if command -v "$callback_func2" &>/dev/null && ! mark_exists "$callback_func2" && ! mark_exists "$callback_func1"; then
+			log "INFO" "Module $module has a post installation callback for $mod."
+			"$callback_func2"
+			if [ $? -ne 0 ]; then
+				log "ERROR" "Module $module failed to run $callback_func2"
+				return 1
+			fi
+			add_mark "$callback_func2"
+		fi
+	done
+}
+
 add_mark() {
 	local mark=$1
 	local mark_file=${2:-"$PROJECT_DIR/run/marks"}

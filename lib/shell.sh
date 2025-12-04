@@ -243,12 +243,16 @@ init_shell_rc_file() {
 	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
 	return 0
 }
-
+get_currentshell(){
+	local ps_content="$(ps -p $$ -o cmd=)"
+	local SHELL_NAME=$(awk '{print $1}' <<<"$ps_content" | xargs basename)
+	echo "$SHELL_NAME"
+}
 check_rcfile() {
-	log "INFO" "Checking for existing RC file configurations"
+	log "INFO" "Checking for existing RC file configurations for CURRENT RUNNING SHELL"
 	# considering zsh and bash only for now
-	local SHELL_NAME
-	SHELL_NAME=$(basename "$SHELL")
+
+	local SHELL_NAME=$(get_currentshell)
 	RC_FILE=""
 	if [ "$SHELL_NAME" = "zsh" ]; then
 		RC_FILE="$HOME/.zshrc"

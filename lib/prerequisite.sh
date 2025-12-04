@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 _detect_prerequisites() {
 	check_user || {
 		log "ERROR" "User check failed. Exiting."

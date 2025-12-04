@@ -6,7 +6,7 @@ _init_install() {
 	log "INFO" "=== Starting init module ==="
 	init_shell_rc_file
 	init_prjdir
-	init_tlnx_in_path $SHELL
+	init_tlnx_in_path $(get_currentshell)
 	init_network_info
 	init_check_internet_access
 	init_enable_bbr

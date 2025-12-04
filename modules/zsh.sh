@@ -40,7 +40,7 @@ zsh_set_default() {
 # Module entrypoint for install workflow
 _zsh_install() {
 	log "INFO" "=== Starting ZSH installation and configuration ==="
-	local current_shell=$(basename $SHELL)	
+	local current_shell=$(get_currentshell)
 	log "INFO" "current shell is $current_shell"
 	zsh_install
 	if ! command -v zsh >/dev/null 2>&1; then
