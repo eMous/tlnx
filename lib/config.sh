@@ -1,30 +1,5 @@
 #!/bin/bash
 
-apply_enc_overrides_from_file() {
-	local conf_file="$1"
-
-	if [ -z "$conf_file" ] || [ ! -f "$conf_file" ]; then
-		return 0
-	fi
-
-	while IFS='=' read -r raw_key _; do
-		local key trimmed_key base_key
-		trimmed_key=$(echo "$raw_key" | tr -d '[:space:]')
-		if [[ -z "$trimmed_key" || "$trimmed_key" =~ ^# ]]; then
-			continue
-		fi
-		key="$trimmed_key"
-		if [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*_X$ ]]; then
-			base_key="${key%_X}"
-			if [ -z "$base_key" ] || [ -z "${!key+x}" ]; then
-				continue
-			fi
-			printf -v "$base_key" '%s' "${!key}"
-			log "DEBUG" "Applied encrypted override ${key} -> ${base_key}"
-		fi
-	done < <(grep -E '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*=' "$conf_file")
-}
-
 # Decrypt configuration when encrypted file exists
 decrypt_config() {
 	log "INFO" "Checking for encrypted configuration..."
@@ -33,7 +8,6 @@ decrypt_config() {
 		if [ -f "${PROJECT_DIR}/config/enc.conf" ] && [ "${PROJECT_DIR}/config/enc.conf" -nt "${PROJECT_DIR}/config/enc.conf.enc" ]; then
 			log "INFO" "Decrypted config is newer than encrypted source; loading"
 			source "${PROJECT_DIR}/config/enc.conf"
-			apply_enc_overrides_from_file "${PROJECT_DIR}/config/enc.conf"
 			log "INFO" "Encrypted configuration loaded"
 			return 0
 		else
@@ -51,7 +25,6 @@ decrypt_config() {
 					if [ -f "${PROJECT_DIR}/config/enc.conf" ]; then
 						log "INFO" "Loading decrypted configuration"
 						source "${PROJECT_DIR}/config/enc.conf"
-						apply_enc_overrides_from_file "${PROJECT_DIR}/config/enc.conf"
 						log "INFO" "Encrypted configuration loaded"
 						return 0
 					else
@@ -90,10 +63,10 @@ _load_config() {
 		CONFIG_MODULES=("${MODULES[@]}")
 	fi
 
-	TARGET_HOST="$TARGET_ENC_HOST"
-	TARGET_USER="$TARGET_ENC_USER"
-	TARGET_PORT="$TARGET_ENC_PORT"
-	TARGET_PASSWORD="$TARGET_ENC_PASSWORD"
+	TARGET_HOST="$REMOTE_ENC_HOST_X"
+	TARGET_USER="$REMOTE_ENC_USER_X"
+	TARGET_PORT="$REMOTE_ENC_PORT_X"
+	TARGET_PASSWORD="$REMOTE_ENC_PASSWORD_X"
 }
 
 get_proxy_value_from_configs() {

@@ -109,7 +109,7 @@ This is an automated server configuration tool that helps users set up a new clo
    - Encrypt `config/enc.conf` into `config/enc.conf.enc`.
    - Exit after encryption completes.
 8. Apply any CLI overrides passed via `-e VAR=value` after both configs load so the user can force values without editing files.
-9. When a sudo command is required, try `TLNX_PASSWD` first, then `LOCAL_USER_PASSWD`, then `REMOTE_ENC_PASSWORD`; cache whichever password works in `TLNX_PASSWD` before falling back to an interactive prompt.
+9. When a sudo command is required, try `TLNX_PASSWD` first, then `LOCAL_USER_PASSWD_X`, then `REMOTE_ENC_PASSWORD_X`; cache whichever password works in `TLNX_PASSWD` before falling back to an interactive prompt.
 10. If running in remote mode (`REMOTE_RUN=false`):
    - Compress the project and transfer it to the target host via `rsync`.
    - Extract it on the target and run the script there.
@@ -284,7 +284,7 @@ CONFIG_KEY=your-secret-key ./tlnx
 # Repeat `-e` flags to override multiple values; overrides are evaluated left-to-right so later flags win when they target the same variable.
 
 # Provide the sudo password via config/`-e` to avoid interactive prompts
-./tlnx -e LOCAL_USER_PASSWD='your-password'
+./tlnx -e LOCAL_USER_PASSWD_X='your-password'
 
 # Use the -d flag to decrypt
 ./tlnx -d

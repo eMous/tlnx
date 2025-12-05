@@ -277,13 +277,13 @@ done
 	# Environment detection - determine execution context
 	if [ "${REMOTE_RUN:-false}" = "true" ]; then
 		# Not the execution environment; transfer to target host
-		if [ -z "$REMOTE_ENC_HOST" ] || [ -z "$REMOTE_ENC_USER" ]; then
-			log "ERROR" "REMOTE_ENC_HOST and REMOTE_ENC_USER must be set when REMOTE_RUN=true"
+		if [ -z "$REMOTE_ENC_HOST_X" ] || [ -z "$REMOTE_ENC_USER_X" ]; then
+			log "ERROR" "REMOTE_ENC_HOST_X and REMOTE_ENC_USER_X must be set when REMOTE_RUN=true"
 			exit 1
 		fi
 		# Start remote transfer immediately
 		log "INFO" "REMOTE_RUN=true; transferring to remote host"
-		remote_execution "$REMOTE_ENC_HOST" "$REMOTE_ENC_USER" "$REMOTE_ENC_PORT" "$REMOTE_ENC_PASSWORD"
+		remote_execution "$REMOTE_ENC_HOST_X" "$REMOTE_ENC_USER_X" "$REMOTE_ENC_PORT_X" "$REMOTE_ENC_PASSWORD_X"
 		exit $?
 	fi
     

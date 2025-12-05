@@ -14,19 +14,19 @@ CONFIG_DEFAULT_KEY_ENV="CONFIG_KEY"
 # Remote execution toggle
 REMOTE_RUN="false"
 # Encrypted target host
-REMOTE_ENC_HOST=""
+REMOTE_ENC_HOST_X=""
 # Encrypted target username
-REMOTE_ENC_USER=""
+REMOTE_ENC_USER_X=""
 # Encrypted target SSH port
-REMOTE_ENC_PORT=""
+REMOTE_ENC_PORT_X=""
 # Encrypted target password
-REMOTE_ENC_PASSWORD=""
+REMOTE_ENC_PASSWORD_X=""
 # Optional local sudo password used to auto-answer sudo prompts
-LOCAL_USER_PASSWD=""
+LOCAL_USER_PASSWD_X=""
 
 # === Clashctl configuration ===
 # Clashctl binary download URL
-CLASHCTL_URL=""
+CLASHCTL_URL_X=""
 # Clash configuration download URL
 CLASHCTL_CONFIG_URL=""
 # Clash proxy port
