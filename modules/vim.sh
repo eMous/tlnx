@@ -3,16 +3,22 @@
 # Vim module - install and configure Vim
 
 vim_install() {
+	if command -v vim >/dev/null 2>&1; then
+		log "INFO" "Vim already installed; skipping apt installation"
+		return 0
+	fi
+
 	log "INFO" "Installing Vim..."
-	sudo apt-get update 2>&1 | tee -a "$LOG_FILE"
-	sudo apt-get install -y vim 2>&1 | tee -a "$LOG_FILE"
-	
-	if [ $? -eq 0 ]; then
-		log "INFO" "Vim installed successfully"
-	else
+	if ! sudo apt-get update 2>&1 | tee -a "$LOG_FILE"; then
+		log "ERROR" "Failed to update package lists before installing Vim"
+		return 1
+	fi
+	if ! sudo apt-get install -y vim 2>&1 | tee -a "$LOG_FILE"; then
 		log "ERROR" "Vim installation failed"
 		return 1
 	fi
+
+	log "INFO" "Vim installed successfully"
 }
 
 vim_configure() {

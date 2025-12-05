@@ -20,8 +20,8 @@ _clashctl_install() {
     if [ -n "${CLASHCTL_SUB_X:-}" ]; then
         curl -L "${CLASHCTL_SUB_X}" -o resources/config.yaml 2>&1 | tee -a "$LOG_FILE"
     fi
-    command sudo $(get_currentshell) uninstall.sh 2>&1 | tee -a "$LOG_FILE" 
-    command sudo $(get_currentshell) install.sh 2>&1 | tee -a "$LOG_FILE"
+    command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE" 
+    command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 
 	return 0
 

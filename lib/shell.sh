@@ -9,8 +9,8 @@
 # the provided content just before the block end marker on subsequent calls.
 append_shell_rc_block() {
 	local content="$1"
-	local rc_file="${2:-${RC_FILE}}"
-
+	local rc_file="${2:-$(get_rc_file $(get_current_shell))}"
+	log "VERBOSE" "Appending content to shell rc file: $rc_file"
 	if [ -z "$content" ]; then
 		log "ERROR" "append_shell_rc_block requires content to append"
 		return 1
@@ -141,7 +141,7 @@ append_shell_rc_sub_block() {
 
 remove_shell_rc_sub_block() {
 	local label="$1"
-	local rc_file="${2:-${RC_FILE}}"
+	local rc_file="${2:-$(get_rc_file $(get_current_shell))}"
 
 	if [ -z "$label" ]; then
 		log "ERROR" "remove_shell_rc_sub_block requires a label"
@@ -189,9 +189,9 @@ remove_shell_rc_sub_block() {
 }
 
 source_rcfile() {
-	local rc_file="${RC_FILE:-}"
+	local rc_file=$(get_rc_file $(get_current_shell))
 	if [ -z "$rc_file" ]; then
-		log "ERROR" "RC_FILE is not set; cannot source rc file"
+		log "ERROR" "rc_file is not set; cannot source rc file"
 		return 1
 	fi
 
@@ -205,11 +205,23 @@ source_rcfile() {
 	fi
 }
 
+mark_exists() {
+	local mark=$1
+	local marks_file=${2:-"$PROJECT_DIR/run/marks"}
+	if grep -Fq "$mark" "$marks_file"; then
+		log "DEBUG" "mark $mark found in $marks_file"
+		return 0
+	else
+		log "WARN" "mark $mark not found in $marks_file"
+		return 1
+	fi
+}
 init_shell_rc_file() {
-	local rc_file="${RC_FILE:-}" block_start backup_file
+	local rc_file block_start backup_file
+	rc_file=$(get_rc_file $(get_current_shell))
 	log "VERBOSE" "Initializing shell rc file: $rc_file"
 	if [ -z "$rc_file" ]; then
-		log "ERROR" "RC_FILE is not set; cannot initialize rc file"
+		log "ERROR" "rc_file is not set; cannot initialize rc file"
 		return 1
 	fi
 
@@ -243,26 +255,15 @@ init_shell_rc_file() {
 	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
 	return 0
 }
-get_currentshell(){
-	local ps_content="$(ps -p $$ -o cmd=)"
-	local SHELL_NAME=$(awk '{print $1}' <<<"$ps_content" | xargs basename)
-	echo "$SHELL_NAME"
-}
 check_rcfile() {
 	log "INFO" "Checking for existing RC file configurations for CURRENT RUNNING SHELL"
 	# considering zsh and bash only for now
-
-	local SHELL_NAME=$(get_currentshell)
-	RC_FILE=""
-	if [ "$SHELL_NAME" = "zsh" ]; then
-		RC_FILE="$HOME/.zshrc"
-	elif [ "$SHELL_NAME" = "bash" ]; then
-		RC_FILE="$HOME/.bashrc"
-	else
-		log "WARN" "Unsupported shell $SHELL_NAME, skipping RC file check"
+	local rc_file=$(get_rc_file $(get_current_shell))
+	if [ -z "$rc_file" ]; then
+		log "ERROR" "Unable to determine RC file for current shell"
 		return 1
 	fi
-	log "INFO" "Using RC file: $RC_FILE"
+	log "INFO" "Using RC file: $rc_file"
 }
 
 get_default_shell() {
@@ -270,15 +271,24 @@ get_default_shell() {
 	default_shell=$(getent passwd "$USER" | cut -d: -f7)
 	echo "$default_shell"
 }
-
-mark_exists() {
-	local mark=$1
-	local marks_file=${2:-"$PROJECT_DIR/run/marks"}
-	if grep -Fq "$mark" "$marks_file"; then
-		log "DEBUG" "mark $mark found in $marks_file"
-		return 0
-	else
-		log "WARN" "mark $mark not found in $marks_file"
-		return 1
-	fi
+get_current_shell(){
+	local ps_content="$(ps -p $$ -o cmd=)"
+	local SHELL_NAME=$(awk '{print $1}' <<<"$ps_content" | xargs basename)
+	echo "$SHELL_NAME"
+}
+get_rc_file(){
+	local shell_name=$(basename "$1")
+	local rc_file=""
+	case "$shell_name" in
+	"zsh")
+		rc_file="$HOME/.zshrc"
+		;;
+	"bash")
+		rc_file="$HOME/.bashrc"
+		;;
+	*)
+		log "WARN" "Unsupported shell $shell_name; cannot determine rc file"
+		;;
+	esac
+	echo "$rc_file"
 }

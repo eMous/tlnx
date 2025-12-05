@@ -53,9 +53,14 @@ This is an automated server configuration tool that helps users set up a new clo
 │   ├── module.sh        # Module management
 │   └── remote.sh        # Remote execution helper
 ├── modules/             # Individual module scripts
-│   ├── docker.sh        # Docker module
+│   ├── init.sh          # System bootstrap module
+│   ├── git.sh           # Git module
+│   ├── vim.sh           # Vim editor module
 │   ├── zsh.sh           # ZSH module
-│   └── clashctl.sh      # Clashctl proxy module
+│   ├── zerotier.sh      # ZeroTier networking module
+│   ├── frp.sh           # FRP tunneling module
+│   ├── clashctl.sh      # Clashctl proxy module
+│   └── docker.sh        # Docker module
 ├── config/              # Configuration files
 │   ├── default.conf     # Default config example
 │   ├── default.conf.template  # Config template
@@ -84,7 +89,7 @@ This is an automated server configuration tool that helps users set up a new clo
 
 - **Environment variable guide**: Refer to `config/default.conf.template` for the full list of variables and explanations.
 - **Module orchestration**:
-  - `config/default.conf` seeds `CONFIG_MODULES=("init" "git" "zsh" "clashctl")` so proxy tooling installs automatically on new hosts.
+  - `config/default.conf` seeds `CONFIG_MODULES=("init" "git" "vim" "zsh" "zerotier" "frp" "clashctl" "docker")` so networking, editor, and proxy tooling install automatically on new hosts.
   - Override the default list via `--modules`, `--select-modules`, or by editing the config when bespoke orderings are needed.
 - **Offline package staging**:
   - Prebuilt archives (for example `clash-for-linux-install.tar.gz`) live under `packages/` so air-gapped installs stay reproducible.
@@ -132,6 +137,20 @@ This is an automated server configuration tool that helps users set up a new clo
   3. The module runs the bundled `uninstall.sh` and `install.sh` via `sudo $SHELL` to ensure a clean re-install each time.
   4. All stdout/stderr streams are tee'd into `logs/server_config-*.log` so proxy provisioning diagnostics stay captured.
 - Because the tarball lives inside the repo, Clashctl installs succeed even on air-gapped machines; only the optional subscription download hits the network.
+
+3.9 **ZeroTier module**:
+- Installs the official ZeroTier package via the upstream bootstrap script.
+- When `ZEROTIER_NETWORK_ID` (or its encrypted counterpart) is populated, the module automatically joins that network so the node becomes reachable over the virtual overlay.
+- Skips the join step gracefully when no network ID is supplied.
+
+3.10 **FRP module**:
+- Extracts `packages/frp.tar.gz`, installs the `frpc` and `frps` binaries into `/usr/local/bin`, and copies template configs from `etc/.conf/frp/` into `~/.config/frp/`.
+- Validates each TOML config with `frpc verify`/`frps verify` before generating systemd units that reference the extracted configs and binaries.
+- Honors the `FRPC_AUTO_START` and `FRPS_AUTO_START` flags so services only start when explicitly requested, keeping air-gapped setups under user control.
+
+3.11 **Vim module**:
+- Installs Vim via apt when it is missing, then drops a conservative `.vimrc` if the user does not already have one.
+- The generated config turns on syntax highlighting, indentation helpers, and a few quality-of-life defaults so machines without prior editor setup remain usable out of the box.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.

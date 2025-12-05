@@ -16,44 +16,80 @@ _frp_installed_check() {
     fi
 }
 
-
-
 frp_configure() {
-	local config_file="/etc/frp/frpc.toml"
-	
-	if [ -f "$config_file" ]; then
-		log "INFO" "$config_file already exists, skipping configuration"
-	else
-		log "INFO" "Creating default configuration at $config_file"
-		
-		local server_addr="${FRP_SERVER_ADDR:-127.0.0.1}"
-		local server_port="${FRP_SERVER_PORT:-7000}"
-		local token="${FRP_AUTH_TOKEN:-}"
-		
-		cat <<EOF | sudo tee "$config_file" > /dev/null
-serverAddr = "$server_addr"
-serverPort = $server_port
+	log "VERBOSE" "Stopping any existing frpc/frps services..."
+	sudo systemctl disable frpc 2>/dev/null || true
+	sudo systemctl stop frpc 2>/dev/null || true
+	sudo systemctl disable frps 2>/dev/null || true
+	sudo systemctl stop frps 2>/dev/null || true
 
-auth.method = "token"
-auth.token = "$token"
-
-[[proxies]]
-name = "ssh"
-type = "tcp"
-localIP = "127.0.0.1"
-localPort = 22
-remotePort = 6000
-EOF
-		log "INFO" "Configuration created. Please edit $config_file with your actual settings."
+	log "VERBOSE" "Configuring FRP services..."
+	local config_files=()
+	local frpc_config_file
+	frpc_config_file="$(get_config_dir "frp")/frpc.toml"
+	if [ -f "$frpc_config_file" ] && [ -s "$frpc_config_file" ]; then
+		log "VERBOSE" "Found FRP client configuration file $frpc_config_file"
+		config_files+=("$frpc_config_file")
 	fi
-	
-	# Systemd service
-	local service_file="/etc/systemd/system/frpc.service"
-	if [ ! -f "$service_file" ]; then
-		log "INFO" "Creating systemd service..."
-		cat <<EOF | sudo tee "$service_file" > /dev/null
+
+	local frps_config_file
+	frps_config_file="$(get_config_dir "frp")/frps.toml"
+	if [ -f "$frps_config_file" ] && [ -s "$frps_config_file" ]; then
+		log "VERBOSE" "Found FRP server configuration file $frps_config_file"
+		config_files+=("$frps_config_file")
+	fi
+
+	if [ ${#config_files[@]} -eq 0 ]; then
+		log "WARN" "No FRP configuration files discovered; skipping service setup"
+		return 0
+	fi
+
+	for config_file in "${config_files[@]}"; do
+		local command
+		command=$(basename "$config_file" .toml)
+		local binary_path
+		binary_path=$(command -v "$command" || true)
+		if [ -z "$binary_path" ]; then
+			log "ERROR" "Binary $command not found in PATH; skipping service creation"
+			continue
+		fi
+
+		log "VERBOSE" "Validating FRP configuration file $config_file with $binary_path"
+		if ! "$binary_path" verify -c "$config_file" >>"$LOG_FILE" 2>&1; then
+			log "ERROR" "FRP configuration file $config_file is invalid; skipping $command service"
+			continue
+		fi
+
+		log "INFO" "$command configuration $config_file is valid"
+		log "INFO" "Setting up systemd service for $command"
+		local service_file="/etc/systemd/system/${command}.service"
+		if [ -f "$service_file" ]; then
+			log "INFO" "$service_file already exists; current contents:"
+			cat "$service_file" | tee -a "$LOG_FILE"
+		fi
+
+		get_service_content "$config_file" "$binary_path" | command sudo tee "$service_file" >/dev/null
+		sudo systemctl daemon-reload
+
+		local varname="${command^^}_AUTO_START"
+		if [ "${!varname:-false}" = "true" ]; then
+			sudo systemctl restart "$command"
+			sudo systemctl enable "$command"
+			log "INFO" "$command service enabled and running"
+		else
+			log "INFO" "$varname is not true; registered $command service but left it disabled"
+		fi
+	done
+}
+
+get_service_content() {
+	local config_file=$1
+	local binary_path=$2
+	local command
+	command=$(basename "$config_file" .toml)
+	cat <<EOF
 [Unit]
-Description=Frp Client Service
+Description=${command^} Service
 After=network.target
 
 [Service]
@@ -61,65 +97,44 @@ Type=simple
 User=root
 Restart=on-failure
 RestartSec=5s
-ExecStart=/usr/local/bin/frpc -c /etc/frp/frpc.toml
+ExecStart=$binary_path -c $config_file
 
 [Install]
 WantedBy=multi-user.target
 EOF
-		sudo systemctl daemon-reload
-		sudo systemctl enable frpc
-		log "INFO" "frpc service enabled"
-	fi
 }
 
-_frp_install() {
-	log "INFO" "=== Starting FRP module ==="
+frp_install() {
     local package_name="frp"
     if ! checkout_package_file "$package_name"; then
         log "ERROR" "Failed to checkout package file for $package_name"
         return 1
     fi
- 
+
     local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-    cd $extracted_dir
     local frpc_binary="frpc"
     local frps_binary="frps"
+    copy_to_binary "$extracted_dir/$frpc_binary" || return 1
+    copy_to_binary "$extracted_dir/$frps_binary" || return 1
 
-
-	frp_configure
-    
-	log "INFO" "=== FRP module completed ==="
-}
-
-_frp_uninstall() {
-    log "INFO" "=== Starting FRP module uninstallation ==="
-    # check if frpc service exists
-    if ! systemctl list-units --full -all | grep -Fq "frps.service"; then
-        log "INFO" "frps service not found; skipping uninstall frps service"
-        return 0
-    else 
-        log "INFO" "frps service found; try to uninstall frps service"
-        sudo systemctl stop frps
-        sudo systemctl disable frps
-        sudo rm -f /etc/systemd/system/frps.service
-    fi
-
-    if ! systemctl list-units --full -all | grep -Fq "frpc.service"; then
-        log "INFO" "frpc service not found; skipping uninstall frpc service"
-        return 0
+    local etcdir="$PROJECT_DIR/etc/.conf/frp"
+    if [ ! -d "$etcdir" ]; then
+        log "ERROR" "No predefined FRP config directory found at $etcdir"
     else
-        log "INFO" "frpc service found; try to uninstall frpc service"
-        sudo systemctl stop frpc
-        sudo systemctl disable frpc
-        sudo rm -f /etc/systemd/system/frpc.service
+        if [ -f "$etcdir/frpc.toml" ]; then
+            copy_to_config "$etcdir/frpc.toml" "frp" || return 1
+        fi
+        if [ -f "$etcdir/frps.toml" ]; then
+            copy_to_config "$etcdir/frps.toml" "frp" || return 1
+        fi
     fi
-
-    # TODO HERE
-    sudo rm -f /usr/local/bin/frpc
-    sudo rm -f /usr/local/bin/frps
-
-    sudo rm -f /etc/frp/frpc.toml
-    sudo systemctl daemon-reload
-    log "INFO" "FRP module uninstalled"
-    log "INFO" "=== FRP module uninstallation completed ==="
 }
+_frp_install() {
+    log "INFO" "=== Starting FRP module ==="
+    frp_install || return 1
+    frp_configure || return 1
+    log "INFO" "=== FRP module completed ==="
+}
+
+
+# TODO  结合default.conf 或 enc.conf 完成 frp.toml的模板解析

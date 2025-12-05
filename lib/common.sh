@@ -53,7 +53,7 @@ log() {
         if [ -n "$color_prefix" ]; then
             printf "%b%s%b\n" "$color_prefix" "$formatted" "$color_suffix"
         else
-            echo "$formatted"
+            echo "$formatted" 1>&2
         fi
     fi
 }

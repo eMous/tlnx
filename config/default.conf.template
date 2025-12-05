@@ -43,6 +43,9 @@ ZEROTIER_NETWORK_ID=""
 ZEROTIER_ENC_NETWORK_ID=""
 
 # === FRP configuration ===
+# Auto-start flags for FRP client/server units
+FRPC_AUTO_START="false"
+FRPS_AUTO_START="false"
 # FRP role: client or server
 FRP_ROLE="client"
 # FRP server address
