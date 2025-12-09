@@ -19,8 +19,11 @@ EOF
 github_auth_check() {
 	local key_path=$1
 	local ssh_output
-		ssh_output=$(ssh ${key_path+"-i "$key_path" "} -o StrictHostKeyChecking=no -o BatchMode=yes -T git@github.com 2>&1)
-	
+	if [ -z $key_path ]; then
+		ssh_output=$(ssh -o StrictHostKeyChecking=no -o BatchMode=yes -T git@github.com 2>&1)
+	else
+		ssh_output=$(ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -T git@github.com 2>&1)
+	fi
 	if echo "$ssh_output" | grep -q "successfully authenticated"; then
 		return 0
 	else
