@@ -80,4 +80,4 @@ fi
 # unique user customizations
 if [ -f ~/.config/bash/.bashrc_uniq ]; then
     source ~/.config/bash/.bashrc_uniq
-fi
+fi 
