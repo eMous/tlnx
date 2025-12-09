@@ -50,10 +50,7 @@ init_shell() {
 		local templatedir="$(get_config_dir $shell)"
 		local templatepath="$templatedir/$(basename $homercpath)"
 		local mark="init_shell_${shell}_done"
-		if mark_exists "$mark" "$PROJECT_DIR/run/marks" && ! mark_older_than "$mark" $(stat -c %Y "$templatedir"); then
-			log "INFO" "Shell rc file for $shell already initialized; skipping"
-			continue
-		fi
+
 		if [ ! -f "$templatepath" ]; then
 			log "ERROR" "Template rc file for $shell not found at $templatepath; cannot initialize"
 			exit 1
@@ -64,7 +61,7 @@ init_shell() {
 
 		# copy the every file under templatepath to subrcpath
 		mkdir -p "$subrcdir"
-		rsync -av "$templatedir/" "$subrcdir/" 2>&1 | tee -a "$LOG_FILE"
+		rsync -a "$templatedir/" "$subrcdir/" 2>&1 | tee -a "$LOG_FILE"
 		log "INFO" "Copied TLNX shell config template to $subrcdir"
 
 		# PATH setup
@@ -78,7 +75,6 @@ init_shell() {
 		export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"
 		append_shell_rc_block "$content_to_check" "$subrcpath"
 
-		add_mark "$mark" "$PROJECT_DIR/run/marks"
 		# if shell is current running shell source the rc file
 		if [[ "$curshell" == *"$shell"* ]]; then
 			log "INFO" "Current shell $curshell matches $shell; sourcing rc file"

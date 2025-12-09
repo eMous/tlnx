@@ -119,9 +119,15 @@ module_check_installed() {
 	fi
 }
 module_install_complete() {
+	local off_mark_control=("init")
 	local module=$1
 	local mark=$2
 	local mark_file=$3
+	# if module is not in off_mark_control list add the mark
+	if [[ " ${off_mark_control[*]} " == *" $module "* ]]; then
+		log "INFO" "${module} module is in off_mark_control list; skipping mark addition"
+		return 0
+	fi
 	# Add the mark
 	echo "$mark $(date +%s)" >>"$mark_file"
 	log "INFO" "${module} module mark $mark added to $mark_file"

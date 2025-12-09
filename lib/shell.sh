@@ -60,23 +60,44 @@ append_shell_rc_block() {
 		return 1
 	}
 
-	awk -v end="$block_end" -v insert_file="$insert_file" '
-        BEGIN {
-            insert_content = ""
-            while ((getline line < insert_file) > 0) {
-                insert_content = insert_content line "\n"
-            }
-            close(insert_file)
-            inserted = 0
-        }
-        {
-            if ($0 == end && !inserted) {
-                printf "%s", insert_content
-                inserted = 1
-            }
-            print
-        }
-    ' "$rc_file" >"$tmp_file"
+	awk -v start="$block_start" -v end="$block_end" -v insert_file="$insert_file" '
+		BEGIN {
+			insert_content = ""
+			while ((getline line < insert_file) > 0) {
+				insert_content = insert_content line "\n"
+			}
+			close(insert_file)
+			block_len = 0
+			inside = 0
+		}
+		{
+			if ($0 == start) {
+				print
+				inside = 1
+				next
+			}
+			if ($0 == end) {
+				# Reconstruct the block without previous copies of insert_content
+				block_text = ""
+				for (i = 0; i < block_len; i++) {
+					block_text = block_text block_lines[i]
+				}
+				while (match(block_text, insert_content)) {
+					block_text = substr(block_text, 1, RSTART - 1) substr(block_text, RSTART + RLENGTH)
+				}
+				printf "%s", block_text
+				printf "%s", insert_content
+				print
+				inside = 0
+				next
+			}
+			if (inside) {
+				block_lines[block_len++] = $0 "\n"
+				next
+			}
+			print
+		}
+	' "$rc_file" >"$tmp_file"
 
 	if mv "$tmp_file" "$rc_file"; then
 		log "INFO" "Appended content to TLNX shell block in $rc_file"
