@@ -20,7 +20,10 @@ if [ -f ~/.config/commonshell/common.sh ]; then
 fi
 
 
-
+# unique user customizations
+if [ -f ~/.config/zsh/.zshrc_template ]; then
+    source ~/.config/zsh/.zshrc_template
+fi
 
 
 

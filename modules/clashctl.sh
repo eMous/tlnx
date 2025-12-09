@@ -23,8 +23,6 @@ _clashctl_install() {
     command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE" 
     command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 
-	return 0
-
 	log "INFO" "=== Clashctl module completed ==="
 	return 0
 }

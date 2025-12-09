@@ -11,4 +11,7 @@ alias zs='vim ~/.config/zsh/.zshrc'
 alias bs='vim ~/.config/bash/.bashrc'
 alias cs='vim ~/.config/commonshell/common.sh'
 alias vs='vim ~/.config/vim/.vimrc'
+alias v='vim'
+alias t='cd /home/tom/tlnx'
 echo "Common shell settings loaded."
+
