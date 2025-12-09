@@ -82,8 +82,10 @@ append_shell_rc_block() {
 				for (i = 0; i < block_len; i++) {
 					block_text = block_text block_lines[i]
 				}
-				while (match(block_text, insert_content)) {
-					block_text = substr(block_text, 1, RSTART - 1) substr(block_text, RSTART + RLENGTH)
+				pos = index(block_text, insert_content)
+				while (pos) {
+					block_text = substr(block_text, 1, pos - 1) substr(block_text, pos + length(insert_content))
+					pos = index(block_text, insert_content)
 				}
 				printf "%s", block_text
 				printf "%s", insert_content
