@@ -3,18 +3,39 @@
 # init module - system bootstrap configuration
 # Module entrypoint - init
 _init_install() {
+	local subprocedures=("shell_rc_file" "prjdir" "tlnx_in_path" "network_info" \
+	"check_internet_access" "enable_bbr" "update_aliyun_mirror" \
+	"timezone" "timesyncd" "ssh_keys" "bash_setup")
+	local off_mark_control=()
+
 	log "INFO" "=== Starting init module ==="
-	init_shell_rc_file
-	init_prjdir
-	init_tlnx_in_path $(get_current_shell)
-	init_network_info
-	init_check_internet_access
-	init_enable_bbr
-	init_update_aliyun_mirror
-	init_timezone
-	init_timesyncd
-	init_ssh_keys
-	init_bash_setup
+	
+	for subproc in "${subprocedures[@]}"; do
+		local func="init_${subproc}"
+		local mark="init_${subproc}_done"
+		log "INFO" "Running subprocedure: $func"
+		# if subproc is in off_mark_control, skip mark check
+		if [[ " ${off_mark_control[*]} " == *" ${subproc} "* ]]; then
+			log "INFO" "Skipping mark check for subprocedure: $func"
+		else
+			if mark_exists "$mark" "$PROJECT_DIR/run/marks"; then
+				log "INFO" "Mark exists for subprocedure: $func; skipping"
+				continue
+			fi
+		fi
+		"$func"
+		if [ $? -ne 0 ]; then
+			log "ERROR" "Subprocedure $func failed"
+			return 1
+		else
+			log "INFO" "Subprocedure $func completed successfully"
+			# add mark for subproc except those in off_mark_control
+			if [[ ! " ${off_mark_control[*]} " == *" ${subproc} "* ]]; then
+				add_mark "$mark" "$PROJECT_DIR/run/marks"
+			fi
+		fi
+	done
+	
 	log "INFO" "=== init module completed ==="
 }
 # Update Alibaba Cloud mirrors
@@ -168,8 +189,14 @@ init_tlnx_in_path() {
 # Internet Access Check
 init_check_internet_access() {
 	log "INFO" "Checking internet access"
-	# Checking http(s) proxy, if http proxy is empty
 
+	if mark_exists "internet-access-check" "$PROJECT_DIR/run/marks"; then
+		log "INFO" "Internet access check already performed previously; skipping"
+		return 0
+	fi
+	add_mark "internet-access-check" "$PROJECT_DIR/run/marks"
+
+	# Checking http(s) proxy, if http proxy is empty
 	source_rcfile
 	if [ -z "$http_proxy" ]; then
 		log "WARN" "No HTTP proxy detected, performing direct internet access check"

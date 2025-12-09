@@ -92,12 +92,27 @@ module_check_installed() {
 		log "WARN" "${module} module mark $mark not found in $marks_file; considered older"
 		return 1
 	fi
+
+	local installed=""
 	if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/default.conf")" &&
 		! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/enc.conf")"; then
 		log "DEBUG" "${module} module already applied (mark found)"
-		return 0
+		if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
+			log "DEBUG" "${module} module script not modified since last run"
+			installed=true
+		else
+			log "INFO" "${module} module script modified since last run; module will run"
+			installed=false
+		fi
 	else
 		log "INFO" "${module} module config files modified since last run; module will run"
+		installed=false
+	fi
+
+
+	if [ "$installed" = "true" ]; then
+		return 0
+	else
 		# remove the mark
 		sed -i "/^${mark}.*$/d" "$marks_file"
 		return 1
