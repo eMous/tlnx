@@ -116,7 +116,7 @@ configure_zdot(){
 	touch "$HOME/.zshenv"
 	local content=$(cat << EOF
 export ZDOTDIR="\$HOME/.config/zsh"
-[[ -f "$ZDOTDIR/.zshenv" ]] && source "$ZDOTDIR/.zshenv"
+[[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
 EOF
 	)
 	append_shell_rc_sub_block "zshenv zdotdir config" "$content" "$HOME/.zshenv"
