@@ -83,6 +83,19 @@ print_module_menu() {
 # Buffer for interactive selection results
 PROMPT_MODULE_SELECTION_RESULT=""
 
+# Append a module to an array by name only if it is not already present
+append_unique_module() {
+	local module="$1"
+	local -n target_array=$2
+
+	for existing in "${target_array[@]}"; do
+		if [ "$existing" = "$module" ]; then
+			return 0
+		fi
+	done
+	target_array+=("$module")
+}
+
 # Prompt the user to select modules by number and return a comma-separated string
 prompt_module_selection() {
     local modules=("$@")
@@ -402,16 +415,12 @@ done
         
         # Add required modules first
         for req_module in "${CONFIG_REQUIRED_MODULES[@]}"; do
-            if [[ ! "${FINAL_MODULES[*]}" =~ "$req_module" ]]; then
-                FINAL_MODULES+=("$req_module")
-            fi
+            append_unique_module "$req_module" FINAL_MODULES
         done
         
         # Append optional modules while avoiding duplicates
         for module in "${MODULES_TO_EXECUTE[@]}"; do
-            if [[ ! "${FINAL_MODULES[*]}" =~ "$module" ]]; then
-                FINAL_MODULES+=("$module")
-            fi
+            append_unique_module "$module" FINAL_MODULES
         done
         
         # Update the final sequence
