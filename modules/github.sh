@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GitHub module - configure SSH authentication for GitHub 
+# GitHub module - configure SSH authentication for GitHub
 
 github_key_path() {
 	echo "$HOME/.ssh/id_rsa_github"
