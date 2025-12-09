@@ -13,5 +13,6 @@ alias cs='vim ~/.config/commonshell/common.sh'
 alias vs='vim ~/.config/vim/.vimrc'
 alias v='vim'
 alias t='cd /home/tom/tlnx'
+alias bat='batcat'
 echo "Common shell settings loaded."
 
