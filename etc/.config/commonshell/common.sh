@@ -2,7 +2,7 @@
 set -o vi
 
 # Alias
-alias l='ls -aFh --group-directories-first --color=auto'
+alias l='ls -ah --group-directories-first --color=auto'
 alias ll='l -l'
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
