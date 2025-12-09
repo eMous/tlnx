@@ -216,45 +216,45 @@ mark_exists() {
 		return 1
 	fi
 }
-init_shell_rc_file() {
-	local rc_file block_start backup_file
-	rc_file=$(get_rc_file $(get_current_shell))
-	log "VERBOSE" "Initializing shell rc file: $rc_file"
-	if [ -z "$rc_file" ]; then
-		log "ERROR" "rc_file is not set; cannot initialize rc file"
-		return 1
-	fi
+# init_shell_rc_file() {
+# 	local rc_file block_start backup_file
+# 	rc_file=$(get_rc_file $(get_current_shell))
+# 	log "VERBOSE" "Initializing shell rc file: $rc_file"
+# 	if [ -z "$rc_file" ]; then
+# 		log "ERROR" "rc_file is not set; cannot initialize rc file"
+# 		return 1
+# 	fi
 
-	block_start="# >>> TLNX shell block >>>"
-	backup_file="${rc_file}.$(date +%Y%m%d%H%M%S).bak"
+# 	block_start="# >>> TLNX shell block >>>"
+# 	backup_file="${rc_file}.$(date +%Y%m%d%H%M%S).bak"
 
-	if [ ! -e "$rc_file" ]; then
-		: >"$rc_file"
-		log "INFO" "Created empty shell rc file: $rc_file"
-		return 0
-	fi
+# 	if [ ! -e "$rc_file" ]; then
+# 		: >"$rc_file"
+# 		log "INFO" "Created empty shell rc file: $rc_file"
+# 		return 0
+# 	fi
 
-	if grep -Fq "$block_start" "$rc_file"; then
-		log "DEBUG" "TLNX shell block already present in $rc_file"
-		source_rcfile
-		return 0
-	fi
+# 	if grep -Fq "$block_start" "$rc_file"; then
+# 		log "DEBUG" "TLNX shell block already present in $rc_file"
+# 		source_rcfile
+# 		return 0
+# 	fi
 
-	# if rc_file is empty do nothing
-	if [ ! -s "$rc_file" ]; then
-		log "DEBUG" "$rc_file is empty, no backup needed"
-		return 0
-	fi
+# 	# if rc_file is empty do nothing
+# 	if [ ! -s "$rc_file" ]; then
+# 		log "DEBUG" "$rc_file is empty, no backup needed"
+# 		return 0
+# 	fi
 
-	if ! mv "$rc_file" "$backup_file"; then
-		log "ERROR" "Failed to back up $rc_file to $backup_file"
-		return 1
-	fi
+# 	if ! mv "$rc_file" "$backup_file"; then
+# 		log "ERROR" "Failed to back up $rc_file to $backup_file"
+# 		return 1
+# 	fi
 
-	: >"$rc_file"
-	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
-	return 0
-}
+# 	: >"$rc_file"
+# 	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
+# 	return 0
+# }
 check_rcfile() {
 	log "INFO" "Checking for existing RC file configurations for CURRENT RUNNING SHELL"
 	# considering zsh and bash only for now
@@ -281,10 +281,10 @@ get_rc_file(){
 	local rc_file=""
 	case "$shell_name" in
 	"zsh")
-		rc_file="$HOME/.zshrc"
+		rc_file="$HOME/.config/zsh/.zshrc"
 		;;
 	"bash")
-		rc_file="$HOME/.bashrc"
+		rc_file="$HOME/.config/bash/.bashrc"
 		;;
 	*)
 		log "WARN" "Unsupported shell $shell_name; cannot determine rc file"

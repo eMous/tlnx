@@ -117,7 +117,7 @@ frp_install() {
     copy_to_binary "$extracted_dir/$frpc_binary" || return 1
     copy_to_binary "$extracted_dir/$frps_binary" || return 1
 
-    local etcdir="$PROJECT_DIR/etc/.conf/frp"
+    local etcdir=$(get_config_dir "frp")
     if [ ! -d "$etcdir" ]; then
         log "ERROR" "No predefined FRP config directory found at $etcdir"
     else

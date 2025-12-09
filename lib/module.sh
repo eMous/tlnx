@@ -301,3 +301,10 @@ checkout_package_file() {
 		return 1
 	fi
 }
+
+
+get_config_dir() {
+	local config_dir="$PROJECT_DIR/etc/.config"
+	local sub_dir=${1:-""}
+	echo "$config_dir/$sub_dir"
+}

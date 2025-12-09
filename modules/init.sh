@@ -3,16 +3,16 @@
 # init module - system bootstrap configuration
 # Module entrypoint - init
 _init_install() {
-	local subprocedures=("shell_rc_file" "prjdir" "tlnx_in_path" "network_info" \
-	"check_internet_access" "enable_bbr" "update_aliyun_mirror" \
-	"timezone" "timesyncd" "ssh_keys" "bash_setup")
-	local off_mark_control=()
+	local subprocedures=("init_shell"  "init_network_info"
+		"init_check_internet_access" "init_enable_bbr" "init_update_aliyun_mirror"
+		"init_timezone" "init_timesyncd" "init_ssh_keys" "init_bash_setup")
+	local off_mark_control=("init_shell")
 
 	log "INFO" "=== Starting init module ==="
-	
+
 	for subproc in "${subprocedures[@]}"; do
-		local func="init_${subproc}"
-		local mark="init_${subproc}_done"
+		local func="${subproc}"
+		local mark="${subproc}_done"
 		log "INFO" "Running subprocedure: $func"
 		# if subproc is in off_mark_control, skip mark check
 		if [[ " ${off_mark_control[*]} " == *" ${subproc} "* ]]; then
@@ -35,9 +35,58 @@ _init_install() {
 			fi
 		fi
 	done
-	
+
 	log "INFO" "=== init module completed ==="
 }
+
+init_shell() {
+	local curshell="$(get_current_shell)"
+	local shells=("bash" "zsh")
+	for shell in "${shells[@]}"; do
+		# Check etc/rc file exist
+		local homercpath=$HOME/$(basename $(get_rc_file "$shell"))
+		local subrcdir="$HOME/.config/$shell"
+		local subrcpath=$subrcdir/$(basename $homercpath)
+		local templatedir="$(get_config_dir $shell)"
+		local templatepath="$templatedir/$(basename $homercpath)"
+		local mark="init_shell_${shell}_done"
+		if mark_exists "$mark" "$PROJECT_DIR/run/marks" && ! mark_older_than "$mark" $(stat -c %Y "$templatedir"); then
+			log "INFO" "Shell rc file for $shell already initialized; skipping"
+			continue
+		fi
+		if [ ! -f "$templatepath" ]; then
+			log "ERROR" "Template rc file for $shell not found at $templatepath; cannot initialize"
+			exit 1
+		fi
+		log "VERBOSE" "Initilizing rc file for $shell: $homercpath"
+		append_shell_rc_block "source \$HOME/.config/$shell/$(basename "$homercpath")" "$homercpath"
+		log "INFO" "$homercpath initialized to source TLNX shell config"
+
+		# copy the every file under templatepath to subrcpath
+		mkdir -p "$subrcdir"
+		rsync -av "$templatedir/" "$subrcdir/" 2>&1 | tee -a "$LOG_FILE"
+		log "INFO" "Copied TLNX shell config template to $subrcdir"
+
+		# PATH setup
+		local content_to_check="export PATH=\"$PROJECT_DIR:$HOME/.local/bin:\$PATH\""
+		mkdir -p "$HOME/.local/bin"
+		if grep -Fq "$content_to_check" "$subrcpath"; then
+			log "INFO" "Project directory $PROJECT_DIR already present in $shell PATH via $subrcpath"
+			return 0
+		fi
+		log "INFO" "Adding project directory $PROJECT_DIR to $shell PATH via $subrcpath"
+		export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"
+		append_shell_rc_block "$content_to_check" "$subrcpath"
+
+		add_mark "$mark" "$PROJECT_DIR/run/marks"
+		# if shell is current running shell source the rc file
+		if [[ "$curshell" == *"$shell"* ]]; then
+			log "INFO" "Current shell $curshell matches $shell; sourcing rc file"
+			source "$homercpath"
+		fi
+	done
+}
+
 # Update Alibaba Cloud mirrors
 init_update_aliyun_mirror() {
 	log "INFO" "Updating Alibaba Cloud package mirrors"
@@ -161,6 +210,10 @@ init_prjdir() {
 
 # Check tlnx in bin: Add $PROJECT_DIR to PATH in rc file
 init_tlnx_in_path() {
+	# integreted in init_shell now
+	return 0
+
+
 	local target_shell="${1:-$(get_current_shell)}"
 	local shell_name
 	shell_name=$(basename "$target_shell")
@@ -365,20 +418,23 @@ init_network_info() {
 		local current_hostname
 		current_hostname=$(hostname)
 		log "INFO" "Current hostname is: $current_hostname"
-		read -rp "Do you want to change the hostname? (y/n): " change_hostname
-		if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-			read -rp "Enter new hostname: " new_hostname
-			if [ -n "$new_hostname" ]; then
-				sudo hostnamectl set-hostname "$new_hostname"
-				log "INFO" "Hostname changed to: $new_hostname"
-				# in /etc/hosts, replace current hostname with new hostname
-				sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
+		local new_hostname
+		if [ -z "$INIT_HOSTNAME" ]; then
+			read -rp "Do you want to change the hostname? (y/n): " change_hostname
+			if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
+				read -rp "Enter new hostname: " new_hostname
+				if [ -z "$new_hostname" ]; then
+					new_hostname="$current_hostname"
+					log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
+				fi
 			else
-				log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
+				new_hostname="$current_hostname"
+                log "INFO" "Keeping current hostname: $current_hostname"
 			fi
-		else
-			log "INFO" "Keeping current hostname: $current_hostname"
 		fi
+		sudo hostnamectl set-hostname "$new_hostname"
+		sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
+		log "INFO" "Hostname set to: $new_hostname"
 		# Add mark
 		echo "$mark $(date +%s)" >>"$MARK_FILE"
 	else
