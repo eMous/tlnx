@@ -5,7 +5,7 @@
 _init_install() {
 	local subprocedures=("init_shell"  "init_network_info"
 		"init_check_internet_access" "init_enable_bbr" "init_update_aliyun_mirror"
-		"init_timezone" "init_timesyncd" "init_ssh_keys" "init_bash_setup")
+		"init_timezone" "init_timesyncd" "init_ssh_keys")
 	local off_mark_control=("init_shell")
 
 	log "INFO" "=== Starting init module ==="
@@ -81,6 +81,9 @@ init_shell() {
 			source "$homercpath"
 		fi
 	done
+
+	rsync -a $(get_config_dir "commonshell")/ "$HOME/.config/commonshell/" 2>&1 | tee -a "$LOG_FILE"
+	log "INFO" "Copied TLNX commonshell config template to $HOME/.config/commonshell"
 }
 
 # Update Alibaba Cloud mirrors
@@ -492,36 +495,36 @@ init_ssh_keys() {
 	return 0
 }
 
-init_bash_setup() {
-	log "INFO" "Applying basic bash shell setup"
-	# if there is no etc/.bashrc, return 0
-	if [ ! -f "$PROJECT_DIR/etc/.bashrc" ]; then
-		log "INFO" "No etc/.bashrc found, skipping bash basic setup"
-		return 0
-	fi
-	local mark="bash-basic-setup"
-	# if etc/.bashrc is newer than user's .bashrc, remove the previous block first
-	if [ "$PROJECT_DIR/etc/.bashrc" -nt "$HOME/.bashrc" ]; then
-		log "INFO" "Updating existing bashrc block in $HOME/.bashrc, as etc/.bashrc is newer"
-		remove_shell_rc_sub_block "bashrc template" "$HOME/.bashrc"
-		# remove mark of bash-basic-setup in run/marks
-		local MARK_FILE="$PROJECT_DIR/run/marks"
-		# remove the line of mark
-		sed -i "/^${mark}.*$/d" "$MARK_FILE"
-	fi
+# init_bash_setup() {
+# 	log "INFO" "Applying basic bash shell setup"
+# 	# if there is no etc/.bashrc, return 0
+# 	if [ ! -f "$PROJECT_DIR/etc/.bashrc" ]; then
+# 		log "INFO" "No etc/.bashrc found, skipping bash basic setup"
+# 		return 0
+# 	fi
+# 	local mark="bash-basic-setup"
+# 	# if etc/.bashrc is newer than user's .bashrc, remove the previous block first
+# 	if [ "$PROJECT_DIR/etc/.bashrc" -nt "$HOME/.bashrc" ]; then
+# 		log "INFO" "Updating existing bashrc block in $HOME/.bashrc, as etc/.bashrc is newer"
+# 		remove_shell_rc_sub_block "bashrc template" "$HOME/.bashrc"
+# 		# remove mark of bash-basic-setup in run/marks
+# 		local MARK_FILE="$PROJECT_DIR/run/marks"
+# 		# remove the line of mark
+# 		sed -i "/^${mark}.*$/d" "$MARK_FILE"
+# 	fi
 
-	# if there is a mark of bash-basic-setup in run/marks
-	# AND the etc/.bashrc is older than marks
-	# AND etc/.bashrc is matched in $HOME/.bashrc, skip
-	local MARK_FILE="$PROJECT_DIR/run/marks"
-	if grep -q "${mark}" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ] && grep -qFf "$PROJECT_DIR/etc/.bashrc" "$HOME/.bashrc"; then
-		log "INFO" "Bash basic setup already applied, skipping"
-		return 0
-	fi
-	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
-	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
-	# add mark
-	echo "$mark $(date +%s)" >>"$MARK_FILE"
-	log "INFO" "Basic bash shell setup applied"
-	return 0
-}
+# 	# if there is a mark of bash-basic-setup in run/marks
+# 	# AND the etc/.bashrc is older than marks
+# 	# AND etc/.bashrc is matched in $HOME/.bashrc, skip
+# 	local MARK_FILE="$PROJECT_DIR/run/marks"
+# 	if grep -q "${mark}" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ] && grep -qFf "$PROJECT_DIR/etc/.bashrc" "$HOME/.bashrc"; then
+# 		log "INFO" "Bash basic setup already applied, skipping"
+# 		return 0
+# 	fi
+# 	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
+# 	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
+# 	# add mark
+# 	echo "$mark $(date +%s)" >>"$MARK_FILE"
+# 	log "INFO" "Basic bash shell setup applied"
+# 	return 0
+# }

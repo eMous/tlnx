@@ -32,33 +32,33 @@ github_auth_check() {
 	fi
 }
 
-_github_check_installed() {
-	local key_path
-	key_path=$(github_key_path)
+# _github_check_installed() {
+# 	local key_path
+# 	key_path=$(github_key_path)
 
-	if [ ! -f "$key_path" ]; then
-		log "INFO" "GitHub SSH key not found at $key_path"
-		return 1
-	fi
+# 	if [ ! -f "$key_path" ]; then
+# 		log "INFO" "GitHub SSH key not found at $key_path"
+# 		return 1
+# 	fi
 
-	if ! ssh-keygen -y -f "$key_path" >/dev/null 2>&1; then
-		log "WARN" "Existing GitHub key at $key_path is invalid"
-		return 1
-	fi
+# 	if ! ssh-keygen -y -f "$key_path" >/dev/null 2>&1; then
+# 		log "WARN" "Existing GitHub key at $key_path is invalid"
+# 		return 1
+# 	fi
 
-	local ssh_config="$HOME/.ssh/config"
-	if [ ! -f "$ssh_config" ] || ! grep -Fq "IdentityFile ~/.ssh/id_rsa_github" "$ssh_config"; then
-		log "INFO" "GitHub SSH config entry missing"
-		return 1
-	fi
+# 	local ssh_config="$HOME/.ssh/config"
+# 	if [ ! -f "$ssh_config" ] || ! grep -Fq "IdentityFile ~/.ssh/id_rsa_github" "$ssh_config"; then
+# 		log "INFO" "GitHub SSH config entry missing"
+# 		return 1
+# 	fi
 
-	if ! github_auth_check; then
-		log "INFO" "Re-running GitHub module due to failed authentication check"
-		return 1
-	fi
+# 	if ! github_auth_check; then
+# 		log "INFO" "Re-running GitHub module due to failed authentication check"
+# 		return 1
+# 	fi
 
-	return 0
-}
+# 	return 0
+# }
 
 _github_install() {
 	log "INFO" "=== Starting GitHub module ==="
