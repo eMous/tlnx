@@ -23,12 +23,9 @@ _clashctl_install() {
 	command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE"
 	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 
-	# source $(get_home_rc_file $(get_current_shell))
-	source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh && watch_proxy
-	# cat  $(get_home_rc_file $(get_current_shell))
-	clashctl on
-	clashctl proxy on
-
+	bash -ci 'clashctl on'
+	echo $http_proxy
+	exit
 	log "INFO" "=== Clashctl module completed ==="
 	return 0
 }

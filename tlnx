@@ -11,7 +11,7 @@ is_sourced() {
   fi
   return 1  # NOT sourced.
 }
-# Not allowed use by source
+Not allowed use by source
 is_sourced && {
     echo "[ERROR]" "This script must be executed, not sourced. Exiting."
     return 1
@@ -442,5 +442,4 @@ done
     log "INFO" "Automated server configuration completed"
 }
 
-# Invoke entrypoint
 main "$@"
