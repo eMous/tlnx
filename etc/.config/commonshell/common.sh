@@ -1,6 +1,3 @@
-# Prompt
-set -o vi
-
 # Alias
 alias l='ls -ah --group-directories-first --color=auto'
 alias ll='l -l'
@@ -12,6 +9,9 @@ alias bs='vim ~/.config/bash/.bashrc'
 alias cs='vim ~/.config/commonshell/common.sh'
 alias vs='vim ~/.config/vim/.vimrc'
 alias v='vim'
+if command -v nvim >/dev/null 2>&1; then
+    alias vim='nvim'
+fi
 alias t='cd /home/tom/tlnx'
 alias bat='batcat'
 echo "Common shell settings loaded."

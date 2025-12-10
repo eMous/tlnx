@@ -6,7 +6,7 @@ _init_install() {
 	local subprocedures=("init_copy_conffiles" "init_shell" "init_network_info"
 		"init_check_internet_access" "init_enable_bbr" "init_update_aliyun_mirror"
 		"init_timezone" "init_timesyncd" "init_ssh_keys")
-	local off_mark_control=("init_shell" "init_conffiles")
+	local off_mark_control=("init_shell" "init_copy_conffiles")
 
 	log "INFO" "=== Starting init module ==="
 

@@ -3,6 +3,7 @@
 # ~/.config/zsh/.zshrc_uniq 
 
 
+
 # Correctly display UTF-8 with combining characters.
 if [[ "$(locale LC_CTYPE)" == "UTF-8" ]]; then
     setopt COMBINING_CHARS
@@ -18,3 +19,5 @@ SAVEHIST=100000
 
 # Beep on error
 setopt BEEP
+
+set -o vi
