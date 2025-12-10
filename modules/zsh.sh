@@ -50,18 +50,20 @@ _zsh_install() {
 	else
 		log "INFO" "Default shell is already ZSH; skipping default shell change"
 	fi
-	
+
 	configure_zdot
 	log "INFO" "=== ZSH installation and configuration completed ==="
 }
 
-configure_zdot(){
+configure_zdot() {
 	log "INFO" "Configuring ZDOTDIR for ZSH..."
 	touch "$HOME/.zshenv"
-	local content=$(cat << EOF
+	local content=$(
+	cat <<EOF
 export ZDOTDIR="\$HOME/.config/zsh"
 [[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
 EOF
+	)
 	append_shell_rc_sub_block "zshenv zdotdir config" "$content" "$HOME/.zshenv"
 	log "INFO" "ZDOTDIR configured to $HOME/.config/zsh"
 }
