@@ -10,7 +10,7 @@ alias cs='vim ~/.config/commonshell/common.sh'
 alias vs='vim ~/.config/vim/.vimrc'
 alias v='vim'
 if command -v nvim >/dev/null 2>&1; then
-    alias vim='nvim'
+    alias v='nvim'
 fi
 alias t='cd /home/tom/tlnx'
 alias bat='batcat'
