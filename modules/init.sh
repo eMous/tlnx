@@ -3,10 +3,10 @@
 # init module - system bootstrap configuration
 # Module entrypoint - init
 _init_install() {
-	local subprocedures=("init_shell"  "init_network_info"
+	local subprocedures=("init_copy_conffiles" "init_shell" "init_network_info"
 		"init_check_internet_access" "init_enable_bbr" "init_update_aliyun_mirror"
 		"init_timezone" "init_timesyncd" "init_ssh_keys")
-	local off_mark_control=("init_shell")
+	local off_mark_control=("init_shell" "init_conffiles")
 
 	log "INFO" "=== Starting init module ==="
 
@@ -39,6 +39,21 @@ _init_install() {
 	log "INFO" "=== init module completed ==="
 }
 
+init_copy_conffiles() {
+	local module
+	for module in ${MODULES_TO_EXECUTE[@]}; do
+		# if [ "$module" = "zsh" ] || [ "$module" = "bash" ]; then
+		# 	continue
+		# fi
+		# if there is a dir get_config_dir $module
+		local m_conf_dir=$(get_config_dir $module)
+		if [ -d "$m_conf_dir" ]; then
+		 	log "VERBOSE" "dir $m_conf_dir exist for module: $module"
+			rsync -a --mkpath "$m_conf_dir/" "$HOME/.config/$module/" 2>&1 >>"$LOG_FILE"
+			log "INFO" "Copied config files for module: $module"
+		fi
+	done
+}
 init_shell() {
 	local curshell="$(get_current_shell)"
 	local shells=("bash" "zsh")
@@ -65,7 +80,7 @@ init_shell() {
 		log "INFO" "Copied TLNX shell config template to $subrcdir"
 
 		# PATH setup
-		local content_to_check="export PATH=\"$PROJECT_DIR:$HOME/.local/bin:\$PATH\""
+		local content_to_check="export PATH=\"$PROJECT_DIR:\$HOME/.local/bin:\$PATH\""
 		mkdir -p "$HOME/.local/bin"
 		if grep -Fq "$content_to_check" "$subrcpath"; then
 			log "INFO" "Project directory $PROJECT_DIR already present in $shell PATH via $subrcpath"
@@ -211,7 +226,6 @@ init_prjdir() {
 init_tlnx_in_path() {
 	# integreted in init_shell now
 	return 0
-
 
 	local target_shell="${1:-$(get_current_shell)}"
 	local shell_name
@@ -428,7 +442,7 @@ init_network_info() {
 				fi
 			else
 				new_hostname="$current_hostname"
-                log "INFO" "Keeping current hostname: $current_hostname"
+				log "INFO" "Keeping current hostname: $current_hostname"
 			fi
 		fi
 		sudo hostnamectl set-hostname "$new_hostname"

@@ -315,3 +315,20 @@ get_rc_file(){
 	esac
 	echo "$rc_file"
 }
+
+
+add_to_path() {
+	# if $1 is not a dir, raise an error
+	local dir
+	eval dir="$1"
+	if [ ! -d $dir ]; then
+		log "ERROR" "Directory $1 does not exist"
+		return 1
+	fi
+
+	local content="export PATH=\"$dir:\$PATH\""
+	export PATH="$dir:$PATH"
+	append_shell_rc_block "$content" "$(get_rc_file zsh)"
+	append_shell_rc_block "$content" "$(get_rc_file bash)"
+	return 0
+}

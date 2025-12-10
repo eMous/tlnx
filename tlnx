@@ -390,7 +390,7 @@ done
     
     
     # Determine which modules to run
-    local MODULES_TO_EXECUTE=()
+    MODULES_TO_EXECUTE=()
     
     # Use custom module list when provided
     if [ -n "$CUSTOM_MODULES" ]; then
