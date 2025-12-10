@@ -285,6 +285,7 @@ init_check_internet_access() {
 		# Choose force continue or input a proxy
 		log "INFO" "You can choose to continue without internet access (some modules may fail) or set a proxy and retry"
 		while true; do
+			local yn=${CONTINUE_WITHOUT_INTERNET:-}
 			read -rp "Do you want to continue without internet access? (y/n): " yn
 			case $yn in
 			[Yy]*)

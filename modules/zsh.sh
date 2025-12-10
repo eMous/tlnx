@@ -53,7 +53,7 @@ _zsh_install() {
 
 	configure_zdot
 
-	zsh -ci "echo 'ZSH installation and configuration successful.'" 2>&1 | tee -a "$LOG_FILE"
+	# zsh -ci "echo 'ZSH installation and configuration successful.'" 2>&1 | tee -a "$LOG_FILE"
 
 	log "INFO" "=== ZSH installation and configuration completed ==="
 }
