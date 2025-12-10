@@ -24,8 +24,8 @@ _clashctl_install() {
 	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 
 	source $(get_home_rc_file $(get_current_shell))
-	# clashctl on
-	# clashctl proxy on
+	clashctl on
+	clashctl proxy on
 
 	log "INFO" "=== Clashctl module completed ==="
 	return 0

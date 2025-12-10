@@ -202,7 +202,7 @@ module_install_callback() {
 		fi
 		local callback_func1="_${mod}_${module}_post_install_callback"
 		local callback_func2="_${module}_${mod}_post_install_callback"
-		if command -v "$callback_func1" &>/dev/null && ! mark_exists "$callback_func1" && ! mark_exists "$callback_func2"; then
+		if command -v "$callback_func1" &>/dev/null && ! mark_exists "$callback_func1" && ! mark_exists "$callback_func2" && mark_exists "$mod"; then
 			log "INFO" "Module $mod has a post installation callback for $module."
 			"$callback_func1"
 			if [ $? -ne 0 ]; then
@@ -211,7 +211,7 @@ module_install_callback() {
 			fi
 			add_mark "$callback_func1"
 		fi
-		if command -v "$callback_func2" &>/dev/null && ! mark_exists "$callback_func2" && ! mark_exists "$callback_func1"; then
+		if command -v "$callback_func2" &>/dev/null && ! mark_exists "$callback_func2" && ! mark_exists "$callback_func1" && mark_exists "$mod"; then
 			log "INFO" "Module $module has a post installation callback for $mod."
 			"$callback_func2"
 			if [ $? -ne 0 ]; then
