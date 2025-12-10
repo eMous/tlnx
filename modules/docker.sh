@@ -67,3 +67,12 @@ _docker_install() {
 	log "INFO" "=== Docker installation and configuration completed ==="
 	return 0
 }
+
+_docker_check_installed() {
+	if command -v docker >/dev/null 2>&1; then
+		log "INFO" "Docker is already installed, skipping installation"
+		return 0
+	else
+		return 1
+	fi
+}
