@@ -4,7 +4,6 @@
 # or create a new file and make it sourced by .zshrc_uniq.
 
 
-export ZDOTDIR="$HOME/.config/zsh"
 # ZIM configuration
 export ZIM_HOME="$ZDOTDIR/.zim"
 export ZIM_CONFIG_FILE="$ZDOTDIR/.zimrc"

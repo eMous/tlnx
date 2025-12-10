@@ -58,11 +58,10 @@ _zsh_install() {
 configure_zdot(){
 	log "INFO" "Configuring ZDOTDIR for ZSH..."
 	touch "$HOME/.zshenv"
-# 	local content=$(cat << EOF
-# export ZDOTDIR="\$HOME/.config/zsh"
-# [[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
-# EOF
-	local content="source \$HOME/.config/zsh/.zshenv"
+	local content=$(cat << EOF
+export ZDOTDIR="\$HOME/.config/zsh"
+[[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
+EOF
 	append_shell_rc_sub_block "zshenv zdotdir config" "$content" "$HOME/.zshenv"
 	log "INFO" "ZDOTDIR configured to $HOME/.config/zsh"
 }
