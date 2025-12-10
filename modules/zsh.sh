@@ -63,7 +63,6 @@ configure_zdot(){
 # [[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
 # EOF
 	local content="source \$HOME/.config/zsh/.zshenv"
-	)
 	append_shell_rc_sub_block "zshenv zdotdir config" "$content" "$HOME/.zshenv"
 	log "INFO" "ZDOTDIR configured to $HOME/.config/zsh"
 }
