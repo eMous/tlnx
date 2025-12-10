@@ -315,7 +315,22 @@ get_rc_file(){
 	esac
 	echo "$rc_file"
 }
-
+get_home_rc_file(){
+	local shell_name=$(basename "$1")
+	local rc_file=""
+	case "$shell_name" in
+	"zsh")
+		rc_file="$HOME/.zshrc"
+		;;
+	"bash")
+		rc_file="$HOME/.bashrc"
+		;;
+	*)
+		log "WARN" "Unsupported shell $shell_name; cannot determine rc file"
+		;;
+	esac
+	echo "$rc_file"
+}
 
 add_to_path() {
 	# if $1 is not a dir, raise an error
