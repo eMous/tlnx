@@ -276,7 +276,7 @@ init_check_internet_access() {
 		log "INFO" "HTTPS proxy detected: $https_proxy"
 	fi
 
-	curl --max-time 10 -I https://www.google.com >/dev/null 2> >(tee -a "$LOG_FILE")
+	curl --max-time 5 -I https://www.google.com >/dev/null 2> >(tee -a "$LOG_FILE")
 
 	local CURL_STATUS=${PIPESTATUS[0]}
 	if [ $CURL_STATUS -ne 0 ]; then
