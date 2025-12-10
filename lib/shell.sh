@@ -2,8 +2,6 @@
 
 # Shell-related helpers
 
-
-
 # Append raw shell configuration lines into the TLNX-managed block of an rc file.
 # The function will manage markers in ~/.zshrc or ~/.bashrc (default) and append
 # the provided content just before the block end marker on subsequent calls.
@@ -15,7 +13,6 @@ append_shell_rc_block() {
 		log "ERROR" "append_shell_rc_block requires content to append"
 		return 1
 	fi
-
 
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "Unable to resolve target shell configuration file"
@@ -294,12 +291,12 @@ get_default_shell() {
 	default_shell=$(getent passwd "$USER" | cut -d: -f7)
 	echo "$default_shell"
 }
-get_current_shell(){
+get_current_shell() {
 	local ps_content="$(ps -p $$ -o cmd=)"
 	local SHELL_NAME=$(awk '{print $1}' <<<"$ps_content" | xargs basename)
 	echo "$SHELL_NAME"
 }
-get_rc_file(){
+get_rc_file() {
 	local shell_name=$(basename "$1")
 	local rc_file=""
 	case "$shell_name" in
@@ -315,7 +312,7 @@ get_rc_file(){
 	esac
 	echo "$rc_file"
 }
-get_home_rc_file(){
+get_home_rc_file() {
 	local shell_name=$(basename "$1")
 	local rc_file=""
 	case "$shell_name" in

@@ -46,7 +46,7 @@ EOF
 	sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y 2>&1 | tee -a "$LOG_FILE"
 	
 	
-	if [ ${PIPESTATUS[0]} -eq 0 ]; then
+	if command -v docker >/dev/null 2>&1; then
 		log "INFO" "Docker installation succeeded"
 	else
 		log "ERROR" "Docker installation failed"
