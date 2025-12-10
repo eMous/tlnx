@@ -23,9 +23,11 @@ _clashctl_install() {
 	command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE"
 	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 
-	bash -ci 'clashctl on'
-	echo $http_proxy
-	exit
+	local output=$(bash -ci 'clashon >/dev/null 2>&1; echo $http_proxy;')
+	export http_proxy=$(echo $output | grep -o "http://[^ ]*")
+	export https_proxy=$http_proxy
+	export HTTP_PROXY=$http_proxy
+	export HTTPS_PROXY=$http_proxy
 	log "INFO" "=== Clashctl module completed ==="
 	return 0
 }
