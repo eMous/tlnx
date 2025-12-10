@@ -119,7 +119,7 @@ module_check_installed() {
 	fi
 }
 module_install_complete() {
-	local off_mark_control=("init"  "nvim")
+	local off_mark_control=("init"  "nvim" "clashctl")
 	local module=$1
 	local mark=$2
 	local mark_file=$3
