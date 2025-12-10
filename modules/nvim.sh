@@ -34,6 +34,5 @@ _nvim_install() {
 	nvim_install
 	nvim_path_register
 	nvim_configure
-	exit 
 	log "INFO" "=== nvim module completed ==="
 }
