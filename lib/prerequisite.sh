@@ -25,7 +25,7 @@ check_aptlock(){
 	sudo rm -f /var/lib/dpkg/lock
 	sudo rm -f /var/cache/apt/archives/lock
 	sudo dpkg --configure -a
-	sudo systemctl stop unattended-upgrades
+	sudo apt-get remove unattended-upgrades
 	return 0
 }
 
