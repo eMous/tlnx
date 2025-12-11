@@ -125,7 +125,7 @@ _tlnx_run_sudo_with_password() {
     fi
 
     log "DEBUG" "Running sudo command with provided password: sudo $*"
-    if printf '%s\n' "$password" | command sudo -S -p '' "$@" >>"$LOG_FILE" 2> >(tee -a $LOG_FILE >&2); then
+    if printf '%s\n' "$password" | command sudo -S -p '' "$@" >&2 | tee -a "$LOG_FILE" ; then
         return 0
     fi
 

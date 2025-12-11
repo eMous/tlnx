@@ -136,13 +136,13 @@ run_docker_test() {
 		--label "${_docker_test_label}" \
 		--privileged \
 		--cgroupns=host \
-		--tmpfs /run \
-		--tmpfs /run/lock \
-		--tmpfs /tmp \
-		--mount type=bind,src="$host_project_dir",target=/root/tlnx \
-		--mount type=tmpfs,target=/root/tlnx/run \
-		-v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-		"$image" >/dev/null; then
+			--tmpfs /run \
+			--tmpfs /run/lock \
+			--tmpfs /tmp \
+			--tmpfs /root/tlnx/run:exec \
+			--mount type=bind,src="$host_project_dir",target=/root/tlnx \
+			-v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+			"$image" >/dev/null; then
 		log "ERROR" "Failed to start docker container $container_name"
 		return 1
 	fi

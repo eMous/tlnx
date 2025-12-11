@@ -21,6 +21,9 @@ RUN apt-get update \
         libterm-readline-perl-perl \
         sshpass \
         systemd-timesyncd \
+        xz-utils \
+        iproute2 \
+        net-tools \
         tzdata \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

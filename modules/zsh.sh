@@ -40,7 +40,6 @@ _zsh_install() {
 		log "ERROR" "ZSH installation failed; aborting ZSH module"
 		return 1
 	fi
-
 	if [ "$(basename $(get_default_shell))" != "zsh" ]; then
 		log "INFO" "Default shell is not ZSH, changing to ZSH"
 		zsh_set_default

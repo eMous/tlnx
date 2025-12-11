@@ -65,6 +65,18 @@ _detect_prerequisites() {
 		log "ERROR" "tzdata installation check failed. Exiting."
 		return 1
 	}
+	ensure_xz_utils_installed || {
+		log "ERROR" "xz-utils installation check failed. Exiting."
+		return 1
+	}
+	ensure_iproute2_installed || {
+		log "ERROR" "iproute2 installation check failed. Exiting."
+		return 1
+	}
+	ensure_net_tools_installed || {
+		log "ERROR" "net-tools installation check failed. Exiting."
+		return 1
+	}
 }
 
 check_aptlock(){
@@ -315,5 +327,59 @@ ensure_tzdata_installed() {
 		return 1
 	fi
 	log "INFO" "tzdata installed successfully"
+	return 0
+}
+
+ensure_xz_utils_installed() {
+	if command -v xz >/dev/null 2>&1; then
+		log "INFO" "xz-utils already installed"
+		return 0
+	fi
+	log "INFO" "xz-utils not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing xz-utils"
+		return 1
+	fi
+	if ! sudo apt-get install -y xz-utils >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install xz-utils"
+		return 1
+	fi
+	log "INFO" "xz-utils installed successfully"
+	return 0
+}
+
+ensure_iproute2_installed() {
+	if command -v ss >/dev/null 2>&1; then
+		log "INFO" "iproute2 already installed"
+		return 0
+	fi
+	log "INFO" "iproute2 not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing iproute2"
+		return 1
+	fi
+	if ! sudo apt-get install -y iproute2 >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install iproute2"
+		return 1
+	fi
+	log "INFO" "iproute2 installed successfully"
+	return 0
+}
+
+ensure_net_tools_installed() {
+	if command -v netstat >/dev/null 2>&1; then
+		log "INFO" "net-tools already installed"
+		return 0
+	fi
+	log "INFO" "net-tools not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing net-tools"
+		return 1
+	fi
+	if ! sudo apt-get install -y net-tools >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install net-tools"
+		return 1
+	fi
+	log "INFO" "net-tools installed successfully"
 	return 0
 }

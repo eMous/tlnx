@@ -288,7 +288,7 @@ check_rcfile() {
 
 get_default_shell() {
 	local default_shell
-	default_shell=$(getent passwd "$USER" | cut -d: -f7)
+	default_shell=$(getent passwd $(id -un) | cut -d: -f7)
 	echo "$default_shell"
 }
 get_current_shell() {
