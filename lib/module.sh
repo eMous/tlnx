@@ -60,7 +60,7 @@ execute_module() {
 				"$install_func" "${module}" "${mark}" "${marks_file}"
 				if [ $? -ne 0 ]; then
 				 # if module in REQUIRED_MODULES, fail the entire process
-					if [[ " ${REQUIRED_MODULES[*]} " == *" $module "* ]]; then
+					if [[ " ${CONFIG_REQUIRED_MODULES[*]} " == *" $module "* ]]; then
 						log "ERROR" "Module $module is required and failed to install; aborting"
 						exit 1
 					fi

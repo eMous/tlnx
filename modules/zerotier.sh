@@ -40,7 +40,7 @@ zerotier_join() {
 
 _zerotier_install() {
 	log "INFO" "=== Starting ZeroTier module ==="
-	zerotier_install
-	zerotier_join
+	# zerotier_install
+	# zerotier_join
 	log "INFO" "=== ZeroTier module completed ==="
 }

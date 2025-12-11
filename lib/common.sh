@@ -25,10 +25,12 @@ get_log_priority() {
 
 # Log helper
 log() {
+    # content after tlnx(tlnx itself is not included)
+    local invoker=${BASH_SOURCE[1]#*tlnx/} 
     local level=$1
     local message=$2
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    local formatted="[$timestamp] [$level] $message"
+    local formatted="[$timestamp] [$level] [$invoker] $message"
 
     # Always write to log file
     echo "$formatted" >>$LOG_FILE
@@ -120,7 +122,7 @@ _tlnx_run_sudo_with_password() {
     fi
 
     log "DEBUG" "Running sudo command with provided password: sudo $*"
-    if printf '%s\n' "$password" | command sudo -S -p '' "$@" 2>&1 | tee -a "$LOG_FILE"; then
+    if printf '%s\n' "$password" | command sudo -S -p '' "$@" >>"$LOG_FILE" 2> >(tee -a $LOG_FILE >&2); then
         return 0
     fi
 
