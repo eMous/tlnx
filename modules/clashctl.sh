@@ -29,10 +29,10 @@ _clashctl_install() {
 	export HTTP_PROXY=$http_proxy
 	export HTTPS_PROXY=$http_proxy
 
-	curl https://download.docker.com/linux/ubuntu/gpg 
 	log "INFO" "=== Clashctl module completed ==="
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
 	_clashctl_install
+	cat ~/.bashrc
 }

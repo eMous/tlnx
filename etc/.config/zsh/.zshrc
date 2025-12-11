@@ -4,6 +4,10 @@
 # or create a new file and make it sourced by .zshrc_uniq.
 
 
+# For fixing some apps which injects stuff into $HOME/.zshrc
+[ -f $HOME/.zshrc ] &&
+source $HOME/.zshrc
+
 # ZIM configuration
 export ZIM_HOME="$ZDOTDIR/.zim"
 export ZIM_CONFIG_FILE="$ZDOTDIR/.zimrc"

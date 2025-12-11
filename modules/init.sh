@@ -48,7 +48,7 @@ init_copy_conffiles() {
 		# if there is a dir get_config_dir $module
 		local m_conf_dir=$(get_config_dir $module)
 		if [ -d "$m_conf_dir" ]; then
-		 	log "VERBOSE" "dir $m_conf_dir exist for module: $module"
+			log "VERBOSE" "dir $m_conf_dir exist for module: $module"
 			rsync -a --mkpath "$m_conf_dir/" "$HOME/.config/$module/" 2>&1 >>"$LOG_FILE"
 			log "INFO" "Copied config files for module: $module"
 		fi
@@ -70,14 +70,12 @@ init_shell() {
 			log "ERROR" "Template rc file for $shell not found at $templatepath; cannot initialize"
 			exit 1
 		fi
-		log "VERBOSE" "Initilizing rc file for $shell: $homercpath"
-		append_shell_rc_block "source \$HOME/.config/$shell/$(basename "$homercpath")" "$homercpath"
-		log "INFO" "$homercpath initialized to source TLNX shell config"
-
-		# copy the every file under templatepath to subrcpath
-		mkdir -p "$subrcdir"
-		rsync -a "$templatedir/" "$subrcdir/" 2>&1 | tee -a "$LOG_FILE"
-		log "INFO" "Copied TLNX shell config template to $subrcdir"
+		# Only bash needs to redirect in home.rc file, since zdotdir has set in .zshenv
+		if [ $shell = "bash" ]; then
+			log "VERBOSE" "Initilizing rc file for $shell: $homercpath"
+			append_shell_rc_block "source \$HOME/.config/$shell/$(basename "$homercpath")" "$homercpath"
+			log "INFO" "$homercpath initialized to source TLNX shell config"
+		fi
 
 		# PATH setup
 		local content_to_check="export PATH=\"$PROJECT_DIR:\$HOME/.local/bin:\$PATH\""
@@ -90,11 +88,11 @@ init_shell() {
 		export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"
 		append_shell_rc_block "$content_to_check" "$subrcpath"
 
-		# if shell is current running shell source the rc file
-		if [[ "$curshell" == *"$shell"* ]]; then
-			log "INFO" "Current shell $curshell matches $shell; sourcing rc file"
-			source "$homercpath"
-		fi
+		# # if shell is current running shell source the rc file
+		# if [[ "$curshell" == *"$shell"* ]]; then
+		# 	log "INFO" "Current shell $curshell matches $shell; sourcing rc file"
+		# 	source "$homercpath"
+		# fi
 	done
 
 	rsync -a $(get_config_dir "commonshell")/ "$HOME/.config/commonshell/" 2>&1 | tee -a "$LOG_FILE"

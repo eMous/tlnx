@@ -32,36 +32,30 @@ github_auth_check() {
 	fi
 }
 
-# _github_check_installed() {
-# 	local key_path
-# 	key_path=$(github_key_path)
+github_install() {
+	log "INFO" "Installing gh.."
+	if command -v gh >/dev/null 2>&1; then
+		log "INFO" "gh is already installed; skipping"
+		return 0
+	fi
+	
+	(type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+	&& out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+	&& cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+	&& sudo apt update \
+	&& sudo apt install gh -y
 
-# 	if [ ! -f "$key_path" ]; then
-# 		log "INFO" "GitHub SSH key not found at $key_path"
-# 		return 1
-# 	fi
-
-# 	if ! ssh-keygen -y -f "$key_path" >/dev/null 2>&1; then
-# 		log "WARN" "Existing GitHub key at $key_path is invalid"
-# 		return 1
-# 	fi
-
-# 	local ssh_config="$HOME/.ssh/config"
-# 	if [ ! -f "$ssh_config" ] || ! grep -Fq "IdentityFile ~/.ssh/id_rsa_github" "$ssh_config"; then
-# 		log "INFO" "GitHub SSH config entry missing"
-# 		return 1
-# 	fi
-
-# 	if ! github_auth_check; then
-# 		log "INFO" "Re-running GitHub module due to failed authentication check"
-# 		return 1
-# 	fi
-
-# 	return 0
-# }
+	return 0
+}
 
 _github_install() {
 	log "INFO" "=== Starting GitHub module ==="
+
+	github_install
 
 	if [ -z "${GITHUB_PRIV_KEY_X:-}" ]; then
 		log "ERROR" "GITHUB_PRIV_KEY_X is not set; cannot configure GitHub SSH access"
@@ -107,3 +101,4 @@ _github_install() {
 	log "INFO" "=== GitHub module completed ==="
 	return 0
 }
+
