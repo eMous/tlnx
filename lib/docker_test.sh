@@ -25,7 +25,11 @@ docker_test_cleanup_old_containers() {
 		return 0
 	fi
 	local -a existing_ids existing_names
-	local line
+	local ps_output line
+	if ! ps_output=$(command sudo docker ps -a --filter "label=${_docker_test_label}" --format '{{.ID}} {{.Names}}' 2>/dev/null); then
+		log "WARN" "Failed to list docker test containers; skipping cleanup"
+		return 0
+	fi
 	while IFS= read -r line; do
 		[ -z "$line" ] && continue
 		local cid name
@@ -33,13 +37,12 @@ docker_test_cleanup_old_containers() {
 		name="${line#* }"
 		existing_ids+=("$cid")
 		existing_names+=("$name")
-	done < <(docker_cli ps -a --filter "label=${_docker_test_label}" --format '{{.ID}} {{.Names}}' --sort=created 2>/dev/null)
-
+	done <<<"$ps_output"
 	local count=${#existing_ids[@]}
-	while [ "$count" -ge "$max_containers" ]; do
-		local idx=$((count - 1))
-		local container_id="${existing_ids[$idx]}"
-		local container_name="${existing_names[$idx]}"
+	# docker ps --sort=created lists oldest first; remove from the front until we are under the limit.
+	while [ "$count" -gt "$max_containers" ]; do
+		local container_id="${existing_ids[0]}"
+		local container_name="${existing_names[0]}"
 		if [ -n "$container_id" ]; then
 			log "INFO" "Removing old docker test container $container_name ($container_id) to enforce max $max_containers"
 			if ! docker_cli rm -f "$container_id" >>"$LOG_FILE" 2>&1; then
@@ -47,7 +50,10 @@ docker_test_cleanup_old_containers() {
 				break
 			fi
 		fi
-		count=$((count - 1))
+		# Shift arrays
+		existing_ids=("${existing_ids[@]:1}")
+		existing_names=("${existing_names[@]:1}")
+		count=${#existing_ids[@]}
 	done
 }
 
@@ -153,18 +159,37 @@ run_docker_test() {
 	local exec_cmd="./tlnx${quoted_args}"
 	log "INFO" "Executing: $exec_cmd inside $container_name"
 
-	
 	local -a exec_flags=(-e TLNX_FORCE_COLOR=1 -e TLNX_DOCKER_CHILD=1 -e TLNX_DOCKER_CONTAINER_NAME="$container_name" -w /root/tlnx -u root -it)
-	if  command -v script >/dev/null 2>&1; then
+	local status=0
+	if command -v script >/dev/null 2>&1; then
 		local docker_exec_cmd=""
-		printf -v docker_exec_cmd '%q ' sudo docker exec "${exec_flags[@]}" "$container_name" bash -lc "$exec_cmd"
-		log "INFO" "Non-tty environment detected; wrapping docker exec with script to force a pty"
-		script -qefc "$docker_exec_cmd" /dev/null
+		printf -v docker_exec_cmd '%q ' docker exec "${exec_flags[@]}" "$container_name" bash -lc "$exec_cmd"
+		log "INFO" "Forcing docker exec under a pty via script"
+		if [ -n "${TLNX_PASSWD:-}" ]; then
+			# Use sudo askpass so the password is not echoed into the session.
+			local askpass_script
+			askpass_script=$(mktemp) || {
+				log "ERROR" "Failed to create askpass helper"
+				return 1
+			}
+			cat >"$askpass_script" <<'EOF'
+#!/bin/sh
+printf "%s\n" "$SUDO_ASKPASS_PASSWORD"
+EOF
+			chmod 700 "$askpass_script"
+			SUDO_ASKPASS="$askpass_script" SUDO_ASKPASS_PASSWORD="$TLNX_PASSWD" command sudo -A script -qefc "$docker_exec_cmd" /dev/null
+			status=$?
+			rm -f "$askpass_script"
+		else
+			command sudo script -qefc "$docker_exec_cmd" /dev/null
+			status=$?
+		fi
 	else
-		log "INFO" "Non-tty environment detected; forcing docker exec -t anyway"
+		log "INFO" "script(1) not available; running docker exec directly"
 		docker_cli exec "${exec_flags[@]}" "$container_name" bash -lc "$exec_cmd"
+		status=$?
 	fi
-	local status=$?
+
 	if [ $status -ne 0 ]; then
 		log "ERROR" "Docker test run inside $container_name failed with status $status"
 	else

@@ -16,8 +16,15 @@ RUN apt-get update \
         dbus \
         openssh-client \
         ca-certificates \
+        util-linux \
+        dialog \
+        libterm-readline-perl-perl \
+        sshpass \
+        systemd-timesyncd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+
 
 VOLUME [ "/sys/fs/cgroup" ]
 STOPSIGNAL SIGRTMIN+3

@@ -41,6 +41,26 @@ _detect_prerequisites() {
 		log "ERROR" "rsync installation check failed. Exiting."
 		return 1
 	}
+	ensure_script_available || {
+		log "ERROR" "script command installation check failed. Exiting."
+		return 1
+	}
+	ensure_dialog_installed || {
+		log "ERROR" "dialog installation check failed. Exiting."
+		return 1
+	}
+	ensure_term_readline_installed || {
+		log "ERROR" "Term::ReadLine installation check failed. Exiting."
+		return 1
+	}
+	ensure_sshpass_installed || {
+		log "ERROR" "sshpass installation check failed. Exiting."
+		return 1
+	}
+	ensure_timesyncd_installed || {
+		log "ERROR" "systemd-timesyncd check failed. Exiting."
+		return 1
+	}
 }
 
 check_aptlock(){
@@ -183,5 +203,95 @@ ensure_rsync_installed() {
 		return 1
 	fi
 	log "INFO" "rsync installed successfully"
+	return 0
+}
+
+ensure_script_available() {
+	if command -v script >/dev/null 2>&1; then
+		log "INFO" "script already installed"
+		return 0
+	fi
+	log "INFO" "script command not found; installing util-linux via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing util-linux (script)"
+		return 1
+	fi
+	if ! sudo apt-get install -y util-linux >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install util-linux (script)"
+		return 1
+	fi
+	log "INFO" "script installed successfully"
+	return 0
+}
+
+ensure_dialog_installed() {
+	if command -v dialog >/dev/null 2>&1; then
+		log "INFO" "dialog already installed"
+		return 0
+	fi
+	log "INFO" "dialog not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing dialog"
+		return 1
+	fi
+	if ! sudo apt-get install -y dialog >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install dialog"
+		return 1
+	fi
+	log "INFO" "dialog installed successfully"
+	return 0
+}
+
+ensure_term_readline_installed() {
+	if perl -MTerm::ReadLine -e 'exit 0' >/dev/null 2>&1; then
+		log "INFO" "Perl Term::ReadLine already available"
+		return 0
+	fi
+	log "INFO" "Perl Term::ReadLine not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing Term::ReadLine"
+		return 1
+	fi
+	if ! sudo apt-get install -y libterm-readline-perl-perl >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install Term::ReadLine"
+		return 1
+	fi
+	log "INFO" "Perl Term::ReadLine installed successfully"
+	return 0
+}
+
+ensure_sshpass_installed() {
+	if command -v sshpass >/dev/null 2>&1; then
+		log "INFO" "sshpass already installed"
+		return 0
+	fi
+	log "INFO" "sshpass not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing sshpass"
+		return 1
+	fi
+	if ! sudo apt-get install -y sshpass >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install sshpass"
+		return 1
+	fi
+	log "INFO" "sshpass installed successfully"
+	return 0
+}
+
+ensure_timesyncd_installed() {
+	if command -v timedatectl >/dev/null 2>&1 && systemctl list-unit-files 2>/dev/null | grep -q '^systemd-timesyncd.service'; then
+		log "INFO" "systemd-timesyncd already installed"
+		return 0
+	fi
+	log "INFO" "systemd-timesyncd not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing systemd-timesyncd"
+		return 1
+	fi
+	if ! sudo apt-get install -y systemd-timesyncd >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install systemd-timesyncd"
+		return 1
+	fi
+	log "INFO" "systemd-timesyncd installed successfully"
 	return 0
 }
