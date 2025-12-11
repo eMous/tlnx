@@ -65,7 +65,7 @@ init_shell() {
 		local templatedir="$(get_config_dir $shell)"
 		local templatepath="$templatedir/$(basename $homercpath)"
 		local mark="init_shell_${shell}_done"
-
+		mkdir -p "$subrcdir"
 		if [ ! -f "$templatepath" ]; then
 			log "ERROR" "Template rc file for $shell not found at $templatepath; cannot initialize"
 			exit 1
