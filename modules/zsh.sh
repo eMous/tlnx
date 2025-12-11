@@ -7,7 +7,7 @@ zsh_install() {
 
 	if ! command -v zsh >/dev/null 2>&1; then
 		# Refresh package list
-		sudo apt-get update 2>&1 | tee -a "$LOG_FILE"
+		# sudo apt-get update 2>&1 | tee -a "$LOG_FILE"
 		# Install ZSH
 		sudo apt-get install -y zsh 2>&1 | tee -a "$LOG_FILE"
 		if [ $? -ne 0 ]; then

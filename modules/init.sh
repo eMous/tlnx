@@ -362,7 +362,7 @@ init_timesyncd() {
 	# Check if systemd-timesyncd is installed
 	if ! command -v timedatectl >/dev/null 2>&1; then
 		log "INFO" "timesyncd is not installed, installing..."
-		sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
+		# sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
 		sudo apt-get install -y systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
 		local install_status=${PIPESTATUS[0]}
 		if [ $install_status -ne 0 ]; then

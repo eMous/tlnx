@@ -17,10 +17,10 @@ git_install_packages() {
 	fi
 
 	log "INFO" "Installing Git packages..."
-	if ! sudo apt-get update >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "apt-get update failed while preparing for Git installation"
-		return 1
-	fi
+	# if ! sudo apt-get update >>"$LOG_FILE" 2>&1; then
+	# 	log "ERROR" "apt-get update failed while preparing for Git installation"
+	# 	return 1
+	# fi
 
 	if ! sudo apt-get install -y git >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install Git via apt"

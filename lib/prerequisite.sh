@@ -13,6 +13,19 @@ _detect_prerequisites() {
 		log "ERROR" "Shell RC file check failed. Exiting."
 		return 1
 	}
+	check_aptlock || {
+		log "ERROR" "APT lock check failed. Exiting."
+		return 1
+	}
+}
+
+check_aptlock(){
+	sudo killall apt apt-get dpkg 
+	sudo rm -f /var/lib/dpkg/lock-frontend
+	sudo rm -f /var/lib/dpkg/lock
+	sudo rm -f /var/cache/apt/archives/lock
+	sudo dpkg --configure -a
+	return 0
 }
 
 # Detect operating system distribution
