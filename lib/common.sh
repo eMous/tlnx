@@ -29,6 +29,9 @@ log() {
     local invoker=${BASH_SOURCE[1]#*tlnx/} 
     local level=$1
     local message=$2
+    if [ -n "${TLNX_DOCKER_CONTAINER_NAME:-}" ]; then
+        message="[${TLNX_DOCKER_CONTAINER_NAME}] $message"
+    fi
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     local formatted="[$timestamp] [$level] [$invoker] $message"
 
@@ -40,7 +43,7 @@ log() {
     # Only print when message priority is >= configured level
     if [ $message_priority -ge $current_priority ]; then
         local color_prefix="" color_suffix=""
-        if [ -t 1 ] || [ -t 0 ]; then
+        if [ -t 1 ] || [ -t 0 ] || [ -n "${TLNX_FORCE_COLOR:-}" ]; then
             case "$level" in
             "VERBOSE") color_prefix="\033[37m" ;;
             "DEBUG") color_prefix="\033[34m" ;;
@@ -53,7 +56,7 @@ log() {
             fi
         fi
         if [ -n "$color_prefix" ]; then
-            printf "%b%s%b\n" "$color_prefix" "$formatted" "$color_suffix"
+            printf "%b%s%b\n" "$color_prefix" "$formatted" "$color_suffix" >&2
         else
             echo "$formatted" 1>&2
         fi

@@ -3,6 +3,21 @@
 # Clashctl module - install and configure Clash and Clashctl
 
 # Module entrypoint
+run_clash_install_cmd() {
+	local cmd="$1"
+	if [ -t 0 ] && [ -t 1 ]; then
+		command sudo bash -lc "$cmd"
+		return $?
+	fi
+	if command -v script >/dev/null 2>&1; then
+		log "INFO" "Wrapping Clashctl command in script(1) to emulate a TTY"
+		command sudo script -qefc "$cmd" /dev/null
+	else
+		log "WARN" "Non-interactive terminal and 'script' missing; running Clashctl command without TTY"
+		command sudo bash -lc "$cmd"
+	fi
+}
+
 _clashctl_install() {
 	log "INFO" "=== Starting Clashctl module ==="
 
@@ -16,12 +31,25 @@ _clashctl_install() {
 	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
 	cd $extracted_dir
 
-	local clash_config
 	if [ -n "${CLASHCTL_SUB_X:-}" ]; then
 		curl -L "${CLASHCTL_SUB_X}" -o resources/config.yaml 2>&1 | tee -a "$LOG_FILE"
 	fi
-	command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE"
-	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
+
+	local uninstall_cmd="cd '$extracted_dir' && $(get_current_shell) uninstall.sh"
+	run_clash_install_cmd "$uninstall_cmd" 2>&1 | tee -a "$LOG_FILE"
+	local uninstall_status=${PIPESTATUS[0]}
+	if [ $uninstall_status -ne 0 ]; then
+		log "ERROR" "Clash uninstall script failed"
+		return 1
+	fi
+
+	local install_cmd="cd '$extracted_dir' && $(get_current_shell) install.sh"
+	run_clash_install_cmd "$install_cmd" 2>&1 | tee -a "$LOG_FILE"
+	local install_status=${PIPESTATUS[0]}
+	if [ $install_status -ne 0 ]; then
+		log "ERROR" "Clash install script failed"
+		return 1
+	fi
 
 	local output=$(bash -ci 'clashon >/dev/null 2>&1; echo $http_proxy;')
 	export http_proxy=$(echo $output | grep -o "http://[^ ]*")

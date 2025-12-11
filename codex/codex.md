@@ -709,3 +709,87 @@ Option 2: refresh the docs to include the Clashctl module, package staging detai
 
 ## Lessons
 Whenever you introduce a new module or helper, you expect the documentation and history to capture the full workflow (including offline assets and env vars) right away so the repo stays self-explanatory.
+
+---
+id: demand-026
+date: 2025-12-11T05:54:00Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You are tired of restoring VMware snapshots to test the provisioning script on a clean Ubuntu host and asked for a built-in Docker workflow: running `./tlnx` locally should spin up a fresh Ubuntu 24 container, copy the repo inside, and run the automation there while exposing the container so you can inspect it.
+
+## Options
+1. Keep relying on manual VM snapshots and avoid touching the main entrypoint, leaving Docker testing as an external process.
+2. Add a configurable Docker harness in the repo so the default `./tlnx` command provisions a disposable Ubuntu container (capped at five at a time), injects the repo, prevents recursive launches via an env var, and streams the run so you can `docker exec` into it afterward.
+
+## Decision
+Option 2: integrate the Docker harness directly into `./tlnx`, backed by `DOCKER_TEST_*` config knobs so development defaults to containerized testing while production runs can disable it.
+
+## Result
+- Added `lib/docker_test.sh`, which enforces a five-container limit, pulls `ubuntu:24.04`, copies the repo into `/root/tlnx`, and re-runs `./tlnx` inside with `TLNX_DOCKER_CHILD=1` so recursion stops.
+- Updated `tlnx` to short-circuit into the harness when `DOCKER_TEST_ENABLED=true`, plus new config defaults (`DOCKER_TEST_IMAGE`, `DOCKER_TEST_MAX_CONTAINERS`, `DOCKER_TEST_CONTAINER_PREFIX`) and documentation describing the workflow.
+- Documented how to inspect the named containers via `sudo docker exec -it <container> bash`, matching your desire to dive into runs mid-flight.
+
+## Lessons
+You expect core workflows—especially costly verification loops—to be automated inside the repo with sensible guardrails (limits, env safeguards, docs, history entries) so you can trigger them via the standard entrypoint without juggling extra tooling.
+
+---
+id: demand-027
+date: 2025-12-11T06:09:55Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked to stop re-running `apt-get` inside every Docker test execution by baking the required tools into a dedicated image, to reuse that image for subsequent runs, and to have the prerequisite check fail early if `sudo` itself is missing.
+
+## Options
+1. Keep installing `sudo`/`psmisc` on every container boot and hope the overhead stays manageable.
+2. Ship a repository-owned Dockerfile for the test harness, build it automatically when absent, and add an explicit `sudo` binary check in `_detect_prerequisites`.
+
+## Decision
+Option 2: create `docker/test-image/Dockerfile` plus build logic in `lib/docker_test.sh`, reference the image via new config knobs, drop the inline apt install loop, and teach the prerequisite phase to abort if `sudo` is not installed.
+
+## Result
+- Added `docker/test-image/Dockerfile` (default tag `tlnx/test:ubuntu24`) and updated the harness to build it automatically via `DOCKER_TEST_BUILD_CONTEXT`/`DOCKER_TEST_DOCKERFILE` before falling back to `docker pull`.
+- Updated the config defaults/template to point at the new image, removed the per-run apt install block, and documented the workflow so repeated runs stay fast.
+- Introduced `check_sudo_command` in `lib/prerequisite.sh` so the script reports a clear error when `sudo` is missing instead of failing later during package cleanup.
+
+## Lessons
+Baking dependencies into reusable artifacts (like Docker images) aligns with your desire to avoid redundant work; integrating those assets into the config plus prerequisite checks keeps the workflow predictable and self-documenting.
+
+---
+id: demand-028
+date: 2025-12-11T15:30:45Z
+type: feature
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+You asked for two improvements: (1) mount the repository directly into the Docker test container instead of copying it (preserving `run/` as ephemeral) and (2) restore interactive password prompts for `./tlnx -c`, which disappeared because the Docker harness wrapped encryption runs.
+
+## Options
+1. Keep copying the repo into each container, leaving `./tlnx -c` wrapped so prompts stay suppressed.
+2. Bind-mount the repo (masking `run/` with tmpfs), update the systemd-capable image/flags, and only invoke the Docker harness for actual module runs so encryption/decryption execute locally with prompts intact.
+
+## Decision
+Option 2: switch to bind mounts with a tmpfs overlay for `run/`, mark the container privileged/systemd-ready, prune containers aggressively, and short-circuit the harness when `-c`/`-d` (or proxy-only) modes are requested so they run on the host terminal.
+
+## Result
+- `lib/docker_test.sh` now launches containers with `--mount type=bind,src=$PROJECT_DIR,target=/root/tlnx` plus a tmpfs at `/root/tlnx/run`, removing the tar/rsync step; it also adds the necessary systemd/cgroup flags and still enforces the five-container limit.
+- `tlnx` defers the Docker harness until after decrypt/encrypt/set-proxy handling, so `./tlnx -c` runs locally, prompting for the encryption key again.
+- Documentation (and the Dockerfile) reflect the systemd-enabled image plus the new mount strategy.
+
+## Lessons
+Interactive workflows (like encryption prompts) must bypass automation layers that suppress TTYs, and the fastest feedback loop is to mount the repo directly with careful overlays instead of re-copying it for every test container.

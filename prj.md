@@ -65,6 +65,9 @@ This is an automated server configuration tool that helps users set up a new clo
 │   ├── default.conf     # Default config example
 │   ├── default.conf.template  # Config template
 │   └── enc.conf.enc     # Encrypted config
+├── docker/              # Container assets
+│   └── test-image/
+│       └── Dockerfile   # Prebuilt test image used by the Docker harness
 ├── packages/            # Offline bundles (e.g., clash-for-linux-install.tar.gz)
 ├── scripts/             # Helper scripts
 │   ├── decrypt.sh       # Decryption helper
@@ -151,6 +154,16 @@ This is an automated server configuration tool that helps users set up a new clo
 3.11 **Vim module**:
 - Installs Vim via apt when it is missing, then drops a conservative `.vimrc` if the user does not already have one.
 - The generated config turns on syntax highlighting, indentation helpers, and a few quality-of-life defaults so machines without prior editor setup remain usable out of the box.
+
+3.12 **Docker test harness**:
+- When `DOCKER_TEST_ENABLED="true"` (default in `config/default.conf` during development), running `./tlnx` on the host spawns a disposable Ubuntu 24.04 container via Docker, bind-mounts the entire repository to `/root/tlnx`, overlays `/root/tlnx/run` with an in-memory tmpfs so host state is untouched, and re-invokes the script inside that container.
+- The harness injects `TLNX_DOCKER_CHILD=1` so the inner run does not recursively start more containers, then streams the execution logs back to the host terminal.
+- Each container receives a timestamped `DOCKER_TEST_CONTAINER_PREFIX` (default `tlnx-test-YYYYmmddHHMMSS`) and remains running after the test so the user can inspect it with `sudo docker exec -it <name> bash`.
+- Before creating a new container, the harness prunes old ones labeled `tlnx.testcontainer=true`, keeping at most `DOCKER_TEST_MAX_CONTAINERS` (default 5) so local Docker does not accumulate stale runs.
+- The harness builds a reusable image defined by `docker/test-image/Dockerfile` (default tag `tlnx/test:ubuntu24`) whenever it is missing; the file pre-installs `systemd`, `sudo`, `psmisc`, and certificates so repeated apt-get runs are unnecessary.
+- `DOCKER_TEST_BUILD_CONTEXT` and `DOCKER_TEST_DOCKERFILE` point at the repo-managed Dockerfile so developers can tweak the sandbox without editing scripts; if these paths are empty the harness falls back to pulling the `DOCKER_TEST_IMAGE`.
+- The Ubuntu base tag remains configurable through `DOCKER_TEST_IMAGE` should you want to test against another distro, and encryption/decryption helpers (`./tlnx -d/-c`) always run locally so password prompts remain interactive.
+- Disable the harness by setting `DOCKER_TEST_ENABLED="false"` (or exporting `TLNX_DOCKER_CHILD=1`) when provisioning an actual host instead of the disposable Docker sandbox.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.

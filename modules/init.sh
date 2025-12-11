@@ -497,7 +497,7 @@ init_ssh_keys() {
 		return 0
 	fi
 	log "INFO" "Generating new SSH key pair"
-	ssh-keygen -t rsa -b 4096 -f "$keydir/$keyname" -N "" 2>&1 | tee -a "$LOG_FILE"
+	ssh-keygen -t rsa -b 4096 -f "$keydir/$keyname" -N "" 2>&1  #| tee -a "$LOG_FILE"
 	local ssh_status=${PIPESTATUS[0]}
 	if [ $ssh_status -ne 0 ]; then
 		log "ERROR" "Failed to generate SSH key pair"

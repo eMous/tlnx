@@ -250,7 +250,6 @@ done
 		log "INFO" "TLNX_PASSWD already provided (env or override); sudo will try it before other sources"
 	fi
 
-    
     if [ -n "$SET_HTTP_PROXY_VALUE" ]; then
         log "INFO" "Setting HTTP proxy via CLI option"
         if set_http_proxy "$SET_HTTP_PROXY_VALUE"; then
@@ -260,19 +259,6 @@ done
             log "ERROR" "Failed to set HTTP proxy"
             exit 1
         fi
-    fi
-
-    # Handle decrypt/encrypt only modes
-    if [ "$DECRYPT_MODE" = "true" ]; then
-        echo "Running decrypt option..."
-        bash "decrypt" "config/enc.conf.enc" "config/enc.conf"
-        if [ $? -eq 0 ]; then
-            echo "Decryption succeeded: config/enc.conf.enc -> config/enc.conf"
-        else
-            echo "Decryption failed"
-            exit 1
-        fi
-        exit 0
     fi
     
     if [ "$ENCRYPT_MODE" = "true" ]; then
@@ -287,6 +273,25 @@ done
         exit 0
     fi
     
+	if docker_test_should_run; then
+		log "INFO" "Docker testing enabled; provisioning disposable Ubuntu container"
+		run_docker_test "${TLNX_ORIGINAL_ARGS[@]}"
+		exit $?
+	fi
+
+    # Handle decrypt only mode (executes inside docker when enabled)
+    if [ "$DECRYPT_MODE" = "true" ]; then
+        echo "Running decrypt option..."
+        bash "decrypt" "config/enc.conf.enc" "config/enc.conf"
+        if [ $? -eq 0 ]; then
+            echo "Decryption succeeded: config/enc.conf.enc -> config/enc.conf"
+        else
+            echo "Decryption failed"
+            exit 1
+        fi
+        exit 0
+    fi
+
 	# Environment detection - determine execution context
 	if [ "${REMOTE_RUN:-false}" = "true" ]; then
 		# Not the execution environment; transfer to target host
