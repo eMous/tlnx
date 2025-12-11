@@ -34,6 +34,5 @@ _clashctl_install() {
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
-	_clashctl_install
-	cat ~/.bashrc
+	echo "source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh && watch_proxy" >> "$HOME/.zshrc"
 }

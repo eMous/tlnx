@@ -42,15 +42,15 @@ display_usage() {
 	echo "  --select-modules     Show available module scripts and choose by number"
 	echo "  -e VAR=VALUE         Override configuration variable after configs load (repeatable)"
 	echo "  --set-http-proxy URL Persist HTTP/HTTPS proxy settings and exit"
-    echo "  -d, --decrypt        Decrypt config/enc.conf.enc into config/enc.conf"
+    echo "  -d, --attach         Attach to the last executed docker test container"
+    echo "  --decrypt            Decrypt config/enc.conf.enc into config/enc.conf"
     echo "  -c, --encrypt        Encrypt config/enc.conf into config/enc.conf.enc"
     echo ""
     echo "Examples:"
     echo "  ./tlnx -l INFO"
     echo "  ./tlnx --modules docker,zsh"
     echo "  ./tlnx -d"
-    echo "  ./tlnx -c"
-    echo "  ./tlnx --set-http-proxy http://proxy:port"
+    echo "  ./tlnx --decrypt"
 }
 
 # Gather available module scripts from the modules directory
@@ -164,6 +164,7 @@ main() {
 	local DECRYPT_MODE="false"
 	local ENCRYPT_MODE="false"
 	local INTERACTIVE_SELECT="false"
+	local ATTACH_MODE="false"
 	local -a CLI_ENV_OVERRIDES=()
     
     # Parse CLI arguments
@@ -194,7 +195,10 @@ main() {
         elif [ "$arg" = "-h" ] || [ "$arg" = "--help" ]; then
             display_usage
             exit 0
-        elif [ "$arg" = "-d" ] || [ "$arg" = "--decrypt" ]; then
+        elif [ "$arg" = "-d" ] || [ "$arg" = "--attach" ]; then
+            ATTACH_MODE="true"
+            i=$((i+1))
+        elif [ "$arg" = "--decrypt" ]; then
             DECRYPT_MODE="true"
             i=$((i+1))
         elif [ "$arg" = "-c" ] || [ "$arg" = "--encrypt" ]; then
@@ -273,6 +277,11 @@ done
         exit 0
     fi
     
+    if [ "$ATTACH_MODE" = "true" ]; then
+        docker_test_attach_last
+        exit $?
+    fi
+
 	if docker_test_should_run; then
 		log "INFO" "Docker testing enabled; provisioning disposable Ubuntu container"
 		run_docker_test "${TLNX_ORIGINAL_ARGS[@]}"

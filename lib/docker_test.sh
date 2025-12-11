@@ -150,6 +150,9 @@ run_docker_test() {
 	log "INFO" "Docker container ready: $container_name"
 	log "INFO" "Inspect it anytime via: sudo docker exec -it $container_name bash"
 
+	# Persist TLNX_DOCKER_CHILD env var so interactive sessions don't trigger recursion
+	docker_cli exec "$container_name" bash -c 'echo "export TLNX_DOCKER_CHILD=1" >> /root/.bashrc'
+
 	local quoted_args=""
 	if [ "$#" -gt 0 ]; then
 		local arg
@@ -196,5 +199,74 @@ EOF
 	else
 		log "INFO" "Docker test run inside $container_name finished successfully"
 	fi
+
+	# Save container ID for attach mode
+	mkdir -p "$PROJECT_DIR/run"
+	echo "$container_name" > "$PROJECT_DIR/run/last_docker_test_container"
+	
 	return $status
+}
+
+docker_test_attach_last() {
+	local last_container_file="$PROJECT_DIR/run/last_docker_test_container"
+	
+	if [ ! -f "$last_container_file" ]; then
+		log "ERROR" "No last container record found at $last_container_file"
+		return 1
+	fi
+
+	local last_container
+	last_container=$(cat "$last_container_file")
+	
+	if [ -z "$last_container" ]; then
+		log "ERROR" "Last container record is empty"
+		return 1
+	fi
+
+	# Check if container exists
+	if ! docker_cli inspect "$last_container" >/dev/null 2>&1; then
+		log "ERROR" "Container $last_container not found (it may have been removed)"
+		rm -f "$last_container_file"
+		return 1
+	fi
+	
+	# Check if container is running, if not start it
+	local state
+	state=$(docker_cli inspect -f '{{.State.Running}}' "$last_container" 2>/dev/null)
+	if [ "$state" != "true" ]; then
+		log "INFO" "Container $last_container is not running, starting it..."
+		if ! docker_cli start "$last_container" >/dev/null; then
+			log "ERROR" "Failed to start container $last_container"
+			return 1
+		fi
+	fi
+	
+	log "INFO" "Attaching to last container: $last_container"
+	
+	# Use script trick to force PTY allocation if available, similar to run_docker_test
+	if command -v script >/dev/null 2>&1; then
+		local docker_exec_cmd=""
+		# Construct the command to run bash interactively
+		printf -v docker_exec_cmd '%q ' docker exec -it "$last_container" bash
+		
+		if [ -n "${TLNX_PASSWD:-}" ]; then
+			local askpass_script
+			askpass_script=$(mktemp) || {
+				log "ERROR" "Failed to create askpass helper"
+				return 1
+			}
+			cat >"$askpass_script" <<'EOF'
+#!/bin/sh
+printf "%s\n" "$SUDO_ASKPASS_PASSWORD"
+EOF
+			chmod 700 "$askpass_script"
+			SUDO_ASKPASS="$askpass_script" SUDO_ASKPASS_PASSWORD="$TLNX_PASSWD" command sudo -A script -qefc "$docker_exec_cmd" /dev/null
+			rm -f "$askpass_script"
+		else
+			command sudo script -qefc "$docker_exec_cmd" /dev/null
+		fi
+	else
+		# Fallback to direct execution
+		docker_cli exec -it "$last_container" bash
+	fi
 }
