@@ -793,3 +793,58 @@ Option 2: switch to bind mounts with a tmpfs overlay for `run/`, mark the contai
 
 ## Lessons
 Interactive workflows (like encryption prompts) must bypass automation layers that suppress TTYs, and the fastest feedback loop is to mount the repo directly with careful overlays instead of re-copying it for every test container.
+
+---
+id: demand-029
+date: 2025-12-11T17:50:00Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+Hostname changes kept failing inside the Docker test container and systemd-timesyncd was missing for modules that expect it; the hostname should come from config at container start.
+
+## Options
+1. Leave the hostname random and ignore the missing timesyncd, accepting hostnamectl/systemd errors during Docker tests.
+2. Pass `INIT_HOSTNAME` to `docker run`, bake timesyncd and supporting packages into the test image, and ensure timesyncd is present during prerequisite checks.
+
+## Decision
+Chose option 2 to align the container environment with host expectations and the config-provided hostname.
+
+## Result
+- `lib/docker_test.sh` now sets `--hostname` from `INIT_HOSTNAME` (fallback to the generated name).
+- `docker/test-image/Dockerfile` installs `systemd-timesyncd` and pre-seeds machine-id for hostnamectl/dbus.
+- `lib/prerequisite.sh` adds an `ensure_timesyncd_installed` check before modules run.
+
+## Lessons
+Feed config-driven hostnames into containers at creation time and mirror host-level system services in the test image to avoid noisy setup failures.
+
+---
+id: demand-030
+date: 2025-12-11T18:25:00Z
+type: fix
+status: accepted
+idea from: instructor
+links:
+  - event_id:
+  - issue:
+
+## Context
+Docker test runs failed setting the timezone because `tzdata` was missing inside the test container.
+
+## Options
+1. Ignore the timezone error and skip timezone configuration in tests.
+2. Bake `tzdata` into the test image and ensure it’s present during prerequisites.
+
+## Decision
+Chose option 2 to keep the container environment aligned with module expectations.
+
+## Result
+- Added `tzdata` to `docker/test-image/Dockerfile`.
+- Added an `ensure_tzdata_installed` prerequisite to verify/install timezone data before modules run.
+
+## Lessons
+Preloading baseline OS data (like tzdata) in the test image avoids noisy failures in modules that expect it.

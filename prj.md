@@ -164,6 +164,8 @@ This is an automated server configuration tool that helps users set up a new clo
 - `DOCKER_TEST_BUILD_CONTEXT` and `DOCKER_TEST_DOCKERFILE` point at the repo-managed Dockerfile so developers can tweak the sandbox without editing scripts; if these paths are empty the harness falls back to pulling the `DOCKER_TEST_IMAGE`.
 - The Ubuntu base tag remains configurable through `DOCKER_TEST_IMAGE` should you want to test against another distro, and encryption/decryption helpers (`./tlnx -d/-c`) always run locally so password prompts remain interactive.
 - Disable the harness by setting `DOCKER_TEST_ENABLED="false"` (or exporting `TLNX_DOCKER_CHILD=1`) when provisioning an actual host instead of the disposable Docker sandbox.
+- Each container is named with the timestamped prefix and receives its hostname from `INIT_HOSTNAME` (falling back to the generated name) during `docker run`, avoiding in-container hostnamectl failures on bind-mounted `/etc/hostname`.
+- The test image pre-installs util-linux (script), dialog, sshpass, libterm-readline-perl-perl, tzdata, and systemd-timesyncd; prerequisites verify timesyncd and tzdata are present before modules run.
 
 3.4 **Remote execution flow**:
 1. The local script sees `REMOTE_RUN=false`.

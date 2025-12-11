@@ -122,16 +122,17 @@ run_docker_test() {
 	log "INFO" "image using is $image ."
 	local prefix="${DOCKER_TEST_CONTAINER_PREFIX:-tlnx-test}"
 	local container_name="${prefix}-$(date +%Y%m%d%H%M%S)"
+	local docker_hostname="${INIT_HOSTNAME:-$container_name}"
 
 	local host_project_dir="$PROJECT_DIR"
 	if command -v realpath >/dev/null 2>&1; then
 		host_project_dir=$(realpath "$PROJECT_DIR")
 	fi
 
-	log "INFO" "Starting docker test container $container_name from $image"
+	log "INFO" "Starting docker test container $container_name from $image with hostname $docker_hostname"
 	if ! docker_cli run -dit \
 		--name "$container_name" \
-		--hostname "$container_name" \
+		--hostname "$docker_hostname" \
 		--label "${_docker_test_label}" \
 		--privileged \
 		--cgroupns=host \

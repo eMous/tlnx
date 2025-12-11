@@ -61,6 +61,10 @@ _detect_prerequisites() {
 		log "ERROR" "systemd-timesyncd check failed. Exiting."
 		return 1
 	}
+	ensure_tzdata_installed || {
+		log "ERROR" "tzdata installation check failed. Exiting."
+		return 1
+	}
 }
 
 check_aptlock(){
@@ -68,10 +72,10 @@ check_aptlock(){
 	sudo rm -f /var/lib/dpkg/lock-frontend 2>/dev/null
 	sudo rm -f /var/lib/dpkg/lock 2>/dev/null
 	sudo rm -f /var/cache/apt/archives/lock 2>/dev/null
-	sudo dpkg --configure -a
-	sudo systemctl stop unattended-upgrades
+	sudo dpkg --configure -a 2>/dev/null
+	sudo systemctl stop unattended-upgrades 2>/dev/null
 	# sudo pkill --signal SIGKILL unattended-upgrades
-	sudo apt-get purge unattended-upgrades
+	sudo apt-get purge unattended-upgrades 2>/dev/null
 	return 0
 }
 
@@ -293,5 +297,23 @@ ensure_timesyncd_installed() {
 		return 1
 	fi
 	log "INFO" "systemd-timesyncd installed successfully"
+	return 0
+}
+
+ensure_tzdata_installed() {
+	if [ -f /usr/share/zoneinfo/UTC ] && [ -f /usr/share/zoneinfo/Asia/Shanghai ]; then
+		log "INFO" "tzdata already available"
+		return 0
+	fi
+	log "INFO" "tzdata not found; installing via apt-get"
+	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to update apt cache while installing tzdata"
+		return 1
+	fi
+	if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install tzdata"
+		return 1
+	fi
+	log "INFO" "tzdata installed successfully"
 	return 0
 }

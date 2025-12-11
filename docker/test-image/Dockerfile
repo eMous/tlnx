@@ -21,6 +21,7 @@ RUN apt-get update \
         libterm-readline-perl-perl \
         sshpass \
         systemd-timesyncd \
+        tzdata \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

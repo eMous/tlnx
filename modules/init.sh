@@ -80,7 +80,7 @@ init_shell() {
 		# PATH setup
 		local content_to_check="export PATH=\"$PROJECT_DIR:\$HOME/.local/bin:\$PATH\""
 		mkdir -p "$HOME/.local/bin"
-		if grep -Fq "$content_to_check" "$subrcpath"; then
+		if grep -Fq "$content_to_check" "$subrcpath" 2>/dev/null; then
 			log "INFO" "Project directory $PROJECT_DIR already present in $shell PATH via $subrcpath"
 			return 0
 		fi
@@ -124,7 +124,7 @@ init_update_aliyun_mirror() {
 		fi
 
 		# if already using aliyun mirror, skip: check first line of sources.list contains TLNX
-		if grep -q "^# Managed by TLNX" /etc/apt/sources.list; then
+		if grep -q "^# Managed by TLNX" /etc/apt/sources.list 2>/dev/null; then
 			log "INFO" "Apt sources already configured for Alibaba Cloud; skipping"
 		else
 
@@ -239,7 +239,7 @@ init_tlnx_in_path() {
 	local content_to_check="export PATH=\"$PROJECT_DIR:$HOME/.local/bin:\$PATH\""
 	mkdir -p "$HOME/.local/bin"
 
-	if grep -Fq "$content_to_check" "$rc_file"; then
+	if grep -Fq "$content_to_check" "$rc_file" 2>/dev/null; then
 		log "INFO" "Project directory $PROJECT_DIR already present in $shell_name PATH via $rc_file"
 		return 0
 	fi
@@ -420,6 +420,12 @@ init_network_info() {
 		log "ERROR" "Failed to retrieve LAN IP address"
 	else
 		log "INFO" "Retrieved LAN IP address: $lanip"
+	fi
+
+	# Skip hostname changes inside docker test containers; they fail due to bind-mounted /etc/hostname.
+	if [ "${TLNX_DOCKER_CHILD:-0}" = "1" ]; then
+		log "INFO" "Docker test container detected; skipping hostnamectl/hostname changes"
+		return 0
 	fi
 
 	# If the mark of set-hostname not exist in mark.log, set hostname
