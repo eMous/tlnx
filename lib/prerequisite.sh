@@ -25,6 +25,10 @@ _detect_prerequisites() {
 		log "ERROR" "APT lock check failed. Exiting."
 		return 1
 	}
+	# sudo apt-install update -y >>"$LOG_FILE" 2>&1 || {
+	# 	log "ERROR" "APT update failed. Exiting."
+	# 	return 1
+	# }
 	ensure_curl_installed || {
 		log "ERROR" "curl installation check failed. Exiting."
 		return 1
@@ -86,8 +90,7 @@ check_aptlock(){
 	sudo rm -f /var/cache/apt/archives/lock 2>/dev/null
 	sudo dpkg --configure -a 2>/dev/null
 	sudo systemctl stop unattended-upgrades 2>/dev/null
-	# sudo pkill --signal SIGKILL unattended-upgrades
-	sudo apt-get purge unattended-upgrades 2>/dev/null
+	sudo apt-get purge unattended-upgrades -y 2>/dev/null &
 	return 0
 }
 
@@ -156,10 +159,6 @@ ensure_curl_installed() {
 		return 0
 	fi
 	log "INFO" "curl not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing curl"
-		return 1
-	fi
 	if ! sudo apt-get install -y curl >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install curl"
 		return 1
@@ -174,10 +173,6 @@ ensure_lsb_release_installed() {
 		return 0
 	fi
 	log "INFO" "lsb_release not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing lsb_release"
-		return 1
-	fi
 	if ! sudo apt-get install -y lsb-release >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install lsb_release"
 		return 1
@@ -192,10 +187,6 @@ ensure_ssh_keygen_available() {
 		return 0
 	fi
 	log "INFO" "ssh-keygen not found; installing openssh-client via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing openssh-client"
-		return 1
-	fi
 	if ! sudo apt-get install -y openssh-client >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install openssh-client"
 		return 1
@@ -210,10 +201,6 @@ ensure_rsync_installed() {
 		return 0
 	fi
 	log "INFO" "rsync not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing rsync"
-		return 1
-	fi
 	if ! sudo apt-get install -y rsync >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install rsync"
 		return 1
@@ -228,10 +215,6 @@ ensure_script_available() {
 		return 0
 	fi
 	log "INFO" "script command not found; installing util-linux via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing util-linux (script)"
-		return 1
-	fi
 	if ! sudo apt-get install -y util-linux >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install util-linux (script)"
 		return 1
@@ -246,10 +229,6 @@ ensure_dialog_installed() {
 		return 0
 	fi
 	log "INFO" "dialog not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing dialog"
-		return 1
-	fi
 	if ! sudo apt-get install -y dialog >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install dialog"
 		return 1
@@ -264,10 +243,6 @@ ensure_term_readline_installed() {
 		return 0
 	fi
 	log "INFO" "Perl Term::ReadLine not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing Term::ReadLine"
-		return 1
-	fi
 	if ! sudo apt-get install -y libterm-readline-perl-perl >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install Term::ReadLine"
 		return 1
@@ -282,10 +257,6 @@ ensure_sshpass_installed() {
 		return 0
 	fi
 	log "INFO" "sshpass not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing sshpass"
-		return 1
-	fi
 	if ! sudo apt-get install -y sshpass >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install sshpass"
 		return 1
@@ -295,15 +266,12 @@ ensure_sshpass_installed() {
 }
 
 ensure_timesyncd_installed() {
-	if command -v timedatectl >/dev/null 2>&1 && systemctl list-unit-files 2>/dev/null | grep -q '^systemd-timesyncd.service'; then
+	# if command -v timedatectl >/dev/null 2>&1 && systemctl list-unit-files 2>/dev/null | grep -q '^systemd-timesyncd.service'; then
+	if command -v timedatectl >/dev/null 2>&1 ; then
 		log "INFO" "systemd-timesyncd already installed"
 		return 0
 	fi
 	log "INFO" "systemd-timesyncd not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing systemd-timesyncd"
-		return 1
-	fi
 	if ! sudo apt-get install -y systemd-timesyncd >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install systemd-timesyncd"
 		return 1
@@ -318,10 +286,6 @@ ensure_tzdata_installed() {
 		return 0
 	fi
 	log "INFO" "tzdata not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing tzdata"
-		return 1
-	fi
 	if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install tzdata"
 		return 1
@@ -336,10 +300,6 @@ ensure_xz_utils_installed() {
 		return 0
 	fi
 	log "INFO" "xz-utils not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing xz-utils"
-		return 1
-	fi
 	if ! sudo apt-get install -y xz-utils >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install xz-utils"
 		return 1
@@ -354,10 +314,6 @@ ensure_iproute2_installed() {
 		return 0
 	fi
 	log "INFO" "iproute2 not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing iproute2"
-		return 1
-	fi
 	if ! sudo apt-get install -y iproute2 >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install iproute2"
 		return 1
@@ -372,10 +328,6 @@ ensure_net_tools_installed() {
 		return 0
 	fi
 	log "INFO" "net-tools not found; installing via apt-get"
-	if ! sudo apt-get update -y >>"$LOG_FILE" 2>&1; then
-		log "ERROR" "Failed to update apt cache while installing net-tools"
-		return 1
-	fi
 	if ! sudo apt-get install -y net-tools >>"$LOG_FILE" 2>&1; then
 		log "ERROR" "Failed to install net-tools"
 		return 1

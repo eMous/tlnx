@@ -453,6 +453,7 @@ done
         execute_module "$module" "$FORCE_MODE"
     done
     
+    save_env_cache
     log "INFO" "Automated server configuration completed"
 }
 

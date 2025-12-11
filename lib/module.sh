@@ -99,19 +99,55 @@ module_check_installed() {
 	fi
 
 	local installed=""
-	if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/default.conf")" &&
-		! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/enc.conf")"; then
-		log "DEBUG" "${module} module already applied (mark found)"
-		if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
-			log "DEBUG" "${module} module script not modified since last run"
-			installed=true
-		else
-			log "INFO" "${module} module script modified since last run; module will run"
+	
+	# Check watched environment variables
+	local watched_func="_${module}_watched_vars"
+	if command -v "$watched_func" &>/dev/null; then
+		local watched_vars
+		watched_vars=$("$watched_func")
+		local var_changed=false
+		
+		for var in $watched_vars; do
+			local current_val="${!var}"
+			local cached_val
+			cached_val=$(get_cached_env_value "$var")
+			
+			if [ "$current_val" != "$cached_val" ]; then
+				log "INFO" "Watched variable $var changed for module $module; triggering reinstall"
+				log "DEBUG" "Old: '$cached_val', New: '$current_val'"
+				var_changed=true
+				break
+			fi
+		done
+		
+		if [ "$var_changed" = "true" ]; then
 			installed=false
+		else
+			# If vars didn't change, check script modification
+			if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
+				log "DEBUG" "${module} module script not modified since last run"
+				installed=true
+			else
+				log "INFO" "${module} module script modified since last run; module will run"
+				installed=false
+			fi
 		fi
 	else
-		log "INFO" "${module} module config files modified since last run; module will run"
-		installed=false
+		# Fallback to old logic if no watched vars defined
+		if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/default.conf")" &&
+			! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/enc.conf")"; then
+			log "DEBUG" "${module} module already applied (mark found)"
+			if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
+				log "DEBUG" "${module} module script not modified since last run"
+				installed=true
+			else
+				log "INFO" "${module} module script modified since last run; module will run"
+				installed=false
+			fi
+		else
+			log "INFO" "${module} module config files modified since last run; module will run"
+			installed=false
+		fi
 	fi
 
 
