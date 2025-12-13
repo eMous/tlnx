@@ -49,12 +49,36 @@ decrypt_config() {
 # Load default configuration
 _load_config() {
 	log "INFO" "Loading default configuration..."
-	if [ -f $PROJECT_DIR"/config/default.conf" ]; then
-		. "$PROJECT_DIR/config/default.conf"
+	local config_file="$PROJECT_DIR/config/default.conf"
+
+	if [ -f "$config_file" ]; then
+		# Identify variables defined in config file to prevent them from overwriting environment variables
+		local config_vars
+		# Extract variable names assigned at the start of the line (e.g. VAR=value)
+		config_vars=$(grep -E '^[A-Z_][a-zA-Z0-9_]*=' "$config_file" | cut -d= -f1)
+		
+		# Stash existing environment variables
+		local -A env_stash
+		local var
+		for var in $config_vars; do
+			# Check if variable is set in current environment
+			if [ -n "${!var+x}" ]; then
+				env_stash["$var"]="${!var}"
+			fi
+		done
+
+		. "$config_file"
 		log "INFO" "Default configuration loaded"
+
+		# Restore stashed variables
+		for var in "${!env_stash[@]}"; do
+			local val="${env_stash[$var]}"
+			printf -v "$var" '%s' "$val"
+			log "INFO" "Restored environment variable $var over config default"
+		done
 	else
-		log "ERROR" "Default configuration missing: $PROJECT_DIR/config/default.conf"
-		echo "Default configuration missing: $PROJECT_DIR/config/default.conf"
+		log "ERROR" "Default configuration missing: $config_file"
+		echo "Default configuration missing: $config_file"
 		return 1
 	fi
 	decrypt_config

@@ -67,15 +67,20 @@ docker_test_pull_image() {
 	local host_uid
 	host_uid=$(id -u)
 
+	log "INFO" "Detected host user: $host_user (UID: $host_uid)"
+
 	if [ -n "$build_context" ] && [ -d "$build_context" ]; then
 		local dockerfile_path="$build_context/$dockerfile"
 		if [ -f "$dockerfile_path" ]; then
 			log "INFO" "Building docker image $image using $dockerfile_path"
 			
 			# Render Dockerfile to include host user
-			local temp_dockerfile="$build_context/Dockerfile.tmp"
+			local temp_dockerfile="$build_context/Dockerfile.${host_uid}.tmp"
+			log "INFO" "Creating temporary Dockerfile: $temp_dockerfile"
 			cp "$dockerfile_path" "$temp_dockerfile"
 			
+			log "INFO" "Appending user mapping logic to Dockerfile for UID $host_uid ($host_user)"
+			local user_password="${DOCKER_TEST_USER_PASSWORD:-password}"
 			cat >> "$temp_dockerfile" <<EOF
 
 RUN if getent passwd $host_uid > /dev/null; then \\
@@ -86,10 +91,11 @@ RUN if getent passwd $host_uid > /dev/null; then \\
     else \\
       useradd -m -u $host_uid -s /bin/bash $host_user; \\
     fi \\
+    && echo "$host_user:$user_password" | chpasswd \\
     && echo "$host_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 EOF
-
-			if docker_cli build -t "$image" -f "$temp_dockerfile" "$build_context" >>"$LOG_FILE" 2>&1; then
+			log "INFO" "Building image with command: docker build -t $image -f $temp_dockerfile $build_context"
+			if docker_cli build -t "$image" -f "$temp_dockerfile" "$build_context"; then
 				rm -f "$temp_dockerfile"
 				DOCKER_TEST_READY_IMAGE="$image"
 				return 0
@@ -192,8 +198,10 @@ run_docker_test() {
 	fi
 	local exec_cmd="./tlnx${quoted_args}"
 	log "INFO" "Executing: $exec_cmd inside $container_name"
+	log "INFO" "Running test command as user: $host_user (UID: $(id -u))"
 
-	local -a exec_flags=(-e TLNX_FORCE_COLOR=1 -e TLNX_DOCKER_CHILD=1 -e TLNX_DOCKER_CONTAINER_NAME="$container_name" -w "$container_home/tlnx" -u "$host_user" -it)
+	local user_password="${DOCKER_TEST_USER_PASSWORD:-password}"
+	local -a exec_flags=(-e TLNX_PASSWD="$user_password" -e TLNX_FORCE_COLOR=1 -e TLNX_DOCKER_CHILD=1 -e TLNX_DOCKER_CONTAINER_NAME="$container_name" -w "$container_home/tlnx" -u "$host_user" -it)
 	local status=0
 	if command -v script >/dev/null 2>&1; then
 		local docker_exec_cmd=""
@@ -274,10 +282,11 @@ docker_test_attach_last() {
 	log "INFO" "Attaching to last container: $last_container"
 	
 	# Use script trick to force PTY allocation if available, similar to run_docker_test
+	local user_password="${DOCKER_TEST_USER_PASSWORD:-password}"
 	if command -v script >/dev/null 2>&1; then
 		local docker_exec_cmd=""
 		# Construct the command to run bash interactively
-		printf -v docker_exec_cmd '%q ' docker exec -it "$last_container" bash
+		printf -v docker_exec_cmd '%q ' docker exec -it -u "$host_user" -w "$container_home/tlnx" -e TLNX_PASSWD="$user_password" -e TLNX_DOCKER_CHILD=1 "$last_container" bash
 		
 		if [ -n "${TLNX_PASSWD:-}" ]; then
 			local askpass_script
@@ -297,6 +306,6 @@ EOF
 		fi
 	else
 		# Fallback to direct execution
-		docker_cli exec -it "$last_container" bash
+		docker_cli exec -it -u "$host_user" -w "$container_home/tlnx" -e TLNX_PASSWD="$user_password" -e TLNX_DOCKER_CHILD=1 "$last_container" bash
 	fi
 }
