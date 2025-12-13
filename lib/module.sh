@@ -170,7 +170,7 @@ module_install_complete() {
 		return 0
 	fi
 	# Add the mark
-	echo "$mark $(date +%s)" >>"$mark_file"
+	add_mark "$mark" "$mark_file"
 	log "INFO" "${module} module mark $mark added to $mark_file"
 }
 
@@ -267,7 +267,7 @@ module_install_callback() {
 add_mark() {
 	local mark=$1
 	local mark_file=${2:-"$PROJECT_DIR/run/marks"}
-	echo "$mark $(date +%s)" >>"$mark_file"
+	echo "$mark $(date +%s) # $(date '+%Y-%m-%d %H:%M:%S')" >>"$mark_file"
 	log "INFO" "Mark $mark added to $mark_file"
 }
 mark_older_than() {

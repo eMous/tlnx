@@ -435,7 +435,7 @@ init_network_info() {
 		sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
 		log "INFO" "Hostname set to: $new_hostname"
 		# Add mark
-		echo "$mark $(date +%s)" >>"$MARK_FILE"
+		add_mark "$mark" "$MARK_FILE"
 	else
 		log "INFO" "Hostname has already been set previously, skipping"
 	fi
@@ -524,7 +524,7 @@ init_ssh_keys() {
 # 	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
 # 	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
 # 	# add mark
-# 	echo "$mark $(date +%s)" >>"$MARK_FILE"
+# 	add_mark "$mark" "$MARK_FILE"
 # 	log "INFO" "Basic bash shell setup applied"
 # 	return 0
 # }
