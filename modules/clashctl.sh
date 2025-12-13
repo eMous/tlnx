@@ -34,5 +34,9 @@ _clashctl_install() {
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
+	if grep -q "watch_proxy" "$HOME/.zshrc"; then
+		log "INFO" "watch_proxy already found in .zshrc, skipping addition."
+		return 0
+	fi
 	echo "source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh && watch_proxy" >> "$HOME/.zshrc"
 }

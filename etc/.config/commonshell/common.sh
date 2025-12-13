@@ -14,5 +14,6 @@ if command -v nvim >/dev/null 2>&1; then
 fi
 alias t='cd /home/tom/tlnx'
 alias bat='batcat'
+alias dtlnx='DOCKER_TEST_ENABLED="true" tlnx'
 echo "Common shell settings loaded."
 

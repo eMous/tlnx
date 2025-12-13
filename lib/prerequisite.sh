@@ -81,6 +81,14 @@ _detect_prerequisites() {
 		log "ERROR" "net-tools installation check failed. Exiting."
 		return 1
 	}
+	ensure_npm_installed || {
+		log "ERROR" "npm installation check failed. Exiting."
+		return 1
+	}
+	ensure_gcc_installed || {
+		log "ERROR" "gcc installation check failed. Exiting."
+		return 1
+	}
 }
 
 check_aptlock(){
@@ -333,5 +341,33 @@ ensure_net_tools_installed() {
 		return 1
 	fi
 	log "INFO" "net-tools installed successfully"
+	return 0
+}
+
+ensure_npm_installed() {
+	if command -v npm >/dev/null 2>&1; then
+		log "INFO" "npm already installed"
+		return 0
+	fi
+	log "INFO" "npm not found; installing via apt-get"
+	if ! sudo apt-get install -y npm >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install npm"
+		return 1
+	fi
+	log "INFO" "npm installed successfully"
+	return 0
+}
+
+ensure_gcc_installed() {
+	if command -v gcc >/dev/null 2>&1; then
+		log "INFO" "gcc already installed"
+		return 0
+	fi
+	log "INFO" "gcc not found; installing via apt-get"
+	if ! sudo apt-get install -y gcc >>"$LOG_FILE" 2>&1; then
+		log "ERROR" "Failed to install gcc"
+		return 1
+	fi
+	log "INFO" "gcc installed successfully"
 	return 0
 }

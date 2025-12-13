@@ -82,7 +82,7 @@ init_shell() {
 		mkdir -p "$HOME/.local/bin"
 		if grep -Fq "$content_to_check" "$subrcpath" 2>/dev/null; then
 			log "INFO" "Project directory $PROJECT_DIR already present in $shell PATH via $subrcpath"
-			return 0
+			continue
 		fi
 		log "INFO" "Adding project directory $PROJECT_DIR to $shell PATH via $subrcpath"
 		export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"

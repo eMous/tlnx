@@ -25,6 +25,8 @@ RUN apt-get update \
         iproute2 \
         net-tools \
         tzdata \
+        npm \
+        gcc \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -61,15 +61,41 @@ docker_test_pull_image() {
 	local image="${DOCKER_TEST_IMAGE:-ubuntu:24.04}"
 	local build_context="${DOCKER_TEST_BUILD_CONTEXT:-}"
 	local dockerfile="${DOCKER_TEST_DOCKERFILE:-Dockerfile}"
+
+	local host_user
+	host_user=$(whoami)
+	local host_uid
+	host_uid=$(id -u)
+
 	if [ -n "$build_context" ] && [ -d "$build_context" ]; then
 		local dockerfile_path="$build_context/$dockerfile"
 		if [ -f "$dockerfile_path" ]; then
 			log "INFO" "Building docker image $image using $dockerfile_path"
-			if docker_cli build -t "$image" -f "$dockerfile_path" "$build_context" >>"$LOG_FILE" 2>&1; then
+			
+			# Render Dockerfile to include host user
+			local temp_dockerfile="$build_context/Dockerfile.tmp"
+			cp "$dockerfile_path" "$temp_dockerfile"
+			
+			cat >> "$temp_dockerfile" <<EOF
+
+RUN if getent passwd $host_uid > /dev/null; then \\
+      existing_user=\$(getent passwd $host_uid | cut -d: -f1); \\
+      if [ "\$existing_user" != "$host_user" ]; then \\
+        usermod -l $host_user -d /home/$host_user -m \$existing_user; \\
+      fi; \\
+    else \\
+      useradd -m -u $host_uid -s /bin/bash $host_user; \\
+    fi \\
+    && echo "$host_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+EOF
+
+			if docker_cli build -t "$image" -f "$temp_dockerfile" "$build_context" >>"$LOG_FILE" 2>&1; then
+				rm -f "$temp_dockerfile"
 				DOCKER_TEST_READY_IMAGE="$image"
 				return 0
 			else
 				log "WARN" "Docker build failed for $image; falling back to pull"
+				rm -f "$temp_dockerfile"
 			fi
 		else
 			log "WARN" "Dockerfile $dockerfile_path not found; skipping build"
@@ -129,6 +155,10 @@ run_docker_test() {
 		host_project_dir=$(realpath "$PROJECT_DIR")
 	fi
 
+	local host_user
+	host_user=$(whoami)
+	local container_home="/home/$host_user"
+
 	log "INFO" "Starting docker test container $container_name from $image with hostname $docker_hostname"
 	if ! docker_cli run -dit \
 		--name "$container_name" \
@@ -139,8 +169,8 @@ run_docker_test() {
 			--tmpfs /run \
 			--tmpfs /run/lock \
 			--tmpfs /tmp \
-			--tmpfs /root/tlnx/run:exec \
-			--mount type=bind,src="$host_project_dir",target=/root/tlnx \
+			--tmpfs "$container_home/tlnx/run:exec" \
+			--mount type=bind,src="$host_project_dir",target="$container_home/tlnx" \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:rw \
 			"$image" >/dev/null; then
 		log "ERROR" "Failed to start docker container $container_name"
@@ -151,7 +181,7 @@ run_docker_test() {
 	log "INFO" "Inspect it anytime via: sudo docker exec -it $container_name bash"
 
 	# Persist TLNX_DOCKER_CHILD env var so interactive sessions don't trigger recursion
-	docker_cli exec "$container_name" bash -c 'echo "export TLNX_DOCKER_CHILD=1" >> /root/.bashrc'
+	docker_cli exec "$container_name" bash -c "echo 'export TLNX_DOCKER_CHILD=1' >> $container_home/.bashrc"
 
 	local quoted_args=""
 	if [ "$#" -gt 0 ]; then
@@ -163,7 +193,7 @@ run_docker_test() {
 	local exec_cmd="./tlnx${quoted_args}"
 	log "INFO" "Executing: $exec_cmd inside $container_name"
 
-	local -a exec_flags=(-e TLNX_FORCE_COLOR=1 -e TLNX_DOCKER_CHILD=1 -e TLNX_DOCKER_CONTAINER_NAME="$container_name" -w /root/tlnx -u root -it)
+	local -a exec_flags=(-e TLNX_FORCE_COLOR=1 -e TLNX_DOCKER_CHILD=1 -e TLNX_DOCKER_CONTAINER_NAME="$container_name" -w "$container_home/tlnx" -u "$host_user" -it)
 	local status=0
 	if command -v script >/dev/null 2>&1; then
 		local docker_exec_cmd=""
