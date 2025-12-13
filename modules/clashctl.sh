@@ -29,14 +29,56 @@ _clashctl_install() {
 	export https_proxy=$http_proxy
 	export HTTP_PROXY=$http_proxy
 	export HTTPS_PROXY=$http_proxy
-
+	log "INFO" "Set http_proxy for clashctl: $http_proxy"
+	log "INFO" "Set https_proxy for clashctl: $http_proxy"
+	log "INFO" "Set HTTP_proxy for clashctl: $http_proxy"
+	log "INFO" "Set HTTPS_proxy for clashctl: $http_proxy"
+	bash -ci 'clashctl proxy'
+	
 	log "INFO" "=== Clashctl module completed ==="
+
+
+	ch
+	_clashctl_shell_patch $HOME/.bashrc
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
-	if grep -q "watch_proxy" "$HOME/.zshrc"; then
-		log "INFO" "watch_proxy already found in .zshrc, skipping addition."
+	_clashctl_shell_patch $HOME/.zshrc
+}
+
+_clashctl_shell_patch() {
+	local rc_file="$1"
+
+
+	local content=$(cat <<'EOF'
+clashctl_patch() {
+	source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh 
+	# Check mihomo service running
+	if ! systemctl is-active --quiet mihomo; then
+		echo "[Mihomo Service] Mihomo is not running, you may manually run clashon."
+	else 
+		MIXED_PORT=$($BIN_YQ '.mixed-port' "$CLASH_CONFIG_RUNTIME")
+		if [ -z "$MIXED_PORT" ] || [ "$MIXED_PORT" == "null" ]; then
+			echo "[Clashctl] Unable to determine mixed-port from /opt/clash/runtime.yaml"
+		else
+			unset http_proxy
+			unset https_proxy
+			unset HTTP_PROXY
+			unset HTTPS_PROXY
+			export http_proxy="http://127.0.0.1:$MIXED_PORT"
+			export https_proxy="$http_proxy"
+			export HTTP_PROXY="$http_proxy"
+			export HTTPS_PROXY="$http_proxy"
+		fi
+	fi
+}
+clashctl_patch
+EOF
+	)
+	if grep -q "$content" "$rc_file"; then
+		log "INFO" "clashctl patch already found in $rc_file, skipping addition."
 		return 0
 	fi
-	echo "source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh && watch_proxy" >> "$HOME/.zshrc"
+    log "INFO" "Patching clashctl into shell rc file: $rc_file"
+	append_shell_rc_sub_block "clashctl patch" "$content" "$rc_file"
 }

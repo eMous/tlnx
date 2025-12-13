@@ -60,6 +60,7 @@ init_shell() {
 	for shell in "${shells[@]}"; do
 		# Check etc/rc file exist
 		local homercpath=$HOME/$(basename $(get_rc_file "$shell"))
+		touch $homercpath
 		local subrcdir="$HOME/.config/$shell"
 		local subrcpath=$subrcdir/$(basename $homercpath)
 		local templatedir="$(get_config_dir $shell)"
@@ -223,30 +224,6 @@ init_prjdir() {
 # Check tlnx in bin: Add $PROJECT_DIR to PATH in rc file
 init_tlnx_in_path() {
 	# integreted in init_shell now
-	return 0
-
-	local target_shell="${1:-$(get_current_shell)}"
-	local shell_name
-	shell_name=$(basename "$target_shell")
-	local rc_file
-	rc_file=$(get_rc_file "$target_shell")
-
-	if [ -z "$rc_file" ]; then
-		log "WARN" "Unable to determine rc file for shell $shell_name; skipping PATH update"
-		return 1
-	fi
-
-	local content_to_check="export PATH=\"$PROJECT_DIR:$HOME/.local/bin:\$PATH\""
-	mkdir -p "$HOME/.local/bin"
-
-	if grep -Fq "$content_to_check" "$rc_file" 2>/dev/null; then
-		log "INFO" "Project directory $PROJECT_DIR already present in $shell_name PATH via $rc_file"
-		return 0
-	fi
-
-	log "INFO" "Adding project directory $PROJECT_DIR to $shell_name PATH via $rc_file"
-	export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"
-	append_shell_rc_block "$content_to_check" "$rc_file"
 	return 0
 }
 

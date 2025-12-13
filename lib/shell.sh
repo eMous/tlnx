@@ -114,7 +114,7 @@ append_shell_rc_sub_block() {
 	local label="$1"
 	local content="$2"
 	local rc_file="${3:-}"
-
+	echo "VERBOSE" "Appending sub block ($label) to shell rc file: $rc_file"
 	if [ -z "$content" ]; then
 		log "ERROR" "append_shell_rc_sub_block requires content to append"
 		return 1
@@ -156,6 +156,7 @@ append_shell_rc_sub_block() {
 
 	local block_content
 	block_content=$(printf "%s\n%s\n%s" "$sub_start" "$content" "$sub_end")
+	log "DEBUG" "Appending sub block ($sub_label) to $rc_file"
 	append_shell_rc_block "$block_content" "$rc_file"
 }
 

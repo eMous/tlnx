@@ -160,7 +160,7 @@ module_check_installed() {
 	fi
 }
 module_install_complete() {
-	local off_mark_control=${OFF_MARK_CONTROL}
+	local off_mark_control=("${OFF_MARK_CONTROL[@]}")
 	local module=$1
 	local mark=$2
 	local mark_file=$3

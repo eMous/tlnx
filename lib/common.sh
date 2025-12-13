@@ -124,12 +124,31 @@ _tlnx_run_sudo_with_password() {
         return 1
     fi
 
-    log "DEBUG" "Running sudo command with provided password: sudo $*"
-    if printf '%s\n' "$password" | command sudo -S -p '' "$@" >&2 | tee -a "$LOG_FILE" ; then
-        return 0
+    # Create a temporary script for SUDO_ASKPASS
+    local askpass_script
+    askpass_script=$(mktemp)
+    if [ ! -f "$askpass_script" ]; then
+        log "ERROR" "Failed to create temp file for askpass"
+        return 1
     fi
 
-    return $?
+    # Write the script content. It prints the value of the environment variable.
+    cat > "$askpass_script" <<'EOF'
+#!/bin/sh
+echo "$TLNX_SUDO_PW_TEMP"
+EOF
+    chmod 700 "$askpass_script"
+
+    log "DEBUG" "Running sudo command with provided password via ASKPASS: sudo $*"
+    
+    # Run sudo with SUDO_ASKPASS and the password in an env var
+    TLNX_SUDO_PW_TEMP="$password" SUDO_ASKPASS="$askpass_script" command sudo -A "$@"
+    local status=$?
+
+    # Cleanup
+    rm -f "$askpass_script"
+
+    return $status
 }
 
 # Wrapper to run sudo commands with password fallbacks
