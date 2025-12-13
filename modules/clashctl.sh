@@ -45,6 +45,9 @@ _clashctl_zsh_post_install_callback() {
 }
 
 _clashctl_shell_patch() {
+
+
+
 	local rc_file="$1"
 
 
@@ -73,28 +76,40 @@ else
 fi
 }
 
-clashru() {
+clashr() {
 	sudo $BIN_YQ -i '.mode = "rule"' "$CLASH_CONFIG_RUNTIME"
 	clashrestart
 	_okcat "已切换到规则模式"
 	clashctl tun
 }
 
-clashgl() {
+clashg() {
 	sudo $BIN_YQ -i '.mode = "global"' "$CLASH_CONFIG_RUNTIME"
 	clashrestart
 	_okcat "已切换到全局模式"
 	clashctl tun
 }
 
+clasht() {
+	if clashctl tun 2>&1 | grep -q "关闭"; then
+		clashctl tun on
+	elif clashctl tun 2>&1 | grep -q "启用"; then
+		clashctl tun off
+	else
+		clashctl tun
+	fi
+}
+
 clashctl_patch
 EOF
 	)
 	
-	if grep -Fq "clashctl_patch" "$rc_file"; then
-		log "INFO" "clashctl patch already found in $rc_file, skipping addition."
-		return 0
-	fi
+	remove_shell_rc_sub_block "clashctl patch" "$rc_file"
     log "INFO" "Patching clashctl into shell rc file: $rc_file"
 	append_shell_rc_sub_block "clashctl patch" "$content" "$rc_file"
+}
+
+_init_clashctl_post_install_callback() {
+	_clashctl_shell_patch $(get_rc_file zsh)
+	_clashctl_shell_patch $(get_rc_file bash)
 }
