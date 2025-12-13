@@ -50,7 +50,9 @@ _clashctl_shell_patch() {
 
 	local content=$(cat <<'EOF'
 clashctl_patch() {
-source /opt/clash/script/common.sh && source /opt/clash/script/clashctl.sh 
+local file1="/opt/clash/script/common.sh"
+local file2="/opt/clash/script/clashctl.sh"
+source "$file1" && source "$file2"
 # Check mihomo service running
 if ! systemctl is-active --quiet mihomo; then
 	echo "[Mihomo Service] Mihomo is not running, you may manually run clashon."
