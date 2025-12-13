@@ -98,7 +98,7 @@ check_aptlock(){
 	sudo rm -f /var/cache/apt/archives/lock 2>/dev/null
 	sudo dpkg --configure -a 2>/dev/null
 	sudo systemctl stop unattended-upgrades 2>/dev/null
-	sudo apt-get purge unattended-upgrades -y 2>/dev/null &
+	sudo apt-get purge unattended-upgrades -y 2>/dev/null
 	return 0
 }
 
