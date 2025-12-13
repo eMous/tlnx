@@ -79,6 +79,8 @@ docker_test_pull_image() {
 			log "INFO" "Creating temporary Dockerfile: $temp_dockerfile"
 			cp "$dockerfile_path" "$temp_dockerfile"
 			
+
+
 			log "INFO" "Appending user mapping logic to Dockerfile for UID $host_uid ($host_user)"
 			local user_password="${DOCKER_TEST_USER_PASSWORD:-password}"
 			cat >> "$temp_dockerfile" <<EOF
@@ -100,8 +102,9 @@ EOF
 				DOCKER_TEST_READY_IMAGE="$image"
 				return 0
 			else
-				log "WARN" "Docker build failed for $image; falling back to pull"
+				log "ERROR" "Docker build failed for $image"
 				rm -f "$temp_dockerfile"
+				return 1
 			fi
 		else
 			log "WARN" "Dockerfile $dockerfile_path not found; skipping build"
