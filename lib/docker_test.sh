@@ -157,7 +157,7 @@ run_docker_test() {
 	log "INFO" "image using is $image ."
 	local prefix="${DOCKER_TEST_CONTAINER_PREFIX:-tlnx-test}"
 	local container_name="${prefix}-$(date +%Y%m%d%H%M%S)"
-	local docker_hostname="${INIT_HOSTNAME:-$container_name}"
+	local docker_hostname="docker-${INIT_HOSTNAME:-$container_name}"
 
 	local host_project_dir="$PROJECT_DIR"
 	if command -v realpath >/dev/null 2>&1; then
@@ -178,7 +178,7 @@ run_docker_test() {
 			--tmpfs /run \
 			--tmpfs /run/lock \
 			--tmpfs /tmp \
-			--tmpfs "$container_home/tlnx/run:exec" \
+			--tmpfs "$container_home/tlnx/run:exec,uid=$(id -u),gid=$(id -g)" \
 			--mount type=bind,src="$host_project_dir",target="$container_home/tlnx" \
 			-v /sys/fs/cgroup:/sys/fs/cgroup:rw \
 			"$image" >/dev/null; then
@@ -249,6 +249,11 @@ EOF
 }
 
 docker_test_attach_last() {
+	local host_user
+	host_user=$(whoami)
+	local container_home="/home/$host_user"
+	log "INFO" "Debug: host_user='$host_user', container_home='$container_home'"
+
 	local last_container_file="$PROJECT_DIR/run/last_docker_test_container"
 	
 	if [ ! -f "$last_container_file" ]; then
