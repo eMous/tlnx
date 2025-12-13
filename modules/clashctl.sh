@@ -72,6 +72,21 @@ else
 	fi
 fi
 }
+
+clashru() {
+	sudo $BIN_YQ -i '.mode = "rule"' "$CLASH_CONFIG_RUNTIME"
+	clashrestart
+	_okcat "已切换到规则模式"
+	clashctl tun
+}
+
+clashgl() {
+	sudo $BIN_YQ -i '.mode = "global"' "$CLASH_CONFIG_RUNTIME"
+	clashrestart
+	_okcat "已切换到全局模式"
+	clashctl tun
+}
+
 clashctl_patch
 EOF
 	)
