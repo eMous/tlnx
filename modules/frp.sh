@@ -112,8 +112,27 @@ frp_install() {
     fi
 
     local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-    local frpc_binary="frpc"
-    local frps_binary="frps"
+
+    local arch
+    arch=$(uname -m)
+    local bin_dir
+    case "$arch" in
+        x86_64) bin_dir="amd64" ;;
+        aarch64) bin_dir="arm64" ;;
+        *)
+            log "ERROR" "Unsupported architecture: $arch"
+            return 1
+            ;;
+    esac
+
+    local frpc_binary="$bin_dir/frpc"
+    local frps_binary="$bin_dir/frps"
+
+    if [ ! -f "$extracted_dir/$frpc_binary" ]; then
+         log "ERROR" "Binary not found: $extracted_dir/$frpc_binary"
+         return 1
+    fi
+
     copy_to_binary "$extracted_dir/$frpc_binary" || return 1
     copy_to_binary "$extracted_dir/$frps_binary" || return 1
 

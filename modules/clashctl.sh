@@ -39,7 +39,6 @@ _clashctl_install() {
 	log "INFO" "=== Clashctl module completed ==="
 
 	_clashctl_shell_patch $(get_rc_file $(get_current_shell))
-	exit 1
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
