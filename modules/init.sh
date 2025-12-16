@@ -402,42 +402,41 @@ init_network_info() {
 	# Skip hostname changes inside docker test containers; they fail due to bind-mounted /etc/hostname.
 	if [ "${TLNX_DOCKER_CHILD:-0}" = "1" ]; then
 		log "INFO" "Docker test container detected; skipping hostnamectl/hostname changes"
-		return 0
-	fi
-
-	# If the mark of set-hostname not exist in mark.log, set hostname
-	sudo -u $(whoami) mkdir -p "$PROJECT_DIR/run"
-	MARK_FILE="$PROJECT_DIR/run/marks"
-	touch "$MARK_FILE"
-	local mark="hostname-set"
-	log "INFO" "Checking hostname setup mark in $MARK_FILE"
-	if ! grep -q "$mark" "$MARK_FILE"; then
-		log "INFO" "Hostname setup mark not found, proceeding to set hostname"
-		# Ask user to set hostname or keep current
-		local current_hostname
-		current_hostname=$(hostname)
-		log "INFO" "Current hostname is: $current_hostname"
-		local new_hostname
-		if [ -z "$INIT_HOSTNAME" ]; then
-			read -rp "Do you want to change the hostname? (y/n): " change_hostname
-			if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-				read -rp "Enter new hostname: " new_hostname
-				if [ -z "$new_hostname" ]; then
-					new_hostname="$current_hostname"
-					log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
-				fi
-			else
-				new_hostname="$current_hostname"
-				log "INFO" "Keeping current hostname: $current_hostname"
-			fi
-		fi
-		sudo hostnamectl set-hostname "$new_hostname"
-		sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
-		log "INFO" "Hostname set to: $new_hostname"
-		# Add mark
-		add_mark "$mark" "$MARK_FILE"
 	else
-		log "INFO" "Hostname has already been set previously, skipping"
+		# If the mark of set-hostname not exist in mark.log, set hostname
+		sudo -u $(whoami) mkdir -p "$PROJECT_DIR/run"
+		MARK_FILE="$PROJECT_DIR/run/marks"
+		touch "$MARK_FILE"
+		local mark="hostname-set"
+		log "INFO" "Checking hostname setup mark in $MARK_FILE"
+		if ! grep -q "$mark" "$MARK_FILE"; then
+			log "INFO" "Hostname setup mark not found, proceeding to set hostname"
+			# Ask user to set hostname or keep current
+			local current_hostname
+			current_hostname=$(hostname)
+			log "INFO" "Current hostname is: $current_hostname"
+			local new_hostname
+			if [ -z "$INIT_HOSTNAME" ]; then
+				read -rp "Do you want to change the hostname? (y/n): " change_hostname
+				if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
+					read -rp "Enter new hostname: " new_hostname
+					if [ -z "$new_hostname" ]; then
+						new_hostname="$current_hostname"
+						log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
+					fi
+				else
+					new_hostname="$current_hostname"
+					log "INFO" "Keeping current hostname: $current_hostname"
+				fi
+			fi
+			sudo hostnamectl set-hostname "$new_hostname"
+			sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
+			log "INFO" "Hostname set to: $new_hostname"
+			# Add mark
+			add_mark "$mark" "$MARK_FILE"
+		else
+			log "INFO" "Hostname has already been set previously, skipping"
+		fi
 	fi
 
 	# add WAN and LAN IP to run/info
