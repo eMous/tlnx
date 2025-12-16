@@ -428,6 +428,9 @@ init_network_info() {
 					new_hostname="$current_hostname"
 					log "INFO" "Keeping current hostname: $current_hostname"
 				fi
+			else
+				new_hostname="$INIT_HOSTNAME"
+				log "INFO" "Using configured hostname: $new_hostname"
 			fi
 			sudo hostnamectl set-hostname "$new_hostname"
 			sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
