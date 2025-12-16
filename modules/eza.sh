@@ -18,7 +18,24 @@ _eza_install() {
 	fi
 
 	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-	cd $extracted_dir
-	rsync -a eza $HOME/.local/bin/
+    
+    local arch
+    arch=$(uname -m)
+    local bin_dir
+    case "$arch" in
+        x86_64) bin_dir="amd64" ;;
+        aarch64) bin_dir="arm64" ;;
+        *)
+            log "ERROR" "Unsupported architecture: $arch"
+            return 1
+            ;;
+    esac
+
+    if [ ! -f "$extracted_dir/$bin_dir/eza" ]; then
+         log "ERROR" "Binary not found: $extracted_dir/$bin_dir/eza"
+         return 1
+    fi
+
+	rsync -a "$extracted_dir/$bin_dir/eza" "$HOME/.local/bin/"
 	log "INFO" "=== Finishing eza installation and configuration ==="
 }

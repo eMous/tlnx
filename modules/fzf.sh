@@ -18,7 +18,24 @@ _fzf_install() {
 	fi
     
 	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-    cd $extracted_dir
-	rsync -a fzf $HOME/.local/bin/
+    
+    local arch
+    arch=$(uname -m)
+    local bin_dir
+    case "$arch" in
+        x86_64) bin_dir="amd64" ;;
+        aarch64) bin_dir="arm64" ;;
+        *)
+            log "ERROR" "Unsupported architecture: $arch"
+            return 1
+            ;;
+    esac
+
+    if [ ! -f "$extracted_dir/$bin_dir/fzf" ]; then
+         log "ERROR" "Binary not found: $extracted_dir/$bin_dir/fzf"
+         return 1
+    fi
+
+	rsync -a "$extracted_dir/$bin_dir/fzf" "$HOME/.local/bin/"
 	log "INFO" "=== Finishing fzf installation and configuration ==="
 }

@@ -12,9 +12,25 @@ nvim_install() {
 	local package_name="nvim"
 	checkout_package_file "$package_name"
 	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-	cd $extracted_dir
+    
+    local arch
+    arch=$(uname -m)
+    local bin_dir
+    case "$arch" in
+        x86_64) bin_dir="amd64" ;;
+        aarch64) bin_dir="arm64" ;;
+        *)
+            log "ERROR" "Unsupported architecture: $arch"
+            return 1
+            ;;
+    esac
 
-	rsync --mkpath -a ./ $HOME/.local/bin/$package_name
+    if [ ! -d "$extracted_dir/$bin_dir" ]; then
+         log "ERROR" "Binary directory not found: $extracted_dir/$bin_dir"
+         return 1
+    fi
+
+	rsync --mkpath -a "$extracted_dir/$bin_dir/" "$HOME/.local/bin/$package_name/"
 	log "INFO" "nvim installed successfully"
 }
 
