@@ -128,24 +128,24 @@ init_update_aliyun_mirror() {
 		if grep -q "^# Managed by TLNX" /etc/apt/sources.list 2>/dev/null; then
 			log "INFO" "Apt sources already configured for Alibaba Cloud; skipping"
 		else
-
+			local arm=$(uname -m | grep -qE '^arm|^aarch64' && echo "-ports/" || echo "/")
 			sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
 			command sudo tee /etc/apt/sources.list >/dev/null <<EOF
 # Managed by TLNX
-deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
-#deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME} main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME} main restricted universe multiverse
 
-deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
-#deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-security main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-security main restricted universe multiverse
 
-deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
-#deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-updates main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-updates main restricted universe multiverse
 
-deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-proposed main restricted universe multiverse
-#deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-proposed main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-proposed main restricted universe multiverse
 
-deb http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
-#deb-src http://mirrors.aliyun.com/ubuntu/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-backports main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu${arm} ${UBUNTU_CODENAME}-backports main restricted universe multiverse
 EOF
 		fi
 		# if there is any file in /etc/apt/sources.list.d/ not end with .bak, mv it to .bak

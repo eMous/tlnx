@@ -338,10 +338,16 @@ checkout_package_file() {
 	fi
 
 	local destination="$PROJECT_DIR/run/packages/${package_name}"
+	
+	# Clean up destination if it exists to avoid "File exists" errors from tar
+	if [ -d "$destination" ]; then
+		rm -rf "$destination" 2>/dev/null || sudo rm -rf "$destination"
+	fi
+	
 	mkdir -p "$destination"
 
 	log "INFO" "Extracting package $package_name to $destination"
-	if tar -xzvf "$package_file" -C "$destination" 2>&1 >>"$LOG_FILE"; then
+	if tar -xzf "$package_file" -C "$destination" 2>&1 >>"$LOG_FILE"; then
 		return 0
 	else
 		log "ERROR" "Failed to extract package $package_file"

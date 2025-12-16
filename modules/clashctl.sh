@@ -23,6 +23,7 @@ _clashctl_install() {
 
 	command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE"
 	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
+	
 
 	local output=$(bash -ci 'clashon >/dev/null 2>&1; echo $http_proxy;')
 	export http_proxy=$(echo $output | grep -o "http://[^ ]*")
@@ -38,6 +39,7 @@ _clashctl_install() {
 	log "INFO" "=== Clashctl module completed ==="
 
 	_clashctl_shell_patch $(get_rc_file $(get_current_shell))
+	exit 1
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
