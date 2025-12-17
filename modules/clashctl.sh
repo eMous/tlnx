@@ -3,14 +3,31 @@
 # Clashctl module - install and configure Clash and Clashctl
 
 _clashctl_check_installed() {
-	if command -v clashctl >/dev/null 2>&1 &&\
-	command -v watch_proxy >/dev/null 2>&1 &&\
-	zsh -c "command -v clashctl" >/dev/null 2>&1 &&\
-	zsh -c "command -v watch_proxy" >/dev/null 2>&1; then
-		return 0
+	if command -v clashctl >/dev/null 2>&1; then
+		log "INFO" "Clashctl is already installed."
 	else
+		log "INFO" "Clashctl is not installed."
 		return 1
 	fi
+	if command -v watch_proxy >/dev/null 2>&1; then
+		log "INFO" "watch_proxy is already installed."
+	else
+		log "INFO" "watch_proxy is not installed."
+		return 1
+	fi
+	if zsh -ci "command -v clashctl" >/dev/null 2>&1; then
+		log "INFO" "clashctl is already installed in zsh."
+	else
+		log "INFO" "clashctl is not installed in zsh."
+		return 1
+	fi
+	if zsh -ci "command -v watch_proxy" >/dev/null 2>&1; then
+		log "INFO" "watch_proxy is already installed in zsh."
+	else
+		log "INFO" "watch_proxy is not installed in zsh."
+		return 1
+	fi
+	return 0
 }
 
 # Module entrypoint
