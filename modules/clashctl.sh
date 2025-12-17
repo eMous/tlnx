@@ -68,11 +68,11 @@ _clashctl_install() {
 	
 	log "INFO" "=== Clashctl module completed ==="
 
-	_clashctl_shell_patch $(get_rc_file $(get_current_shell))
+	_clashctl_shell_patch $(get_home_rc_file bash)
 	return 0
 }
 _clashctl_zsh_post_install_callback() {
-	_clashctl_shell_patch $(get_rc_file zsh)
+	_clashctl_shell_patch $(get_home_rc_file zsh)
 }
 
 _clashctl_shell_patch() {

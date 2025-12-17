@@ -263,10 +263,10 @@ get_rc_file() {
 	local rc_file=""
 	case "$shell_name" in
 	"zsh")
-		rc_file="${ZDOTDIR:-$HOME}/.zshrc"
+		rc_file="$ZDOTDIR/.zshrc"
 		;;
 	"bash")
-		rc_file="${BDOTDIR:-$HOME}/.bashrc"
+		rc_file="$BDOTDIR/.bashrc"
 		;;
 	*)
 		log "WARN" "Unsupported shell $shell_name; cannot determine rc file"

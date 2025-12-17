@@ -140,6 +140,23 @@ EOF
 	# Leave $HOME/.zshrc as is, use the one in $TLNX_DIR/etc/.config/zsh/.zshrc 
 	# and in $TLNX_DIR/etc/.config/zsh/.zshrc it sources the $HOME/.zshrc
 	touch "$HOME/.zshrc"
+	local zshrc="$HOME/.zshrc"
+	touch "$zshrc"
+	local zsh_content=$(cat <<EOF
+export PATH="$TLNX_DIR:\$HOME/.local/bin:\$PATH"
+EOF
+)
+	local current_zshrc_content=$(cat "$zshrc")
+	if [[ "$current_zshrc_content" != *"$zsh_content"* ]]; then
+		remove_shell_rc_sub_block "init_zsh" "$zshrc"
+		append_shell_rc_sub_block "init_zsh" "$zsh_content" "$zshrc"
+		log "INFO" "Configured zshrc at $zshrc"
+	else
+		log "INFO" "zshrc already configured at $zshrc, skipping"
+	fi
+	export ZDOTDIR="$TLNX_DIR/etc/.config/zsh"
+
+
 
 	# Set default shell to zsh
 	local default_shell="$(get_default_shell)"
@@ -453,7 +470,7 @@ EOF
 init_network_info() {
 	local wanipv4
 	# Get WAN IP by Curl unset http_proxy
-	wanipv4=$(http_proxy= curl -s https://api-ipv4.ip.sb/ip | xargs)
+	wanipv4=$(http_proxy= curl -s https://api-ipv4.ip.sb/ip  --max-time 5 | xargs)
 	if [ -z "$wanipv4" ]; then
 		log "ERROR" "Failed to retrieve WAN IPv4 address"
 	else
@@ -462,7 +479,7 @@ init_network_info() {
 
 	local wanipv6
 	# curl without http_proxy
-	wanipv6=$(http_proxy= curl -s https://api-ipv6.ip.sb/ip | xargs)
+	wanipv6=$(http_proxy= curl -s https://api-ipv6.ip.sb/ip  --max-time 5 | xargs)
 	if [ -z "$wanipv6" ]; then
 		log "ERROR" "Failed to retrieve WAN IPv6 address"
 	else

@@ -34,3 +34,5 @@ tmp/
 
 # Ignore zim modules
 etc/.config/zsh/.zim/modules/
+
+.zhistory
