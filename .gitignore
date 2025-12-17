@@ -16,3 +16,20 @@ config/enc.conf
 
 STALE.md
 tmp/
+
+*.zcompdump*
+# Ignore backup files
+*.bak
+*.bak-*
+
+# Ignore new temporary files
+*.new
+
+# Ignore shell history
+.zsh_history
+.bash_history
+
+# Ignore old files
+*.old
+
+*/nvim/runtime/*

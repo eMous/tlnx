@@ -2,18 +2,31 @@
 
 # Clashctl module - install and configure Clash and Clashctl
 
+_clashctl_check_installed() {
+	if command -v clashctl >/dev/null 2>&1 &&\
+	command -v watch_proxy >/dev/null 2>&1 &&\
+	zsh -c "command -v clashctl" >/dev/null 2>&1 &&\
+	zsh -c "command -v watch_proxy" >/dev/null 2>&1; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 # Module entrypoint
 _clashctl_install() {
 	log "INFO" "=== Starting Clashctl module ==="
 
 	log "INFO" "Installing clash-for-linux-install..."
 	local package_name="clash-for-linux-install"
-	if ! checkout_package_file "$package_name"; then
-		log "ERROR" "Failed to checkout package file for $package_name"
+	# Package is already extracted in packages/clash-for-linux-install
+	local extracted_dir="$TLNX_DIR/packages/$package_name"
+	
+	if [ ! -d "$extracted_dir" ]; then
+		log "ERROR" "Package directory $extracted_dir does not exist"
 		return 1
 	fi
 
-	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
 	cd $extracted_dir
 
 	local clash_config
@@ -102,6 +115,7 @@ clasht() {
 }
 
 clashctl_patch
+alias clash="clashctl proxy"
 EOF
 	)
 	

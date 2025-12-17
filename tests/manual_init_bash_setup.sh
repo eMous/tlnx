@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-export PROJECT_DIR="$PROJECT_ROOT"
+export TLNX_DIR="$PROJECT_ROOT"
 export HOME="${HOME:-$PROJECT_ROOT}"
 
 mkdir -p "$PROJECT_ROOT/run"

@@ -787,7 +787,7 @@ You asked for two improvements: (1) mount the repository directly into the Docke
 Option 2: switch to bind mounts with a tmpfs overlay for `run/`, mark the container privileged/systemd-ready, prune containers aggressively, and short-circuit the harness when `-c`/`-d` (or proxy-only) modes are requested so they run on the host terminal.
 
 ## Result
-- `lib/docker_test.sh` now launches containers with `--mount type=bind,src=$PROJECT_DIR,target=/root/tlnx` plus a tmpfs at `/root/tlnx/run`, removing the tar/rsync step; it also adds the necessary systemd/cgroup flags and still enforces the five-container limit.
+- `lib/docker_test.sh` now launches containers with `--mount type=bind,src=$TLNX_DIR,target=/root/tlnx` plus a tmpfs at `/root/tlnx/run`, removing the tar/rsync step; it also adds the necessary systemd/cgroup flags and still enforces the five-container limit.
 - `tlnx` defers the Docker harness until after decrypt/encrypt/set-proxy handling, so `./tlnx -c` runs locally, prompting for the encryption key again.
 - Documentation (and the Dockerfile) reflect the systemd-enabled image plus the new mount strategy.
 

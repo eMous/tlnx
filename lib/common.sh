@@ -3,9 +3,9 @@
 # Common helper functions
 
 # Ensure log directory exists
-mkdir -p "$PROJECT_DIR/logs"
+mkdir -p "$TLNX_DIR/logs"
 # Default log file
-LOG_FILE="${PROJECT_DIR:+${PROJECT_DIR}/}logs/server_config.log"
+LOG_FILE="${TLNX_DIR:+${TLNX_DIR}/}logs/server_config.log"
 # Default log level
 LOG_LEVEL=${LOG_LEVEL:-"INFO"}
 
@@ -104,7 +104,7 @@ export HTTP_PROXY="$proxy_value"
 export HTTPS_PROXY="$proxy_value"
 EOF
     )
-    source "$PROJECT_DIR/lib/shell.sh"
+    source "$TLNX_DIR/lib/shell.sh"
     append_shell_rc_block "$proxy_block" "$rc_file" || return 1
 
     export http_proxy="$proxy_value"

@@ -2,7 +2,7 @@
 
 # Environment variable caching helpers
 
-ENV_CACHE_FILE="$PROJECT_DIR/run/env.cache"
+ENV_CACHE_FILE="$TLNX_DIR/run/env.cache"
 
 # Save current environment variables to cache file
 save_env_cache() {
@@ -13,7 +13,7 @@ save_env_cache() {
 	# Let's save everything for now to ensure we catch all potential dependencies.
 	# We filter out some obviously dynamic or internal variables to reduce noise.
 	
-	export -p | grep -vE "^declare -x (BASH|SHELL|PWD|OLDPWD|SHLVL|_|LS_COLORS|XDG_|SSH_|TERM|USER|HOME|PATH|LOG_|PROJECT_DIR|TLNX_ORIGINAL_ARGS)" > "$ENV_CACHE_FILE"
+	export -p | grep -vE "^declare -x (BASH|SHELL|PWD|OLDPWD|SHLVL|_|LS_COLORS|XDG_|SSH_|TERM|USER|HOME|PATH|LOG_|TLNX_DIR|TLNX_ORIGINAL_ARGS)" > "$ENV_CACHE_FILE"
 	
 	log "DEBUG" "Environment variables cached to $ENV_CACHE_FILE"
 }

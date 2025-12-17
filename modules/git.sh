@@ -7,7 +7,7 @@ git_module_mark_name() {
 }
 
 git_module_mark_file() {
-	echo "${PROJECT_DIR}/run/marks"
+	echo "${TLNX_DIR}/run/marks"
 }
 
 git_install_packages() {

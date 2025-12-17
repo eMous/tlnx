@@ -92,13 +92,13 @@ _detect_prerequisites() {
 }
 
 check_aptlock(){
-	sudo killall apt apt-get dpkg  2>/dev/null
-	sudo rm -f /var/lib/dpkg/lock-frontend 2>/dev/null
-	sudo rm -f /var/lib/dpkg/lock 2>/dev/null
-	sudo rm -f /var/cache/apt/archives/lock 2>/dev/null
-	sudo dpkg --configure -a 2>/dev/null
-	sudo systemctl stop unattended-upgrades 2>/dev/null
-	sudo apt-get purge unattended-upgrades -y 2>/dev/null
+	sudo killall apt apt-get dpkg  >/dev/null 2>&1 
+	sudo rm -f /var/lib/dpkg/lock-frontend >/dev/null 2>&1
+	sudo rm -f /var/lib/dpkg/lock >/dev/null 2>&1
+	sudo rm -f /var/cache/apt/archives/lock >/dev/null 2>&1
+	sudo dpkg --configure -a >/dev/null 2>&1
+	sudo systemctl stop unattended-upgrades >/dev/null 2>&1
+	sudo apt-get purge unattended-upgrades -y  >/dev/null 2>&1
 	return 0
 }
 
@@ -137,7 +137,7 @@ check_user() {
 	local CURRENT_USER
 	CURRENT_USER=$(whoami)
 	# if current user is in sudoers
-	if sudo -l -U "$CURRENT_USER" 2>&1 | tee -a "$LOG_FILE"; then
+	if sudo -l -U "$CURRENT_USER" 2>&1 | tee -a "$LOG_FILE" >/dev/null; then
 		log "DEBUG" "Current user $CURRENT_USER has sudo privileges, continuing"
 	else
 		log "ERROR" "Current user $CURRENT_USER does not have sudo privileges, cannot continue"

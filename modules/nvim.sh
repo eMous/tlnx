@@ -2,53 +2,19 @@
 
 # nvim module - install and configure nvim
 
-nvim_install() {
+_nvim_check_installed() {
 	if command -v nvim >/dev/null 2>&1; then
-		log "INFO" "nvim already installed; skipping apt installation"
 		return 0
+	else
+		return 1
 	fi
-
-	log "INFO" "Installing nvim..."
-	local package_name="nvim"
-	checkout_package_file "$package_name"
-	local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-    
-    local arch
-    arch=$(uname -m)
-    local bin_dir
-    case "$arch" in
-        x86_64) bin_dir="amd64" ;;
-        aarch64) bin_dir="arm64" ;;
-        *)
-            log "ERROR" "Unsupported architecture: $arch"
-            return 1
-            ;;
-    esac
-
-    if [ ! -d "$extracted_dir/$bin_dir" ]; then
-         log "ERROR" "Binary directory not found: $extracted_dir/$bin_dir"
-         return 1
-    fi
-
-	rsync --mkpath -a "$extracted_dir/$bin_dir/" "$HOME/.local/bin/$package_name/"
-	log "INFO" "nvim installed successfully"
 }
 
-nvim_configure() {
-	log "INFO" "Configuring nvim..."
-	# This is handled by init.sh init_conffiles
-}
-
-nvim_path_register() {
-	local dir="\$HOME/.local/bin/nvim/bin"
-	source $PROJECT_DIR/lib/shell.sh
-	add_to_path $dir
-}
-
+# Module entrypoint for install workflow
 _nvim_install() {
-	log "INFO" "=== Starting nvim module ==="
-	nvim_install
-	nvim_path_register
-	nvim_configure
-	log "INFO" "=== nvim module completed ==="
+	log "INFO" "=== Starting nvim installation and configuration ==="
+	log "INFO" "Installing nvim..."
+	install_package_binary "nvim" "nvim" "bin"
+	_nvim_configure
+	log "INFO" "=== Finishing nvim installation and configuration ==="
 }

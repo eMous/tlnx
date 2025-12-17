@@ -114,7 +114,7 @@ append_shell_rc_sub_block() {
 	local label="$1"
 	local content="$2"
 	local rc_file="${3:-}"
-	echo "VERBOSE" "Appending sub block ($label) to shell rc file: $rc_file"
+	log "VERBOSE" "Appending sub block ($label) to shell rc file: $rc_file"
 	if [ -z "$content" ]; then
 		log "ERROR" "append_shell_rc_sub_block requires content to append"
 		return 1
@@ -210,17 +210,17 @@ remove_shell_rc_sub_block() {
 }
 
 source_rcfile() {
-	local rc_file=$(get_rc_file $(get_current_shell))
+	local rc_file=$1
 	if [ -z "$rc_file" ]; then
 		log "ERROR" "rc_file is not set; cannot source rc file"
 		return 1
 	fi
 
 	if [ -f "$rc_file" ]; then
-		log "VERBOSE" "Sourcing shell rc file: $rc_file"
+		log "DEBUG" "Sourcing shell rc file: $rc_file"
 		# shellcheck source=/dev/null
 		source "$rc_file"
-		log "INFO" "Sourced shell rc file: $rc_file"
+		log "DEBUG" "Sourced shell rc file: $rc_file"
 	else
 		log "WARN" "Shell rc file not found: $rc_file"
 	fi
@@ -228,7 +228,7 @@ source_rcfile() {
 
 mark_exists() {
 	local mark=$1
-	local marks_file=${2:-"$PROJECT_DIR/run/marks"}
+	local marks_file=${2:-"$TLNX_DIR/run/marks"}
 	if grep -Fq "$mark" "$marks_file"; then
 		log "DEBUG" "mark $mark found in $marks_file"
 		return 0
@@ -237,45 +237,6 @@ mark_exists() {
 		return 1
 	fi
 }
-# init_shell_rc_file() {
-# 	local rc_file block_start backup_file
-# 	rc_file=$(get_rc_file $(get_current_shell))
-# 	log "VERBOSE" "Initializing shell rc file: $rc_file"
-# 	if [ -z "$rc_file" ]; then
-# 		log "ERROR" "rc_file is not set; cannot initialize rc file"
-# 		return 1
-# 	fi
-
-# 	block_start="# >>> TLNX shell block >>>"
-# 	backup_file="${rc_file}.$(date +%Y%m%d%H%M%S).bak"
-
-# 	if [ ! -e "$rc_file" ]; then
-# 		: >"$rc_file"
-# 		log "INFO" "Created empty shell rc file: $rc_file"
-# 		return 0
-# 	fi
-
-# 	if grep -Fq "$block_start" "$rc_file"; then
-# 		log "DEBUG" "TLNX shell block already present in $rc_file"
-# 		source_rcfile
-# 		return 0
-# 	fi
-
-# 	# if rc_file is empty do nothing
-# 	if [ ! -s "$rc_file" ]; then
-# 		log "DEBUG" "$rc_file is empty, no backup needed"
-# 		return 0
-# 	fi
-
-# 	if ! mv "$rc_file" "$backup_file"; then
-# 		log "ERROR" "Failed to back up $rc_file to $backup_file"
-# 		return 1
-# 	fi
-
-# 	: >"$rc_file"
-# 	log "INFO" "Backed up $rc_file to $backup_file and created a fresh rc file for TLNX configuration"
-# 	return 0
-# }
 check_rcfile() {
 	log "INFO" "Checking for existing RC file configurations for CURRENT RUNNING SHELL"
 	# considering zsh and bash only for now
@@ -302,10 +263,10 @@ get_rc_file() {
 	local rc_file=""
 	case "$shell_name" in
 	"zsh")
-		rc_file="$HOME/.config/zsh/.zshrc"
+		rc_file="$ZDOTDIR/.zshrc"
 		;;
 	"bash")
-		rc_file="$HOME/.config/bash/.bashrc"
+		rc_file="$BDOTDIR/.bashrc"
 		;;
 	*)
 		log "WARN" "Unsupported shell $shell_name; cannot determine rc file"

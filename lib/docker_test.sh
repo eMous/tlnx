@@ -159,9 +159,9 @@ run_docker_test() {
 	local container_name="${prefix}-$(date +%Y%m%d%H%M%S)"
 	local docker_hostname="docker-${INIT_HOSTNAME:-$container_name}"
 
-	local host_project_dir="$PROJECT_DIR"
+	local host_project_dir="$TLNX_DIR"
 	if command -v realpath >/dev/null 2>&1; then
-		host_project_dir=$(realpath "$PROJECT_DIR")
+		host_project_dir=$(realpath "$TLNX_DIR")
 	fi
 
 	local host_user
@@ -242,8 +242,8 @@ EOF
 	fi
 
 	# Save container ID for attach mode
-	mkdir -p "$PROJECT_DIR/run"
-	echo "$container_name" > "$PROJECT_DIR/run/last_docker_test_container"
+	mkdir -p "$TLNX_DIR/run"
+	echo "$container_name" > "$TLNX_DIR/run/last_docker_test_container"
 	
 	return $status
 }
@@ -254,7 +254,7 @@ docker_test_attach_last() {
 	local container_home="/home/$host_user"
 	log "INFO" "Debug: host_user='$host_user', container_home='$container_home'"
 
-	local last_container_file="$PROJECT_DIR/run/last_docker_test_container"
+	local last_container_file="$TLNX_DIR/run/last_docker_test_container"
 	
 	if [ ! -f "$last_container_file" ]; then
 		log "ERROR" "No last container record found at $last_container_file"

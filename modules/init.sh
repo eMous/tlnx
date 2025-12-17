@@ -1,110 +1,164 @@
 #!/bin/bash
 
 # init module - system bootstrap configuration
+
+_init_check_installed() {
+	return 1
+}
+
 # Module entrypoint - init
 _init_install() {
-	local subprocedures=("init_copy_conffiles" "init_shell" "init_network_info"
+	local subprocedures=("init_symbolic_link" "init_shell" "init_network_info"
 		"init_check_internet_access" "init_enable_bbr" "init_update_aliyun_mirror"
 		"init_timezone" "init_timesyncd" "init_ssh_keys")
-	local off_mark_control=("init_shell" "init_copy_conffiles")
 
-	log "INFO" "=== Starting init module ==="
 
 	for subproc in "${subprocedures[@]}"; do
 		local func="${subproc}"
-		local mark="${subproc}_done"
-		log "INFO" "Running subprocedure: $func"
-		# if subproc is in off_mark_control, skip mark check
-		if [[ " ${off_mark_control[*]} " == *" ${subproc} "* ]]; then
-			log "INFO" "Skipping mark check for subprocedure: $func"
-		else
-			if mark_exists "$mark" "$PROJECT_DIR/run/marks"; then
-				log "INFO" "Mark exists for subprocedure: $func; skipping"
-				continue
-			fi
-		fi
+		log "INFO" "<<<< Subprocedure Running: $func"
 		"$func"
 		if [ $? -ne 0 ]; then
-			log "ERROR" "Subprocedure $func failed"
+			log "ERROR" ">>>> Subprocedure $func failed"
 			return 1
 		else
-			log "INFO" "Subprocedure $func completed successfully"
-			# add mark for subproc except those in off_mark_control
-			if [[ ! " ${off_mark_control[*]} " == *" ${subproc} "* ]]; then
-				add_mark "$mark" "$PROJECT_DIR/run/marks"
+			log "INFO" ">>>> Subprocedure $func completed successfully"
+		fi
+	done
+
+	# rewrite _init_check_installed to return 0
+	_init_check_installed() {
+		return 0
+	}
+}
+
+init_symbolic_link() {
+	log "INFO" "Creating symbolic links for configuration files..."
+	local src_base="$TLNX_DIR/etc/.config"
+	local dest_base="$HOME/.config"
+
+	if [ ! -d "$src_base" ]; then
+		log "ERROR" "Source configuration directory $src_base does not exist; skipping symbolic links."
+		exit 1
+	fi
+
+	mkdir -p "$dest_base"
+
+	# Enable dotglob to include hidden files
+	shopt -s dotglob
+	for src_path in "$src_base"/*; do
+		[ -e "$src_path" ] || continue
+
+		local item_name
+		item_name=$(basename "$src_path")
+		local dest_path="$dest_base/$item_name"
+
+		# Check if destination exists
+		if [ -e "$dest_path" ] || [ -L "$dest_path" ]; then
+			# Check if it's already a symlink to the correct location
+			if [ -L "$dest_path" ]; then
+				local current_target
+				current_target=$(readlink -f "$dest_path")
+				local expected_target
+				expected_target=$(readlink -f "$src_path")
+				
+				if [ "$current_target" = "$expected_target" ]; then
+					log "DEBUG" "$dest_path is already linked to $src_path; skipping"
+					continue
+				fi
 			fi
-		fi
-	done
 
-	log "INFO" "=== init module completed ==="
+			# Backup existing file/dir/link
+			local backup_path="${dest_path}.bak-$(date +%Y%m%d%H%M%S)"
+			log "INFO" "Backing up existing $dest_path to $backup_path"
+			mv "$dest_path" "$backup_path"
+		fi
+
+		# Create symlink
+		ln -s "$src_path" "$dest_path"
+		log "INFO" "Linked $src_path to $dest_path"
+	done
+	shopt -u dotglob
 }
 
-init_copy_conffiles() {
-	local module
-	for module in ${MODULES_TO_EXECUTE[@]}; do
-		# if [ "$module" = "zsh" ] || [ "$module" = "bash" ]; then
-		# 	continue
-		# fi
-		# if there is a dir get_config_dir $module
-		local m_conf_dir=$(get_config_dir $module)
-		if [ -d "$m_conf_dir" ]; then
-			log "VERBOSE" "dir $m_conf_dir exist for module: $module"
-			rsync -a --mkpath "$m_conf_dir/" "$HOME/.config/$module/" 2>&1 >>"$LOG_FILE"
-			log "INFO" "Copied config files for module: $module"
-		fi
-	done
-}
 init_shell() {
 	local curshell="$(get_current_shell)"
-	local shells=("bash" "zsh")
-	for shell in "${shells[@]}"; do
-		# Check etc/rc file exist
-		local homercpath=$HOME/$(basename $(get_rc_file "$shell"))
-		touch $homercpath
-		local subrcdir="$HOME/.config/$shell"
-		local subrcpath=$subrcdir/$(basename $homercpath)
-		local templatedir="$(get_config_dir $shell)"
-		local templatepath="$templatedir/$(basename $homercpath)"
-		local mark="init_shell_${shell}_done"
-		mkdir -p "$subrcdir"
-		if [ ! -f "$templatepath" ]; then
-			log "ERROR" "Template rc file for $shell not found at $templatepath; cannot initialize"
-			exit 1
-		fi
-		# Only bash needs to redirect in home.rc file, since zdotdir has set in .zshenv
-		if [ $shell = "bash" ]; then
-			log "VERBOSE" "Initilizing rc file for $shell: $homercpath"
-			append_shell_rc_block "source \$HOME/.config/$shell/$(basename "$homercpath")" "$homercpath"
-			log "INFO" "$homercpath initialized to source TLNX shell config"
-		fi
+	
+	# Bash setup
+	local bashrc="$HOME/.bashrc"
+	touch "$bashrc"
+	local bash_content=$(cat <<EOF
+export PATH="$TLNX_DIR:\$HOME/.local/bin:\$PATH"
+if [ -f "\$HOME/.config/bash/.bashrc" ]; then
+    source "\$HOME/.config/bash/.bashrc"
+fi
+EOF
+)
+	local current_bashrc_content=$(cat "$bashrc")
+	if [[ "$current_bashrc_content" != *"$bash_content"* ]]; then
+		remove_shell_rc_sub_block "init_bash" "$bashrc"
+		append_shell_rc_sub_block "init_bash" "$bash_content" "$bashrc"
+		log "INFO" "Configured bashrc at $bashrc"
+	else
+		log "INFO" "bashrc already configured at $bashrc, skipping"
+	fi
+	export BDOTDIR="$TLNX_DIR/etc/.config/bash"
 
-		# PATH setup
-		local content_to_check="export PATH=\"$PROJECT_DIR:\$HOME/.local/bin:\$PATH\""
-		mkdir -p "$HOME/.local/bin"
-		if grep -Fq "$content_to_check" "$subrcpath" 2>/dev/null; then
-			log "INFO" "Project directory $PROJECT_DIR already present in $shell PATH via $subrcpath"
-			continue
+
+	# install zsh
+	if ! command -v zsh >/dev/null 2>&1; then
+		log "INFO" "zsh not found, installing..."
+		# Install ZSH
+		sudo apt-get install -y zsh 2>&1 | tee -a "$LOG_FILE"
+		if [ ${PIPESTATUS[0]} -ne 0 ]; then
+			log "ERROR" "ZSH installation failed"
+			return 1
+		else
+			log "INFO" "ZSH installed successfully"
 		fi
-		log "INFO" "Adding project directory $PROJECT_DIR to $shell PATH via $subrcpath"
-		export PATH="$PROJECT_DIR:$HOME/.local/bin:$PATH"
-		append_shell_rc_block "$content_to_check" "$subrcpath"
+	else
+		log "INFO" "ZSH is already installed, skipping installation"
+	fi
 
-		# # if shell is current running shell source the rc file
-		# if [[ "$curshell" == *"$shell"* ]]; then
-		# 	log "INFO" "Current shell $curshell matches $shell; sourcing rc file"
-		# 	source "$homercpath"
-		# fi
-	done
+	# set zdotdir
+	touch "$HOME/.zshenv"
+	local content=$(
+	cat <<EOF
+export ZDOTDIR="\$HOME/.config/zsh"
+[[ -f "\$ZDOTDIR/.zshenv" ]] && source "\$ZDOTDIR/.zshenv"
+EOF
+	)
+	export ZDOTDIR="$HOME/.config/zsh"
+	# if content exists in .zshenv, skip
+	if [[ "$(cat $HOME/.zshenv)" != *"$content"* ]]; then
+		remove_shell_rc_sub_block "zshenv zdotdir config" "$HOME/.zshenv"
+		append_shell_rc_sub_block "zshenv zdotdir config" "$content" "$HOME/.zshenv"
+		log "INFO" "ZDOTDIR configured to \$HOME/.config/zsh"
+	else
+		log "INFO" "ZDOTDIR already configured in $HOME/.zshenv, skipping"
+	fi
 
-	rsync -a $(get_config_dir "commonshell")/ "$HOME/.config/commonshell/" 2>&1 | tee -a "$LOG_FILE"
-	log "INFO" "Copied TLNX commonshell config template to $HOME/.config/commonshell"
+	# Leave $HOME/.zshrc as is, use the one in $TLNX_DIR/etc/.config/zsh/.zshrc 
+	# and in $TLNX_DIR/etc/.config/zsh/.zshrc it sources the $HOME/.zshrc
+	touch "$HOME/.zshrc"
+
+	# Set default shell to zsh
+	local default_shell="$(get_default_shell)"
+	if [ "$(basename "$default_shell")" != "zsh" ]; then	
+		log "INFO" "Setting ZSH as the default shell..."
+		# Determine current user
+		local current_user=$(whoami)
+		# Update default shell for the user
+		local user=$(whoami)
+		command sudo chsh -s "$(which zsh)" "$user" 2>&1 | tee -a "$LOG_FILE"
+	else
+		log "INFO" "Default shell is already ZSH; skipping default shell change"
+	fi
+	return 0
 }
 
 # Update Alibaba Cloud mirrors
 init_update_aliyun_mirror() {
-	log "INFO" "Updating Alibaba Cloud package mirrors"
-
-	log "INFO" "Detected system: $DISTRO_NAME $DISTRO_VERSION"
+	log "INFO" "Updating Alibaba Cloud package mirrors. Detected system: $DISTRO_NAME $DISTRO_VERSION"
 
 	if [ "$DISTRO_NAME" = "ubuntu" ]; then
 		log "INFO" "Ubuntu detected, switching apt sources to Alibaba Cloud"
@@ -155,11 +209,37 @@ EOF
 				sudo mv "$file" "$file.bak"
 			fi
 		done
-		sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE"
-		local apt_status=${PIPESTATUS[0]}
-		if [ $apt_status -ne 0 ]; then
-			log "ERROR" "Failed cto update apt package lists after changing mirrors"
-			return 1
+		
+		local need_update=false
+		if ! mark_exists "init_update_aliyun_mirror"; then
+			need_update=true
+		else
+			local last_update_file="/var/lib/apt/periodic/update-success-stamp"
+			if [ -f "$last_update_file" ]; then
+				local last_update_time=$(stat -c %Y "$last_update_file")
+				local current_time=$(date +%s)
+				local diff=$((current_time - last_update_time))
+				if [ $diff -gt 1200 ]; then # 20 minutes = 1200 seconds
+					log "INFO" "Last apt update was more than 20 minutes (1200 seconds) ago ($diff seconds), updating..."
+					need_update=true
+				else
+					log "INFO" "Last apt update was less than 20 minutes (1200 seconds) ago ($diff seconds), skipping update"
+				fi
+			else
+				log "INFO" "No apt update timestamp found, updating..."
+				need_update=true
+			fi
+		fi
+
+		if [ "$need_update" = "true" ]; then
+			local current_timestamp=$(date +"%Y%m%d%H%M%S")
+			sudo apt-get update -y 2>&1 | tee -a "$LOG_FILE" >/dev/null
+			local apt_status=${PIPESTATUS[0]}
+			if [ $apt_status -ne 0 ]; then
+				log "ERROR" "Failed to update apt package lists after changing mirrors"
+				return 1
+			fi
+			mark_exists "init_update_aliyun_mirror" || add_mark "init_update_aliyun_mirror"
 		fi
 	else
 		log "WARN" "Unsupported distribution $DISTRO_NAME, skipping mirror update"
@@ -172,12 +252,12 @@ init_prjdir() {
 	# It seems there is no need to mv the prjdir to /opt/tlnx explicity
 	return 0
 	log "INFO" "Checking project directory..."
-	local old_project_dir="$PROJECT_DIR"
-	if [ -z "$PROJECT_DIR" ]; then
-		log "ERROR" "PROJECT_DIR is not set. Cannot continue."
+	local old_project_dir="$TLNX_DIR"
+	if [ -z "$TLNX_DIR" ]; then
+		log "ERROR" "TLNX_DIR is not set. Cannot continue."
 		return 1
 	fi
-	if [ "$PROJECT_DIR" = "/opt/tlnx" ]; then
+	if [ "$TLNX_DIR" = "/opt/tlnx" ]; then
 		log "INFO" "Project directory is correctly set to /opt/tlnx"
 		return 0
 	fi
@@ -194,25 +274,25 @@ init_prjdir() {
 	sudo mkdir -p /opt/tlnx
 
 	# rsync  all stdout and stderr both output to log file and console
-	sudo rsync -ar "$PROJECT_DIR"/* /opt/tlnx/ 2>&1 | tee -a "$LOG_FILE"
+	sudo rsync -ar "$TLNX_DIR"/* /opt/tlnx/ 2>&1 | tee -a "$LOG_FILE"
 	local rsync_status=${PIPESTATUS[0]}
 	if [ $rsync_status -ne 0 ]; then
 		log "ERROR" "Failed to rsync project files to /opt/tlnx"
 		return 1
 	fi
-	#rm -rf "$PROJECT_DIR"
+	#rm -rf "$TLNX_DIR"
 
-	# LOG_FILE update to: in original LOG_FILE, the $PROJECT_DIR substituted to /opt/tlnx
-	LOG_FILE="${LOG_FILE//$PROJECT_DIR/\/opt\/tlnx}"
+	# LOG_FILE update to: in original LOG_FILE, the $TLNX_DIR substituted to /opt/tlnx
+	LOG_FILE="${LOG_FILE//$TLNX_DIR/\/opt\/tlnx}"
 	log "INFO" "Log file path updated to $LOG_FILE"
-	PROJECT_DIR="/opt/tlnx"
+	TLNX_DIR="/opt/tlnx"
 	log "INFO" "Project directory set to /opt/tlnx"
 
-	# if old_project_dir is not PROJECT_DIR, empty file STALE.md in PROJECT_DIR
-	if [ "$old_project_dir" != "$PROJECT_DIR" ]; then
-		log "INFO" "Project directory has changed from $old_project_dir to $PROJECT_DIR"
+	# if old_project_dir is not TLNX_DIR, empty file STALE.md in TLNX_DIR
+	if [ "$old_project_dir" != "$TLNX_DIR" ]; then
+		log "INFO" "Project directory has changed from $old_project_dir to $TLNX_DIR"
 		: >$old_project_dir/STALE.md
-		echo "This project directory has been moved to $PROJECT_DIR on $(date). So the dir: $old_project_dir is STALE to use!" >>$old_project_dir/STALE.md
+		echo "This project directory has been moved to $TLNX_DIR on $(date). So the dir: $old_project_dir is STALE to use!" >>$old_project_dir/STALE.md
 		chmod 777 $old_project_dir/STALE.md
 	else
 		log "INFO" "Project directory remains unchanged"
@@ -221,36 +301,31 @@ init_prjdir() {
 	return 0
 }
 
-# Check tlnx in bin: Add $PROJECT_DIR to PATH in rc file
-init_tlnx_in_path() {
-	# integreted in init_shell now
-	return 0
-}
-
 # Internet Access Check
 init_check_internet_access() {
 	log "INFO" "Checking internet access"
 
-	if mark_exists "internet-access-check" "$PROJECT_DIR/run/marks"; then
-		log "INFO" "Internet access check already performed previously; skipping"
-		return 0
-	fi
-	add_mark "internet-access-check" "$PROJECT_DIR/run/marks"
-
 	# Checking http(s) proxy, if http proxy is empty
-	source_rcfile
+	source_rcfile $HOME/.bashrc >/dev/null 
+
 	if [ -z "$http_proxy" ]; then
-		log "WARN" "No HTTP proxy detected, performing direct internet access check"
+		log "WARN" "No HTTP proxy detected."
 	else
 		log "INFO" "HTTP proxy detected: $http_proxy"
 	fi
 
 	if [ -z "$https_proxy" ]; then
-		log "WARN" "No HTTPS proxy detected, performing direct internet access check"
+		log "WARN" "No HTTPS proxy detected."
 	else
 		log "INFO" "HTTPS proxy detected: $https_proxy"
 	fi
 
+	# if set CONTINUE_WITHOUT_INTERNET=1, skip the check
+	if [ "${CONTINUE_WITHOUT_INTERNET:-n}" = "y" ]; then
+		log "INFO" "CONTINUE_WITHOUT_INTERNET is set; skipping internet access check"
+		return 0
+	fi
+	log "INFO" "Performing internet access check by connecting to https://www.google.com ..."
 	curl --max-time 5 -I https://www.google.com >/dev/null 2> >(tee -a "$LOG_FILE")
 
 	local CURL_STATUS=${PIPESTATUS[0]}
@@ -299,7 +374,7 @@ init_check_internet_access() {
 
 # Enable BBR congestion control
 init_enable_bbr() {
-	log "INFO" "Enabling BBR congestion control"
+	log "INFO" "Check enabling BBR congestion control"
 
 	# Check if BBR is already enabled
 	local CURRENT_CONGESTION
@@ -348,23 +423,28 @@ init_timesyncd() {
 		fi
 		log "INFO" "systemd-timesyncd installed successfully"
 	else
-		log "INFO" "systemd-timesyncd is already installed"
+		log "INFO" "systemd-timesyncd is already installed, skipping..."
 	fi
 
 	# configure ntp servers: ntp.aliyun.com ntp1.aliyun.com ntp2.aliyun.com
-	sudo tee /etc/systemd/timesyncd.conf >/dev/null <<EOF
+	local timesyncd_conf="/etc/systemd/timesyncd.conf"
+	if [ -f "$timesyncd_conf" ] && grep -Fq "NTP=ntp.aliyun.com ntp.hust.edu.cn" "$timesyncd_conf"; then
+		log "INFO" "systemd-timesyncd already configured with Aliyun NTP servers"
+	else
+		sudo tee /etc/systemd/timesyncd.conf >/dev/null <<EOF
 [Time]
 NTP=ntp.aliyun.com ntp.hust.edu.cn
 FallbackNTP=ntp1.aliyun.com ubuntu.pool.ntp.org
 EOF
-	sudo systemctl restart systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
-	local restart_status=${PIPESTATUS[0]}
-	if [ $restart_status -ne 0 ]; then
-		log "ERROR" "Failed to restart systemd-timesyncd"
-		return 1
+		sudo systemctl restart systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+		local restart_status=${PIPESTATUS[0]}
+		if [ $restart_status -ne 0 ]; then
+			log "ERROR" "Failed to restart systemd-timesyncd"
+			return 1
+		fi
+		sudo systemctl enable systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
+		log "INFO" "systemd-timesyncd configured with Aliyun NTP servers"
 	fi
-	sudo systemctl enable systemd-timesyncd 2>&1 | tee -a "$LOG_FILE"
-	log "INFO" "systemd-timesyncd configured with Aliyun NTP servers"
 	log "INFO" "Current system time: $(date)"
 	log "INFO" "Current clock synchronization status: $(timedatectl status | grep 'System clock synchronized' | awk '{print $4}')"
 	return 0
@@ -404,46 +484,40 @@ init_network_info() {
 		log "INFO" "Docker test container detected; skipping hostnamectl/hostname changes"
 	else
 		# If the mark of set-hostname not exist in mark.log, set hostname
-		sudo -u $(whoami) mkdir -p "$PROJECT_DIR/run"
-		MARK_FILE="$PROJECT_DIR/run/marks"
-		touch "$MARK_FILE"
-		local mark="hostname-set"
-		log "INFO" "Checking hostname setup mark in $MARK_FILE"
-		if ! grep -q "$mark" "$MARK_FILE"; then
-			log "INFO" "Hostname setup mark not found, proceeding to set hostname"
-			# Ask user to set hostname or keep current
-			local current_hostname
-			current_hostname=$(hostname)
-			log "INFO" "Current hostname is: $current_hostname"
-			local new_hostname
-			if [ -z "$INIT_HOSTNAME" ]; then
-				read -rp "Do you want to change the hostname? (y/n): " change_hostname
-				if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-					read -rp "Enter new hostname: " new_hostname
-					if [ -z "$new_hostname" ]; then
-						new_hostname="$current_hostname"
-						log "WARN" "No hostname entered, keeping current hostname: $current_hostname"
-					fi
-				else
-					new_hostname="$current_hostname"
-					log "INFO" "Keeping current hostname: $current_hostname"
-				fi
+		sudo -u $(whoami) mkdir -p "$TLNX_DIR/run"
+		if mark_exists "init_set_hostname"; then
+			log "INFO" "Mark init_set_hostname found. Hostname has already been set previously; skipping"
+			return 0
+		fi
+		# Ask user to set hostname or keep current
+		local current_hostname
+		current_hostname=$(hostname)
+		log "INFO" "Current hostname is: $current_hostname"
+		local new_hostname
+		if [ -n "$INIT_HOSTNAME" ]; then
+			new_hostname="$INIT_HOSTNAME"
+			log "INFO" "Using configured hostname: $new_hostname"
+		else
+			read -rp "Enter new hostname (leave empty to keep '$current_hostname'): " input_hostname
+			if [ -n "$input_hostname" ]; then
+				new_hostname="$input_hostname"
 			else
-				new_hostname="$INIT_HOSTNAME"
-				log "INFO" "Using configured hostname: $new_hostname"
+				new_hostname="$current_hostname"
 			fi
+		fi
+		
+		if [ "$current_hostname" != "$new_hostname" ]; then
 			sudo hostnamectl set-hostname "$new_hostname"
 			sudo sed -i "s/$current_hostname/$new_hostname/g" /etc/hosts
 			log "INFO" "Hostname set to: $new_hostname"
-			# Add mark
-			add_mark "$mark" "$MARK_FILE"
 		else
-			log "INFO" "Hostname has already been set previously, skipping"
+			log "INFO" "Hostname is already set to $new_hostname; skipping"
 		fi
+		mark_exists "init_set_hostname" || add_mark "init_set_hostname"
 	fi
 
 	# add WAN and LAN IP to run/info
-	local INFO_FILE="$PROJECT_DIR/run/info"
+	local INFO_FILE="$TLNX_DIR/run/info"
 	mkdir -p "$(dirname "$INFO_FILE")"
 	if [ ! -f "$INFO_FILE" ]; then
 		touch "$INFO_FILE"
@@ -473,8 +547,8 @@ init_network_info() {
 # SSH Key setup
 init_ssh_keys() {
 	log "INFO" "Checking SSH key setup"
-	# if mark of key pairs exist in $PROJECT_DIR/run/keys, skip
-	local keydir="$PROJECT_DIR/run/keys"
+	# if mark of key pairs exist in $TLNX_DIR/run/keys, skip
+	local keydir="$TLNX_DIR/run/keys"
 	mkdir -p "$keydir"
 	local keyname="id_rsa-$(whoami)@$(hostname)"
 	if [ -f "$keydir/$keyname" ] && [ -f "$keydir/$keyname.pub" ]; then
@@ -496,37 +570,3 @@ init_ssh_keys() {
 	log "INFO" "SSH public key added to authorized_keys"
 	return 0
 }
-
-# init_bash_setup() {
-# 	log "INFO" "Applying basic bash shell setup"
-# 	# if there is no etc/.bashrc, return 0
-# 	if [ ! -f "$PROJECT_DIR/etc/.bashrc" ]; then
-# 		log "INFO" "No etc/.bashrc found, skipping bash basic setup"
-# 		return 0
-# 	fi
-# 	local mark="bash-basic-setup"
-# 	# if etc/.bashrc is newer than user's .bashrc, remove the previous block first
-# 	if [ "$PROJECT_DIR/etc/.bashrc" -nt "$HOME/.bashrc" ]; then
-# 		log "INFO" "Updating existing bashrc block in $HOME/.bashrc, as etc/.bashrc is newer"
-# 		remove_shell_rc_sub_block "bashrc template" "$HOME/.bashrc"
-# 		# remove mark of bash-basic-setup in run/marks
-# 		local MARK_FILE="$PROJECT_DIR/run/marks"
-# 		# remove the line of mark
-# 		sed -i "/^${mark}.*$/d" "$MARK_FILE"
-# 	fi
-
-# 	# if there is a mark of bash-basic-setup in run/marks
-# 	# AND the etc/.bashrc is older than marks
-# 	# AND etc/.bashrc is matched in $HOME/.bashrc, skip
-# 	local MARK_FILE="$PROJECT_DIR/run/marks"
-# 	if grep -q "${mark}" "$MARK_FILE" && [ "$MARK_FILE" -nt "$PROJECT_DIR/etc/.bashrc" ] && grep -qFf "$PROJECT_DIR/etc/.bashrc" "$HOME/.bashrc"; then
-# 		log "INFO" "Bash basic setup already applied, skipping"
-# 		return 0
-# 	fi
-# 	# copy the contents of etc/.bashrc to user's .bashrc using append_shell_rc_sub_block
-# 	append_shell_rc_sub_block "bashrc template" "$(cat $PROJECT_DIR/etc/.bashrc)" "$HOME/.bashrc"
-# 	# add mark
-# 	add_mark "$mark" "$MARK_FILE"
-# 	log "INFO" "Basic bash shell setup applied"
-# 	return 0
-# }

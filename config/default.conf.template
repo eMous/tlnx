@@ -4,7 +4,7 @@
 # Project semantic version (major.minor.patch)
 VERSION="1.0.0"
 # Log file path
-LOG_FILE="${PROJECT_DIR:+${PROJECT_DIR}/}logs/server_config-$(date +%Y%m%d).log"
+LOG_FILE="${TLNX_DIR:+${TLNX_DIR}/}logs/server_config-$(date +%Y%m%d).log"
 # Default log level (DEBUG, INFO, WARN, ERROR)
 LOG_LEVEL="INFO"
 # Default module sequence (executed in order)
@@ -27,7 +27,7 @@ LOCAL_USER_PASSWD_X=""
 # === Docker test harness ===
 DOCKER_TEST_ENABLED="false"
 DOCKER_TEST_IMAGE="tlnx/test:ubuntu24"
-DOCKER_TEST_BUILD_CONTEXT="${PROJECT_DIR:+${PROJECT_DIR}/}docker/test-image"
+DOCKER_TEST_BUILD_CONTEXT="${TLNX_DIR:+${TLNX_DIR}/}docker/test-image"
 DOCKER_TEST_DOCKERFILE="Dockerfile"
 DOCKER_TEST_MAX_CONTAINERS=5
 DOCKER_TEST_CONTAINER_PREFIX="tlnx-test"

@@ -11,15 +11,6 @@ _rg_install() {
 	fi
 
 	log "INFO" "Installing rg..."
-	# local package_name="ripgrep"
-	# if ! checkout_package_file "$package_name"; then
-	# 	log "ERROR" "Failed to checkout package file for $package_name"
- 	#     return 1
-	# fi
-    
-	# local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-    # cd $extracted_dir
-	# rsync -a rg $HOME/.local/bin/
 	sudo apt-get install -y ripgrep
 	log "INFO" "=== Finishing ripgrep installation and configuration ==="
 }

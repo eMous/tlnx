@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-export PROJECT_DIR="$PROJECT_ROOT"
+export TLNX_DIR="$PROJECT_ROOT"
 
 # Use a throwaway HOME so git --global config writes stay inside repo
 TEST_HOME="$PROJECT_ROOT/run/tmp/git-module-home"

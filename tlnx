@@ -145,15 +145,15 @@ prompt_module_selection() {
 # Main function
 main() {
     TLNX_ORIGINAL_ARGS=("$@")
-    PROJECT_DIR=$(cd "$(dirname "$0")" && pwd)
-    echo "[INFO]" "Project directory set to $PROJECT_DIR"
+    TLNX_DIR=$(cd "$(dirname "$0")" && pwd)
+    echo "[INFO]" "Project directory set to $TLNX_DIR"
 
     # source every file in lib
-    for lib_file in "$PROJECT_DIR"/lib/*.sh; do
+    for lib_file in "$TLNX_DIR"/lib/*.sh; do
         source "$lib_file"
     done
     # source every file in modules
-    for module_file in "$PROJECT_DIR"/modules/*.sh; do
+    for module_file in "$TLNX_DIR"/modules/*.sh; do
         source "$module_file"
     done
 
@@ -449,8 +449,11 @@ done
     fi
     
     # Execute modules
+    local idx=1
+    local total=${#MODULES_TO_EXECUTE[@]}
     for module in "${MODULES_TO_EXECUTE[@]}"; do
-        execute_module "$module" "$FORCE_MODE"
+        execute_module "$module" "$FORCE_MODE" "$idx" "$total"
+        idx=$((idx + 1))
     done
     
     save_env_cache

@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-export PROJECT_DIR="$PROJECT_ROOT"
+export TLNX_DIR="$PROJECT_ROOT"
 
 # Use a throwaway HOME so we do not clobber the real ~/.zshrc or oh-my-zsh data.
 TEST_HOME="$PROJECT_ROOT/run/tmp/zsh-module-home"
@@ -19,7 +19,7 @@ source "$PROJECT_ROOT/lib/common.sh"
 source "$PROJECT_ROOT/lib/shell.sh"
 source "$PROJECT_ROOT/modules/zsh.sh"
 
-echo "Running ZSH module with PROJECT_DIR=$PROJECT_DIR and HOME=$HOME"
+echo "Running ZSH module with TLNX_DIR=$TLNX_DIR and HOME=$HOME"
 _zsh_install
 
 echo ""

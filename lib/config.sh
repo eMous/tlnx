@@ -4,14 +4,14 @@
 decrypt_config() {
 	log "INFO" "Checking for encrypted configuration..."
 
-	if [ -f "${PROJECT_DIR}/config/enc.conf.enc" ]; then
-		if [ -f "${PROJECT_DIR}/config/enc.conf" ] && [ "${PROJECT_DIR}/config/enc.conf" -nt "${PROJECT_DIR}/config/enc.conf.enc" ]; then
+	if [ -f "${TLNX_DIR}/config/enc.conf.enc" ]; then
+		if [ -f "${TLNX_DIR}/config/enc.conf" ] && [ "${TLNX_DIR}/config/enc.conf" -nt "${TLNX_DIR}/config/enc.conf.enc" ]; then
 			log "INFO" "Decrypted config is newer than encrypted source; loading"
-			source "${PROJECT_DIR}/config/enc.conf"
+			source "${TLNX_DIR}/config/enc.conf"
 			log "INFO" "Encrypted configuration loaded"
 			return 0
 		else
-			if [ ! -f "${PROJECT_DIR}/config/enc.conf" ]; then
+			if [ ! -f "${TLNX_DIR}/config/enc.conf" ]; then
 				log "INFO" "Decrypted config missing; running decryption"
 			else
 				log "INFO" "Decrypted config older than encrypted file; running decryption"
@@ -19,12 +19,12 @@ decrypt_config() {
 			if command -v "decrypt" &>/dev/null; then
 				DEFAULT_KEY_ENV=${CONFIG_DEFAULT_KEY_ENV:-"CONFIG_KEY"}
 
-				if "decrypt" "${PROJECT_DIR}/config/enc.conf.enc" "${PROJECT_DIR}/config/enc.conf" "$DEFAULT_KEY_ENV"; then
+				if "decrypt" "${TLNX_DIR}/config/enc.conf.enc" "${TLNX_DIR}/config/enc.conf" "$DEFAULT_KEY_ENV"; then
 					log "INFO" "Encrypted config decrypted"
 
-					if [ -f "${PROJECT_DIR}/config/enc.conf" ]; then
+					if [ -f "${TLNX_DIR}/config/enc.conf" ]; then
 						log "INFO" "Loading decrypted configuration"
-						source "${PROJECT_DIR}/config/enc.conf"
+						source "${TLNX_DIR}/config/enc.conf"
 						log "INFO" "Encrypted configuration loaded"
 						return 0
 					else
@@ -49,7 +49,7 @@ decrypt_config() {
 # Load default configuration
 _load_config() {
 	log "INFO" "Loading default configuration..."
-	local config_file="$PROJECT_DIR/config/default.conf"
+	local config_file="$TLNX_DIR/config/default.conf"
 
 	if [ -f "$config_file" ]; then
 		# Identify variables defined in config file to prevent them from overwriting environment variables
@@ -95,7 +95,7 @@ _load_config() {
 
 get_proxy_value_from_configs() {
 	local key="$1"
-	local files=("$PROJECT_DIR/config/enc.conf" "$PROJECT_DIR/config/default.conf")
+	local files=("$TLNX_DIR/config/enc.conf" "$TLNX_DIR/config/default.conf")
 
 	for file in "${files[@]}"; do
 		if [ ! -f "$file" ]; then

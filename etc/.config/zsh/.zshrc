@@ -18,19 +18,77 @@ source ${ZIM_HOME}/init.zsh
 
 
 # common shell settings
-if [ -f ~/.config/commonshell/common.sh ]; then
-    source ~/.config/commonshell/common.sh
+if [ -f "$TLNX_DIR/etc/.config/commonshell/common.sh" ]; then
+    source "$TLNX_DIR/etc/.config/commonshell/common.sh"
 fi
 
 
 # unique user customizations
-if [ -f ~/.config/zsh/.zshrc_template ]; then
-    source ~/.config/zsh/.zshrc_template
+if [ -f "$ZDOTDIR/.zshrc_template" ]; then
+    source "$ZDOTDIR/.zshrc_template"
 fi
 
 
 
 # unique user customizations
-if [ -f ~/.config/zsh/.zshrc_uniq ]; then
-    source ~/.config/zsh/.zshrc_uniq
+if [ -f "$ZDOTDIR/.zshrc_uniq" ]; then
+    source "$ZDOTDIR/.zshrc_uniq"
 fi
+# >>> TLNX shell block >>>
+export PATH="/home/tom/tlnx:/home/tom/tlnx/run/bin:$HOME/.local/bin:$PATH"
+#     >>> TLNX init_zsh_path >>>
+export PATH="/home/tom/tlnx:/home/tom/tlnx/run/bin:$PATH"
+#     <<< TLNX init_zsh_path <<<
+#     >>> TLNX clashctl patch >>>
+clashctl_patch() {
+local file1="/opt/clash/script/common.sh"
+local file2="/opt/clash/script/clashctl.sh"
+source "$file1" && source "$file2"
+# Check mihomo service running
+if ! systemctl is-active --quiet mihomo; then
+	echo "[Mihomo Service] Mihomo is not running, you may manually run clashon."
+else 
+	MIXED_PORT=$($BIN_YQ '.mixed-port' "$CLASH_CONFIG_RUNTIME")
+	if [ -z "$MIXED_PORT" ] || [ "$MIXED_PORT" == "null" ]; then
+		echo "[Clashctl] Unable to determine mixed-port from $CLASH_CONFIG_RUNTIME"
+	else
+		unset http_proxy
+		unset https_proxy
+		unset HTTP_PROXY
+		unset HTTPS_PROXY
+		export http_proxy="http://127.0.0.1:$MIXED_PORT"
+		export https_proxy="$http_proxy"
+		export HTTP_PROXY="$http_proxy"
+		export HTTPS_PROXY="$http_proxy"
+	fi
+fi
+}
+
+clashr() {
+	sudo $BIN_YQ -i '.mode = "rule"' "$CLASH_CONFIG_RUNTIME"
+	clashrestart
+	_okcat "已切换到规则模式"
+	clashctl tun
+}
+
+clashg() {
+	sudo $BIN_YQ -i '.mode = "global"' "$CLASH_CONFIG_RUNTIME"
+	clashrestart
+	_okcat "已切换到全局模式"
+	clashctl tun
+}
+
+clasht() {
+	if clashctl tun 2>&1 | grep -q "关闭"; then
+		clashctl tun on
+	elif clashctl tun 2>&1 | grep -q "启用"; then
+		clashctl tun off
+	else
+		clashctl tun
+	fi
+}
+
+clashctl_patch
+alias clash="clashctl proxy"
+#     <<< TLNX clashctl patch <<<
+# <<< TLNX shell block <<<

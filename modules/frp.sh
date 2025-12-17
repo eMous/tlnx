@@ -2,17 +2,13 @@
 
 # FRP module - install and configure frpc
 
-FRP_VERSION="0.58.1"
-
 _frp_installed_check() {
-    if mark_older_than "frp_installed_mark" "$(stat -c %Y "$PROJECT_DIR/etc/HOME/.conf/frp/frpc.toml")" || mark_older_than "frp_installed_mark" "$(stat -c %Y "$PROJECT_DIR/etc/HOME/.conf/frp/frps.toml")"; then
-        log "INFO" "FRP module config files modified since last run; module will run"
-        # remove the mark
-        sed -i "/^frp_installed_mark.*$/d" "$PROJECT_DIR/run/marks"
-        return 1
-    else
-        log "DEBUG" "FRP module already applied (mark found)"
+	if command -v frpc >/dev/null 2>&1 && command -v frps >/dev/null 2>&1 &&\
+	[ -f /etc/systemd/system/frpc.service ] &&\
+	 [ -f /etc/systemd/system/frps.service ]; then
         return 0
+    else
+        return 1
     fi
 }
 
@@ -64,8 +60,9 @@ frp_configure() {
 		log "INFO" "Setting up systemd service for $command"
 		local service_file="/etc/systemd/system/${command}.service"
 		if [ -f "$service_file" ]; then
-			log "INFO" "$service_file already exists; current contents:"
-			cat "$service_file" | tee -a "$LOG_FILE"
+			log "WARN" "$service_file already exists; Check content in log file.."
+			cat "$service_file" >> "$LOG_FILE" 2>&1
+			continue
 		fi
 
 		get_service_content "$config_file" "$binary_path" | command sudo tee "$service_file" >/dev/null
@@ -105,48 +102,8 @@ EOF
 }
 
 frp_install() {
-    local package_name="frp"
-    if ! checkout_package_file "$package_name"; then
-        log "ERROR" "Failed to checkout package file for $package_name"
-        return 1
-    fi
-
-    local extracted_dir="$PROJECT_DIR/run/packages/$package_name"
-
-    local arch
-    arch=$(uname -m)
-    local bin_dir
-    case "$arch" in
-        x86_64) bin_dir="amd64" ;;
-        aarch64) bin_dir="arm64" ;;
-        *)
-            log "ERROR" "Unsupported architecture: $arch"
-            return 1
-            ;;
-    esac
-
-    local frpc_binary="$bin_dir/frpc"
-    local frps_binary="$bin_dir/frps"
-
-    if [ ! -f "$extracted_dir/$frpc_binary" ]; then
-         log "ERROR" "Binary not found: $extracted_dir/$frpc_binary"
-         return 1
-    fi
-
-    copy_to_binary "$extracted_dir/$frpc_binary" || return 1
-    copy_to_binary "$extracted_dir/$frps_binary" || return 1
-
-    local etcdir=$(get_config_dir "frp")
-    if [ ! -d "$etcdir" ]; then
-        log "ERROR" "No predefined FRP config directory found at $etcdir"
-    else
-        if [ -f "$etcdir/frpc.toml" ]; then
-            copy_to_config "$etcdir/frpc.toml" "frp" || return 1
-        fi
-        if [ -f "$etcdir/frps.toml" ]; then
-            copy_to_config "$etcdir/frps.toml" "frp" || return 1
-        fi
-    fi
+    install_package_binary "frp" "frpc"
+    install_package_binary "frp" "frps"
 }
 _frp_install() {
     log "INFO" "=== Starting FRP module ==="

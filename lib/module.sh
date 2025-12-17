@@ -22,33 +22,28 @@ display_usage() {
 execute_module() {
 	local module=$1
 	local force=${2:-"false"}
-	log "INFO" "Executing module: $module"
-
-	if [ -f "$PROJECT_DIR/modules/$module.sh" ]; then
-		source "$PROJECT_DIR/modules/$module.sh"
+	local index=${3:-0}
+	local total=${4:-0}
+	log "INFO" "===== Executing module: $module ($index/$total) ====="
+	if [ -f "$TLNX_DIR/modules/$module.sh" ]; then
+		source "$TLNX_DIR/modules/$module.sh"
 		local mark="${module}_installed_mark"
-		local marks_file="$PROJECT_DIR/run/marks"
+		local marks_file="$TLNX_DIR/run/marks"
 		local need_install=true
 
 		if [ "$force" != "true" ]; then
-			if module_check_installed "$module" "$mark" "$marks_file"; then
-				log "INFO" "Module $module already installed by global examining; trying specific check"
-				# if specific module's _check_install exists conduct it
-				local check_func="_${module}_check_installed"
-				if command -v "$check_func" &>/dev/null; then
-					if "$check_func" "${module}" "${mark}" "${marks_file}"; then
-						log "INFO" "Module $module passed specific check; skipping installation"
-						need_install=false
-					else
-						need_install=true
-						log "INFO" "Module $module failed specific check; starting installation"
-					fi
-				else
-					log "INFO" "No specific check for module $module, no _${module}_check_installed; skipping installation"
+			local check_func="_${module}_check_installed"
+			if command -v "$check_func" &>/dev/null; then
+				if "$check_func" "${module}" "${mark}" "${marks_file}"; then
+					log "INFO" "Module $module passed specific check; skipping installation"
 					need_install=false
+				else
+					log "INFO" "Module $module failed specific check; starting installation"
+					need_install=true
 				fi
 			else
 				log "INFO" "Module $module not installed; starting installation"
+				need_install=true
 			fi
 		else
 			log "INFO" "Force re-installation for module $module"
@@ -61,118 +56,41 @@ execute_module() {
 				if [ $? -ne 0 ]; then
 				 # if module in REQUIRED_MODULES, fail the entire process
 					if [[ " ${CONFIG_REQUIRED_MODULES[*]} " == *" $module "* ]]; then
-						log "ERROR" "Module $module is required and failed to install; aborting"
+						log "ERROR" "===== Module $module is required and failed to install; aborting ====="
 						exit 1
 					fi
-					log "ERROR" "Module $module failed to run $install_func"
+					log "ERROR" "===== Module $module failed to run $install_func ====="
 					return 1
 				fi
 				module_install_callback "${module}"
-				module_install_complete "${module}" "${mark}" "${marks_file}"
+				# module_install_complete "${module}" "${mark}" "${marks_file}"
 			else
-				log "WARN" "Module $module is missing ${install_func}; skipping installation"
+				log "WARN" "===== Module $module is missing ${install_func}; Check again.. ====="
+				exit 1
 			fi
 		fi
 
-		log "INFO" "Module $module completed"
+		log "INFO" "===== Module $module ($index/$total) completed ====="
 	else
-		log "WARN" "Module script missing: modules/$module.sh; skipping"
-		return 1
+		log "WARN" "===== Module script missing: modules/$module.sh; Check again.. ====="
+		exit 1
 	fi
 }
 
-module_check_installed() {
-	local module=$1
-	local mark=$2
-	local marks_file=$3
-	if [ ! -f "$marks_file" ]; then
-		log "WARN" "Marks file $marks_file does not exist; module $module considered not installed"
-		mkdir -p "$(dirname "$marks_file")"
-		touch "$marks_file"
-		return 1
-	fi
-	if grep -Fq "$mark" "$marks_file"; then
-		log "DEBUG" "${module} module mark $mark found in $marks_file"
-	else
-		log "WARN" "${module} module mark $mark not found in $marks_file; considered older"
-		return 1
-	fi
-
-	local installed=""
-	
-	# Check watched environment variables
-	local watched_func="_${module}_watched_vars"
-	if command -v "$watched_func" &>/dev/null; then
-		local watched_vars
-		watched_vars=$("$watched_func")
-		local var_changed=false
-		
-		for var in $watched_vars; do
-			local current_val="${!var}"
-			local cached_val
-			cached_val=$(get_cached_env_value "$var")
-			
-			if [ "$current_val" != "$cached_val" ]; then
-				log "INFO" "Watched variable $var changed for module $module; triggering reinstall"
-				log "DEBUG" "Old: '$cached_val', New: '$current_val'"
-				var_changed=true
-				break
-			fi
-		done
-		
-		if [ "$var_changed" = "true" ]; then
-			installed=false
-		else
-			# If vars didn't change, check script modification
-			if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
-				log "DEBUG" "${module} module script not modified since last run"
-				installed=true
-			else
-				log "INFO" "${module} module script modified since last run; module will run"
-				installed=false
-			fi
-		fi
-	else
-		# Fallback to old logic if no watched vars defined
-		if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/default.conf")" &&
-			! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/config/enc.conf")"; then
-			log "DEBUG" "${module} module already applied (mark found)"
-			if ! mark_older_than "$mark" "$(stat -c %Y "$PROJECT_DIR/modules/${module}.sh")"; then
-				log "DEBUG" "${module} module script not modified since last run"
-				installed=true
-			else
-				log "INFO" "${module} module script modified since last run; module will run"
-				installed=false
-			fi
-		else
-			log "INFO" "${module} module config files modified since last run; module will run"
-			installed=false
-		fi
-	fi
-
-
-	if [ "$installed" = "true" ]; then
-		return 0
-	else
-		# remove the mark
-		sed -i "/^${mark}.*$/d" "$marks_file"
-		return 1
-	fi
-}
-module_install_complete() {
-	local off_mark_control=("${OFF_MARK_CONTROL[@]}")
-	local module=$1
-	local mark=$2
-	local mark_file=$3
-	# if module is not in off_mark_control list add the mark
-	if [[ " ${off_mark_control[*]} " == *" $module "* ]]; then
-		log "INFO" "${module} module is in off_mark_control list; skipping mark addition"
-		return 0
-	fi
-	# Add the mark
-	add_mark "$mark" "$mark_file"
-	log "INFO" "${module} module mark $mark added to $mark_file"
-}
+# module_install_complete() {
+	# local off_mark_control=("${OFF_MARK_CONTROL[@]}")
+	# local module=$1
+	# local mark=$2
+	# local mark_file=$3
+	# # if module is not in off_mark_control list add the mark
+	# if [[ " ${off_mark_control[*]} " == *" $module "* ]]; then
+		# log "INFO" "${module} module is in off_mark_control list; skipping mark addition"
+		# return 0
+	# fi
+	# # Add the mark
+	# add_mark "$mark" "$mark_file"
+	# log "INFO" "${module} module mark $mark added to $mark_file"
+# }
 
 copy_to_binary() {
 	local source_file=$1
@@ -218,26 +136,16 @@ get_config_dir() {
 module_install_callback() {
 	local module=$1
 	log "VERBOSE" "Running post-install callbacks for module $module"
-	local all_modules=()
-	for mod_file in "$PROJECT_DIR/modules/"*.sh; do
+	local all_installed_modules=()
+	for mod_file in "$TLNX_DIR/modules/"*.sh; do
 		mod_name=$(basename "$mod_file" .sh)
-		all_modules+=("$mod_name")
+		if _${mod_name}_check_installed &>/dev/null; then
+			all_installed_modules+=("$mod_name")
+		fi
 	done
-	log "DEBUG" "All modules: ${all_modules[*]}"
-
-	# local module_post_reg_func="_${module}_post_install_register"
-	# if command -v "$module_post_reg_func" &>/dev/null; then
-	# 	log "INFO" "Module $module has a func to register relevant modules post installation."
-	# 	"$module_post_reg_func"
-	# 	if [ $? -ne 0 ]; then
-	# 		log "ERROR" "Module $module failed to run $module_post_reg_func"
-	# 		return 1
-	# 	fi
-	# else
-	# 	log "DEBUG" "Module $module has no post installation registration function."
-	# fi
+	log "DEBUG" "All installed modules: ${all_installed_modules[*]}"
 	local all_callback_funcs=()
-	for mod in "${all_modules[@]}"; do
+	for mod in "${all_installed_modules[@]}"; do
 		if [ "$mod" = "$module" ]; then
 			continue
 		fi
@@ -266,14 +174,14 @@ module_install_callback() {
 
 add_mark() {
 	local mark=$1
-	local mark_file=${2:-"$PROJECT_DIR/run/marks"}
+	local mark_file=${2:-"$TLNX_DIR/run/marks"}
 	echo "$mark $(date +%s) # $(date '+%Y-%m-%d %H:%M:%S')" >>"$mark_file"
 	log "INFO" "Mark $mark added to $mark_file"
 }
 mark_older_than() {
 	local mark=$1
 	local timestamp=$2
-	local mark_file="$PROJECT_DIR/run/marks"
+	local mark_file="$TLNX_DIR/run/marks"
 
 	# if mark file doesn't exist, consider it older
 	if [ ! -f "$mark_file" ]; then
@@ -309,7 +217,7 @@ mark_older_than() {
 
 mark_exists() {
 	local mark=$1
-	local mark_file=${2:-"$PROJECT_DIR/run/marks"}
+	local mark_file=${2:-"$TLNX_DIR/run/marks"}
 
 	# if mark file doesn't exist, consider mark not exists
 	if [ ! -f "$mark_file" ]; then
@@ -328,36 +236,68 @@ mark_exists() {
 	fi
 }
 
-checkout_package_file() {
-	local package_name=$1
-	local package_file="$PROJECT_DIR/packages/${package_name}.tar.gz"
-	# if package file not exists return 1
-	if [ ! -f "$package_file" ]; then
-		log "ERROR" "Package file $package_file does not exist"
+install_package_binary() {
+	local module=$1
+	local binary_name=${2:-$module}
+	local relative_path=${3:-""}
+
+	local arch
+	arch=$(uname -m)
+	local arch_dir
+	case "$arch" in
+	x86_64) arch_dir="amd64" ;;
+	aarch64) arch_dir="arm64" ;;
+	*)
+		log "ERROR" "Unsupported architecture: $arch"
 		return 1
-	fi
+		;;
+	esac
 
-	local destination="$PROJECT_DIR/run/packages/${package_name}"
-	
-	# Clean up destination if it exists to avoid "File exists" errors from tar
-	if [ -d "$destination" ]; then
-		rm -rf "$destination" 2>/dev/null || sudo rm -rf "$destination"
-	fi
-	
-	mkdir -p "$destination"
+	local src_base="$TLNX_DIR/packages/$module"
+	local src=""
 
-	log "INFO" "Extracting package $package_name to $destination"
-	if tar -xzf "$package_file" -C "$destination" 2>&1 >>"$LOG_FILE"; then
-		return 0
+	# Try arch specific first
+	if [ -f "$src_base/$arch_dir/$binary_name" ]; then
+		src="$src_base/$arch_dir/$binary_name"
+	elif [ -f "$src_base/$arch_dir/$relative_path/$binary_name" ]; then
+		src="$src_base/$arch_dir/$relative_path/$binary_name"
+	# Fallback to root if no arch dir
+	elif [ -f "$src_base/$binary_name" ]; then
+		src="$src_base/$binary_name"
 	else
-		log "ERROR" "Failed to extract package $package_file"
+		log "ERROR" "Binary $binary_name not found in $src_base for arch $arch"
 		return 1
+	fi
+
+	local bin_dir="$TLNX_DIR/run/bin"
+	mkdir -p "$bin_dir"
+
+	local dest="$bin_dir/$binary_name"
+
+	# Create symlink
+	if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$src")" ]; then
+		log "INFO" "$dest is already linked to $src; skipping"
+	else
+		ln -sf "$src" "$dest"
+		log "INFO" "Linked $src to $dest"
+	fi
+
+	# Also link to $HOME/.local/bin
+	local user_bin_dir="$HOME/.local/bin"
+	mkdir -p "$user_bin_dir"
+	local user_dest="$user_bin_dir/$binary_name"
+
+	if [ -L "$user_dest" ] && [ "$(readlink -f "$user_dest")" = "$(readlink -f "$src")" ]; then
+		log "INFO" "$user_dest is already linked to $src; skipping"
+	else
+		ln -sf "$src" "$user_dest"
+		log "INFO" "Linked $src to $user_dest"
 	fi
 }
 
 
 get_config_dir() {
-	local config_dir="$PROJECT_DIR/etc/.config"
+	local config_dir="$TLNX_DIR/etc/.config"
 	local sub_dir=${1:-""}
 	echo "$config_dir/$sub_dir"
 }

@@ -60,7 +60,7 @@ EOF
 
 	# 2. Compress local folder
 	log "INFO" "Archiving project into $local_tar_file"
-	cd "$PROJECT_DIR" 
+	cd "$TLNX_DIR" 
 	tar -czf "$local_tar_file" --exclude='*.tar.gz' --exclude='.log' --exclude='.vscode' . 2>&1 | tee -a "$LOG_FILE"
 	cd "$current_dir"
 	if [ ${PIPESTATUS[0]} -ne 0 ]; then

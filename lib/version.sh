@@ -2,7 +2,7 @@
 
 # Version helper utilities
 
-: "${DEFAULT_CONFIG_FILE:=${PROJECT_DIR:+${PROJECT_DIR}/}config/default.conf}"
+: "${DEFAULT_CONFIG_FILE:=${TLNX_DIR:+${TLNX_DIR}/}config/default.conf}"
 
 # Compare two semantic version strings.
 # Returns: 0 when equal, 1 when first argument is newer, 2 when first argument is older.

@@ -1,0 +1,454 @@
+allow-lan: true
+dns:
+  default-nameserver:
+  - 119.29.29.29
+  - 223.5.5.5
+  enable: true
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+  - https://doh.pub/dns-query
+  - https://223.6.6.6/dns-query
+  use-hosts: true
+log-level: warning
+mixed-port: 9981
+mode: rule
+proxies:
+- name: 美国西雅图
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: f8c18f73-t7ixs0-tsluu1-1k2l4.se.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国西雅图2
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 677bcfd7-t7ixs0-tsluu1-1k2l4.sv.plebai.net
+  tls: true
+  type: socks5
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国洛杉矶[CU]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 15229
+  server: 35d54415-t7ixs0-tsluu1-1k2l4.cu.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国洛杉磯HY
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  ports: 30000-60000
+  server: 6aad1b25-t7ixs0-tsluu1-1k2l4.us.hyhuawei.com
+  type: hysteria2
+- name: 美国硅谷
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: be5b79d8-t7ixs0-tsluu1-1k2l4.sj.gotochinatown.net
+  tls: true
+  type: socks5
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国硅谷2
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 992a28ae-t7ixs0-tsluu1-1k2l4.sj.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国圣何塞
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 32441fcb-t7ixs0-tsluu1-1k2l4.sjc.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国洛杉矶
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 896c4543-t7ixs0-tsluu1-1k2l4.los.gotochinatown.net
+  tls: true
+  type: socks5
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 美国洛杉矶2
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 896c4543-t7ixs0-tsluu1-1k2l4.los.gotochinatown.net
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇭🇰香港中转[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 5228
+  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇭🇰香港精品4
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: d360a5bd-t7ixs0-tsluu1-1k2l4.hkt2.cdnhuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇭🇰香港精品3
+  password: <password>
+  port: 8443
+  server: 7f237db9-t7ixs0-tsluu1-1k2l4.hkt.cdnhuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- alterId: 2
+  cipher: auto
+  name: 🇭🇰 香港精品
+  network: ws
+  port: 80
+  server: f0e10a91-t7ixs0-tsluu1-1k2l4.hkt.gotochinatown.net
+  tls: false
+  type: vmess
+  uuid: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  ws-headers:
+    Host: broadcastlv.chat.bilibili.com
+    User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+      (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36
+  ws-path: /
+- name: 🇭🇰香港精品2
+  password: <password>
+  port: 443
+  server: d360a5bd-t7ixs0-tsluu1-1k2l4.hkt2.cdnhuawei.com
+  tls: true
+  type: socks5
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇭🇰 香港HY02
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  ports: 30000-60000
+  server: d2b38fbd-t7ixs0-tsluu1-1k2l4.hk2.hyhuawei.com
+  type: hysteria2
+- name: 🇭🇰 香港HY01
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  ports: 30000-60000
+  server: d25d5595-t7ixs0-tsluu1-1k2l4.hk1.hyhuawei.com
+  type: hysteria2
+- name: 🇬🇧 英国
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 12143d4d-t7ixs0-tsluu1-1k2l4.uk.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇫🇷 法国
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: ec15608d-t7ixs0-tsluu1-1k2l4.fr.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇩🇪 德国
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 562f64e9-t7ixs0-tsluu1-1k2l4.de.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇲🇾 马来西亚[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 31233
+  server: cf7f6522-t7ixs0-tsluu1-1k2l4.my.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇹🇭 泰国[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 32232
+  server: 8c80e7dd-t7ixs0-tsluu1-1k2l4.id.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇰🇷韩國[CT]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 31433
+  server: be12b41d-t7ixs0-tsluu1-1k2l4.kr.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇨🇳 台湾
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 16157684-t7ixs0-tsluu1-1k2l4.tw3.p5pv.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇯🇵 日本
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: a09d3d38-t7ixs0-tsluu1-1k2l4.jp.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇮🇩 印尼[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 32233
+  server: 8c80e7dd-t7ixs0-tsluu1-1k2l4.id.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇯🇵 日本[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 27233
+  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇯🇵 日本4
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 62029639-t7ixs0-tsluu1-1k2l4.jp4.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇸🇬 新加坡[CM]
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 17235
+  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇸🇬 新加坡
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 3a447643-t7ixs0-tsluu1-1k2l4.sg.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- name: 🇸🇬 新加坡3
+  password: 479decec-0c49-11ef-85ee-f23c913c8d2b
+  port: 443
+  server: 2f8b31d7-t7ixs0-tsluu1-1k2l4.sg3.oshuawei.com
+  tls: true
+  type: http
+  username: 479decec-0c49-11ef-85ee-f23c913c8d2b
+- alterId: 0
+  cipher: auto
+  name: 线路少请更换软件看公告
+  network: tcp
+  port: 443
+  server: hostloc.com
+  tls: true
+  type: vmess
+  uuid: 479decec-0c49-11ef-85ee-f23c913c8d2b
+proxy-groups:
+- name: Ghelper
+  proxies:
+  - 🌐 全球智能
+  - 美国西雅图
+  - 美国西雅图2
+  - 美国洛杉矶[CU]
+  - 美国洛杉磯HY
+  - 美国硅谷
+  - 美国硅谷2
+  - 美国圣何塞
+  - 美国洛杉矶
+  - 美国洛杉矶2
+  - 🇭🇰 香港智能
+  - 🇭🇰香港中转[CM]
+  - 🇭🇰香港精品4
+  - 🇭🇰香港精品3
+  - 🇭🇰 香港精品
+  - 🇭🇰香港精品2
+  - 🇭🇰 香港HY02
+  - 🇭🇰 香港HY01
+  - 🇬🇧 英国
+  - 🇫🇷 法国
+  - 🇩🇪 德国
+  - 🇲🇾 马来西亚[CM]
+  - 🇹🇭 泰国[CM]
+  - 🇰🇷韩國[CT]
+  - 🇨🇳 台湾
+  - 🇯🇵 日本
+  - 🇮🇩 印尼[CM]
+  - 🇯🇵 日本[CM]
+  - 🇯🇵 日本4
+  - 🇸🇬 新加坡[CM]
+  - 🇸🇬 新加坡
+  - 🇸🇬 新加坡3
+  - AI专用
+  - 线路少请更换软件看公告
+  type: select
+- interval: 7200
+  name: 🌐 全球智能
+  proxies:
+  - 美国西雅图
+  - 美国西雅图2
+  - 美国洛杉矶[CU]
+  - 美国洛杉磯HY
+  - 美国硅谷
+  - 美国硅谷2
+  - 美国圣何塞
+  - 美国洛杉矶
+  - 美国洛杉矶2
+  - 🇭🇰 香港智能
+  - 🇭🇰香港中转[CM]
+  - 🇭🇰香港精品4
+  - 🇭🇰香港精品3
+  - 🇭🇰 香港精品
+  - 🇭🇰香港精品2
+  - 🇬🇧 英国
+  - 🇫🇷 法国
+  - 🇯🇵 日本4
+  - 🇸🇬 新加坡
+  - 🇸🇬 新加坡3
+  - 线路少请更换软件看公告
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+- interval: 7200
+  name: 🇭🇰 香港智能
+  proxies:
+  - 🇭🇰香港中转[CM]
+  - 🇭🇰香港精品4
+  - 🇭🇰香港精品3
+  - 🇭🇰 香港精品
+  - 🇭🇰香港精品2
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+- interval: 7200
+  name: AI专用
+  proxies:
+  - 美国西雅图
+  - 美国西雅图2
+  - 美国洛杉矶[CU]
+  - 美国硅谷
+  - 美国硅谷2
+  - 美国圣何塞
+  - 美国洛杉矶
+  - 美国洛杉矶2
+  - 🇬🇧 英国
+  - 🇫🇷 法国
+  - 🇯🇵 日本
+  - 🇯🇵 日本[CM]
+  - 🇯🇵 日本4
+  - 🇸🇬 新加坡[CM]
+  - 🇸🇬 新加坡
+  - 🇸🇬 新加坡3
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+rules:
+- DOMAIN-SUFFIX,ip-api.com,DIRECT
+- DOMAIN-SUFFIX,ipip.net,DIRECT
+- DOMAIN-SUFFIX,ip138.com,DIRECT
+- DOMAIN-SUFFIX,skype.com,DIRECT
+- DOMAIN-SUFFIX,skype.comedge.skype.net,DIRECT
+- DOMAIN-SUFFIX,skypeassets.com,DIRECT
+- DOMAIN-SUFFIX,skypeforbusiness.com,DIRECT
+- DOMAIN-SUFFIX,cdnkuaisou.com,DIRECT
+- DOMAIN-SUFFIX,cnkuaishou.com,DIRECT
+- DOMAIN-SUFFIX,cmhuawei.com,DIRECT
+- DOMAIN-SUFFIX,cmhuawei.com,DIRECT
+- DOMAIN-SUFFIX,cdnhuawei.com,DIRECT
+- DOMAIN-SUFFIX,viphuawei.com,DIRECT
+- DOMAIN-SUFFIX,chromeapi.com,DIRECT
+- DOMAIN-SUFFIX,paypal.com,DIRECT
+- DOMAIN-SUFFIX,alipay.com,DIRECT
+- DOMAIN-SUFFIX,airwallex.com,DIRECT
+- DOMAIN-SUFFIX,stripe.com,DIRECT
+- DOMAIN-SUFFIX,wooshpay.com,DIRECT
+- DOMAIN-SUFFIX,payssion.com,DIRECT
+- DOMAIN-SUFFIX,chrapi.com,DIRECT
+- DOMAIN-SUFFIX,firapi.com,DIRECT
+- DOMAIN-SUFFIX,gheapi.com,DIRECT
+- DOMAIN-SUFFIX,broapi.com,DIRECT
+- DOMAIN-SUFFIX,edgapi.com,DIRECT
+- DOMAIN-SUFFIX,browserapi.net,DIRECT
+- DOMAIN-SUFFIX,cnsync.com,DIRECT
+- DOMAIN-SUFFIX,on1t.com,DIRECT
+- DOMAIN-SUFFIX,chromeapi.net,DIRECT
+- DOMAIN-SUFFIX,copydesign.net,DIRECT
+- DOMAIN-SUFFIX,jy3p.com,DIRECT
+- DOMAIN-SUFFIX,p5pv.com,DIRECT
+- DOMAIN-SUFFIX,z7zi.com,DIRECT
+- DOMAIN-SUFFIX,j2ai.com,DIRECT
+- DOMAIN-SUFFIX,alrihla.net,DIRECT
+- DOMAIN-SUFFIX,sphinxsearch.net,DIRECT
+- DOMAIN-SUFFIX,skype.com,DIRECT
+- DOMAIN-SUFFIX,cdnhuawei.com,DIRECT
+- DOMAIN-SUFFIX,cdnkuaishou.com,DIRECT
+- DOMAIN-SUFFIX,chromeapi.net,DIRECT
+- DOMAIN-KEYWORD,google,Ghelper
+- DOMAIN-SUFFIX,ggpht.com,Ghelper
+- DOMAIN-SUFFIX,gmail.com,Ghelper
+- DOMAIN-SUFFIX,gvt2.com,Ghelper
+- DOMAIN-SUFFIX,gvt3.com,Ghelper
+- DOMAIN-SUFFIX,chrome.com,Ghelper
+- DOMAIN-SUFFIX,wikipedia.org,Ghelper
+- DOMAIN-SUFFIX,wikimedia.org,Ghelper
+- DOMAIN-SUFFIX,appspot.com,Ghelper
+- DOMAIN-SUFFIX,android.com,Ghelper
+- DOMAIN-SUFFIX,github.com,Ghelper
+- DOMAIN-SUFFIX,gitbook.com,Ghelper
+- DOMAIN-SUFFIX,kaggle.com,Ghelper
+- DOMAIN-SUFFIX,arxiv.org,Ghelper
+- DOMAIN-SUFFIX,wiktionary.org,Ghelper
+- DOMAIN-SUFFIX,blogger.com,Ghelper
+- DOMAIN-KEYWORD,google,Ghelper
+- DOMAIN-KEYWORD,youtube,Ghelper
+- DOMAIN-SUFFIX,ggpht.com,Ghelper
+- DOMAIN-SUFFIX,gmail.com,Ghelper
+- DOMAIN-SUFFIX,gvt2.com,Ghelper
+- DOMAIN-SUFFIX,gvt3.com,Ghelper
+- DOMAIN-SUFFIX,chrome.com,Ghelper
+- DOMAIN-SUFFIX,wikipedia.org,Ghelper
+- DOMAIN-SUFFIX,wikimedia.org,Ghelper
+- DOMAIN-SUFFIX,appspot.com,Ghelper
+- DOMAIN-SUFFIX,android.com,Ghelper
+- DOMAIN-SUFFIX,github.com,Ghelper
+- DOMAIN-SUFFIX,gitbook.com,Ghelper
+- DOMAIN-SUFFIX,kaggle.com,Ghelper
+- DOMAIN-SUFFIX,arxiv.org,Ghelper
+- DOMAIN-SUFFIX,wiktionary.org,Ghelper
+- DOMAIN-SUFFIX,blogger.com,Ghelper
+- DOMAIN-SUFFIX,youtu.be,Ghelper
+- DOMAIN-SUFFIX,ytimg.com,Ghelper
+- DOMAIN-SUFFIX,youtube.com,Ghelper
+- DOMAIN-SUFFIX,instagram.com,Ghelper
+- DOMAIN-SUFFIX,twitter.com,Ghelper
+- DOMAIN-SUFFIX,t.co,Ghelper
+- DOMAIN-SUFFIX,facebook.com,Ghelper
+- DOMAIN-SUFFIX,telegram.org,Ghelper
+- DOMAIN-SUFFIX,whatsapp.com,Ghelper
+- DOMAIN-SUFFIX,whatsapp.net,Ghelper
+- DOMAIN-SUFFIX,linkedin.com,Ghelper
+- DOMAIN-SUFFIX,licdn.com,Ghelper
+- DOMAIN-SUFFIX,trkn.us,Ghelper
+- DOMAIN-SUFFIX,cedexis.com,Ghelper
+- DOMAIN-SUFFIX,ip.sb,Ghelper
+- DOMAIN-SUFFIX,ip.net,Ghelper
+- DOMAIN-SUFFIX,openai.com,Ghelper
+- DOMAIN-SUFFIX,auth0.com,Ghelper
+- DOMAIN-SUFFIX,featuregates.org,Ghelper
+- DOMAIN-SUFFIX,statsigapi.net,Ghelper
+- DOMAIN-SUFFIX,intercom.io,Ghelper
+- DOMAIN-SUFFIX,intercomcdn.com,Ghelper
+- DOMAIN-SUFFIX,sentry.io,Ghelper
+- DOMAIN-SUFFIX,sentry.dev,Ghelper
+- DOMAIN-SUFFIX,oaistatic.com,Ghelper
+- DOMAIN-SUFFIX,oaiusercontent.com,Ghelper
+- DOMAIN-SUFFIX,chatgpt.com,Ghelper
+- DOMAIN-SUFFIX,chatgpt-async-webps-prod-southcentralus-6.webpubsub.azure.com,Ghelper
+- DOMAIN-SUFFIX,claude.ai,Ghelper
+- DOMAIN-SUFFIX,anthropic.com,Ghelper
+- DOMAIN-SUFFIX,intercomcdn.com,Ghelper
+- DOMAIN-SUFFIX,intercom.io,Ghelper
+- DOMAIN-SUFFIX,bing.com,Ghelper
+- DOMAIN-SUFFIX,microsoftonline.com,Ghelper
+- DOMAIN-SUFFIX,live.com,Ghelper
+- DOMAIN-SUFFIX,msecnd.net,Ghelper
+- DOMAIN-SUFFIX,msn.com,Ghelper
+- DOMAIN-SUFFIX,bingapis.com,Ghelper
+- DOMAIN-SUFFIX,bing.net,Ghelper
+- DOMAIN-SUFFIX,windows.com,Ghelper
+- DOMAIN-SUFFIX,microsoft.com,Ghelper
+- DOMAIN-SUFFIX,linkedin.com,Ghelper
+- DOMAIN-SUFFIX,licdn.com,Ghelper
+- DOMAIN-SUFFIX,trkn.us,Ghelper
+- DOMAIN-SUFFIX,cedexis.com,Ghelper
+- GEOIP,CN,DIRECT
+- MATCH, Ghelper
