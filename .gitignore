@@ -36,3 +36,5 @@ tmp/
 etc/.config/zsh/.zim/modules/
 
 .zhistory
+packages/clash-for-linux-install/resources/config.yaml
+etc/.config/zsh/.zim/init.zsh

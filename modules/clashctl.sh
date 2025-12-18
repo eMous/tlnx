@@ -3,13 +3,13 @@
 # Clashctl module - install and configure Clash and Clashctl
 
 _clashctl_check_installed() {
-	if command -v clashctl >/dev/null 2>&1; then
+	if bash -ci "command -v clashctl >/dev/null 2>&1"; then
 		log "INFO" "Clashctl is already installed."
 	else
 		log "INFO" "Clashctl is not installed."
 		return 1
 	fi
-	if command -v watch_proxy >/dev/null 2>&1; then
+	if bash -ci "command -v watch_proxy >/dev/null 2>&1"; then
 		log "INFO" "watch_proxy is already installed."
 	else
 		log "INFO" "watch_proxy is not installed."
@@ -54,8 +54,7 @@ _clashctl_install() {
 	command sudo $(get_current_shell) uninstall.sh 2>&1 | tee -a "$LOG_FILE"
 	command sudo $(get_current_shell) install.sh 2>&1 | tee -a "$LOG_FILE"
 	
-
-	local output=$(bash -ci 'clashon >/dev/null 2>&1; echo $http_proxy;')
+	local output=$(bash -ci "clashon >/dev/null 2>&1; echo \$http_proxy;")
 	export http_proxy=$(echo $output | grep -o "http://[^ ]*")
 	export https_proxy=$http_proxy
 	export HTTP_PROXY=$http_proxy
@@ -64,7 +63,6 @@ _clashctl_install() {
 	log "INFO" "Set https_proxy for clashctl: $http_proxy"
 	log "INFO" "Set HTTP_proxy for clashctl: $http_proxy"
 	log "INFO" "Set HTTPS_proxy for clashctl: $http_proxy"
-	bash -ci 'clashctl proxy'
 	
 	log "INFO" "=== Clashctl module completed ==="
 
@@ -84,9 +82,7 @@ _clashctl_shell_patch() {
 
 	local content=$(cat <<'EOF'
 clashctl_patch() {
-local file1="/opt/clash/script/common.sh"
-local file2="/opt/clash/script/clashctl.sh"
-source "$file1" && source "$file2"
+source "/opt/clash/script/common.sh" && source "/opt/clash/script/clashctl.sh"
 # Check mihomo service running
 if ! systemctl is-active --quiet mihomo; then
 	echo "[Mihomo Service] Mihomo is not running, you may manually run clashon."
@@ -132,6 +128,9 @@ clasht() {
 }
 
 clashctl_patch
+if [ -n "$BASH_VERSION" ]; then
+    export -f clashctl_patch clashr clashg clasht
+fi
 alias clash="clashctl proxy"
 EOF
 	)

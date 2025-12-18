@@ -16,21 +16,21 @@ proxies:
 - name: 美国西雅图
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: f8c18f73-t7ixs0-tsluu1-1k2l4.se.oshuawei.com
+  server: 21e62e0e-t7ksg0-tsluu1-1k2l4.se.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国西雅图2
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 677bcfd7-t7ixs0-tsluu1-1k2l4.sv.plebai.net
+  server: aadfb5b6-t7ksg0-tsluu1-1k2l4.sv.plebai.net
   tls: true
   type: socks5
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国洛杉矶[CU]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 15229
-  server: 35d54415-t7ixs0-tsluu1-1k2l4.cu.oshuawei.com
+  server: f3b3e165-t7ksg0-tsluu1-1k2l4.cu.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
@@ -38,61 +38,61 @@ proxies:
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
   ports: 30000-60000
-  server: 6aad1b25-t7ixs0-tsluu1-1k2l4.us.hyhuawei.com
+  server: 7def9d2c-t7ksg0-tsluu1-1k2l4.us.hyhuawei.com
   type: hysteria2
 - name: 美国硅谷
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: be5b79d8-t7ixs0-tsluu1-1k2l4.sj.gotochinatown.net
+  server: 3d2c5fe3-t7ksg0-tsluu1-1k2l4.sj.gotochinatown.net
   tls: true
   type: socks5
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国硅谷2
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 992a28ae-t7ixs0-tsluu1-1k2l4.sj.oshuawei.com
+  server: be77be56-t7ksg0-tsluu1-1k2l4.sj.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国圣何塞
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 32441fcb-t7ixs0-tsluu1-1k2l4.sjc.oshuawei.com
+  server: ebb0708d-t7ksg0-tsluu1-1k2l4.sjc.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国洛杉矶
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 896c4543-t7ixs0-tsluu1-1k2l4.los.gotochinatown.net
+  server: 88c0a865-t7ksg0-tsluu1-1k2l4.los.gotochinatown.net
   tls: true
   type: socks5
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 美国洛杉矶2
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 896c4543-t7ixs0-tsluu1-1k2l4.los.gotochinatown.net
+  server: 88c0a865-t7ksg0-tsluu1-1k2l4.los.gotochinatown.net
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇭🇰香港中转[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 5228
-  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  server: bce9aa6f-t7ksg0-tsluu1-1k2l4.cm4.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇭🇰香港精品4
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: d360a5bd-t7ixs0-tsluu1-1k2l4.hkt2.cdnhuawei.com
+  server: eeca5703-t7ksg0-tsluu1-1k2l4.hkt2.cdnhuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇭🇰香港精品3
   password: <password>
   port: 8443
-  server: 7f237db9-t7ixs0-tsluu1-1k2l4.hkt.cdnhuawei.com
+  server: 589ebc3a-t7ksg0-tsluu1-1k2l4.hkt.cdnhuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
@@ -101,7 +101,7 @@ proxies:
   name: 🇭🇰 香港精品
   network: ws
   port: 80
-  server: f0e10a91-t7ixs0-tsluu1-1k2l4.hkt.gotochinatown.net
+  server: 547d51ad-t7ksg0-tsluu1-1k2l4.hkt.gotochinatown.net
   tls: false
   type: vmess
   uuid: 479decec-0c49-11ef-85ee-f23c913c8d2b
@@ -113,7 +113,7 @@ proxies:
 - name: 🇭🇰香港精品2
   password: <password>
   port: 443
-  server: d360a5bd-t7ixs0-tsluu1-1k2l4.hkt2.cdnhuawei.com
+  server: eeca5703-t7ksg0-tsluu1-1k2l4.hkt2.cdnhuawei.com
   tls: true
   type: socks5
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
@@ -121,109 +121,109 @@ proxies:
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
   ports: 30000-60000
-  server: d2b38fbd-t7ixs0-tsluu1-1k2l4.hk2.hyhuawei.com
+  server: c11cdc32-t7ksg0-tsluu1-1k2l4.hk2.hyhuawei.com
   type: hysteria2
 - name: 🇭🇰 香港HY01
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
   ports: 30000-60000
-  server: d25d5595-t7ixs0-tsluu1-1k2l4.hk1.hyhuawei.com
+  server: 30f27b6c-t7ksg0-tsluu1-1k2l4.hk1.hyhuawei.com
   type: hysteria2
 - name: 🇬🇧 英国
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 12143d4d-t7ixs0-tsluu1-1k2l4.uk.oshuawei.com
+  server: 5cb6dbda-t7ksg0-tsluu1-1k2l4.uk.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇫🇷 法国
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: ec15608d-t7ixs0-tsluu1-1k2l4.fr.oshuawei.com
+  server: 1d0c625d-t7ksg0-tsluu1-1k2l4.fr.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇩🇪 德国
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 562f64e9-t7ixs0-tsluu1-1k2l4.de.oshuawei.com
+  server: cf1815ce-t7ksg0-tsluu1-1k2l4.de.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇲🇾 马来西亚[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 31233
-  server: cf7f6522-t7ixs0-tsluu1-1k2l4.my.oshuawei.com
+  server: ad6b76fc-t7ksg0-tsluu1-1k2l4.my.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇹🇭 泰国[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 32232
-  server: 8c80e7dd-t7ixs0-tsluu1-1k2l4.id.oshuawei.com
+  server: 821a6957-t7ksg0-tsluu1-1k2l4.id.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇰🇷韩國[CT]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 31433
-  server: be12b41d-t7ixs0-tsluu1-1k2l4.kr.oshuawei.com
+  server: 2531d99a-t7ksg0-tsluu1-1k2l4.kr.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇨🇳 台湾
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 16157684-t7ixs0-tsluu1-1k2l4.tw3.p5pv.com
+  server: 16327c68-t7ksg0-tsluu1-1k2l4.tw3.p5pv.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇯🇵 日本
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: a09d3d38-t7ixs0-tsluu1-1k2l4.jp.oshuawei.com
+  server: 4e934687-t7ksg0-tsluu1-1k2l4.jp.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇮🇩 印尼[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 32233
-  server: 8c80e7dd-t7ixs0-tsluu1-1k2l4.id.oshuawei.com
+  server: 821a6957-t7ksg0-tsluu1-1k2l4.id.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇯🇵 日本[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 27233
-  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  server: bce9aa6f-t7ksg0-tsluu1-1k2l4.cm4.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇯🇵 日本4
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 62029639-t7ixs0-tsluu1-1k2l4.jp4.oshuawei.com
+  server: d049218a-t7ksg0-tsluu1-1k2l4.jp4.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇸🇬 新加坡[CM]
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 17235
-  server: d9b89307-t7ixs0-tsluu1-1k2l4.cm4.oshuawei.com
+  server: bce9aa6f-t7ksg0-tsluu1-1k2l4.cm4.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇸🇬 新加坡
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 3a447643-t7ixs0-tsluu1-1k2l4.sg.oshuawei.com
+  server: a70059a2-t7ksg0-tsluu1-1k2l4.sg.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
 - name: 🇸🇬 新加坡3
   password: 479decec-0c49-11ef-85ee-f23c913c8d2b
   port: 443
-  server: 2f8b31d7-t7ixs0-tsluu1-1k2l4.sg3.oshuawei.com
+  server: b28be226-t7ksg0-tsluu1-1k2l4.sg3.oshuawei.com
   tls: true
   type: http
   username: 479decec-0c49-11ef-85ee-f23c913c8d2b
